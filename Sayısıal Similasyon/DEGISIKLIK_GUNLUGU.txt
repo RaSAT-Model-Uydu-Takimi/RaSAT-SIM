@@ -1,0 +1,41 @@
+# 📋 RASAT Simülatör — Değişiklik Günlüğü (Changelog - Sayısal Simülasyon)
+
+---
+
+## [v1.0.0] — 2026-07-12 — Sayısal Simülasyon (WinForms + STM32 Senkron Haberleşme + 6-DOF Fizik)
+
+### ✨ Yeni Özellikler ve Entegrasyon
+- **Senkron Ping-Pong Haberleşme Modülü (`FM_haberlesme`)**:
+  - STM32 kartı ile 16 baytlık İletim Paketi (`Iletim_Paketi_t`) ve 52 baytlık Alım Paketi (`Alim_Paketi_t`) üzerinden senkron haberleşme altyapısı entegre edildi.
+  - Header (`0xAA55`) ve XOR Checksum doğrulama mekanizmaları eklendi.
+  - Zaman aşımı (timeout) ve bozuk paket korumaları eklendi; hata durumunda STM32'ye alarm paketi basılması sağlandı.
+
+- **Godot Bağımsız Saf C# 6-DOF Fizik Motoru (`FM_sistem` / `SatellitePhysicsEngine`)**:
+  - Godot kütüphanelerine bağımlılık olmadan Newton-Euler mekaniği tabanlı 6 eksenli (6-DOF) fizik motoru entegre edildi.
+  - "X" konfigürasyon 4 motorlu model uydu/drone tork hesapları, pervane itki formülleri ve aerodinamik sürtünme denklemleri eklendi.
+  - Kanat açılma bayrağına (`BAYRAK_SGM`) bağlı olarak dinamik eylemsizlik momenti (`InertiaWingsOpen` vs `InertiaWingsClosed`) değişimi eklendi.
+  - İvmeölçer, jiroskop, manyetometre, barometre ve GPS için gerçeğe uygun sensör paketi üretici eklendi.
+
+- **Asenkron CSV Loglama Engine (`FM_logging`)**:
+  - `BlockingCollection` tabanlı, gerçek zamanlı haberleşme döngüsünü yavaşlatmayan arka plan kaydetme mekanizmaları kuruldu.
+  - `Gelen_Veriler`, `Giden_Veriler` ve `Birlesik_Veriler` olmak üzere 3 farklı CSV kütüğü zaman damgalı olarak oluşturuldu.
+
+- **WinForms Canlı İzleme Arayüzü (`Form1`)**:
+  - Visual Studio Form Designer ile uyumlu, sade ve net tasarım.
+  - COM Port ve Baud Rate (921600) seçim kontrolleri.
+  - Canlı telemetri paneli: İrtifa, Hız, Euler açıları, Kanat durumu, Paket sayacı ve motor komutları göstergesi.
+
+---
+
+## [Eski Sürümler Özeti]
+
+### [v0.3.0] — Godot Fizik Motoru "X" Konfigürasyon Geçişi
+- "+" konfigürasyondan "X" konfigürasyona geçildi.
+- Motor dönüş yönleri ve çapraz çift tork denklemleri güncellendi.
+- Yaw reaktif tork hesapları eklendi.
+
+### [v0.2.0] — Fizik Motoru İyileştirmeleri
+- İvme hesabı ve Euler integrasyon düzeltmeleri yapıldı.
+
+### [v0.1.0] — İlk Çalışan Versiyon
+- Temel Newton mekaniği, PID denetleyicileri ve sensör gürültü modelleri oluşturuldu.

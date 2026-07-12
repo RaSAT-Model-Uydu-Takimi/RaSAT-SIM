@@ -1,0 +1,136 @@
+# 📖 RASAT Simülatör — Algoritma ve Fonksiyon Belgeleri (Sayısal Simülasyon)
+
+Bu belge, projede kullanılan tüm algoritmaları, önemli fonksiyonları ve fiziksel modelleri açıklar.
+
+---
+
+## 📐 Genel Mimari
+
+┌─────────────────────────────────────────────────────────────┐
+│                    SİMÜLASYON KATMANI                       │
+│              (Fiziksel gerçekliği simüle eder)              │
+│                                                             │
+│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐   │
+│  │ Fizik Motoru │    │   Sensör     │    │   WinForms   │   │
+│  │ (Ground      │───▶│  Simülasyonu │    │   Arayüzü    │   │
+│  │  Truth)      │    │ (Gürültü ek.)│    │  (Canlı Veri)│   │
+│  └──────────────┘    └──────┬───────┘    └──────────────┘   │
+│                             │                               │
+│         ┌───────────────────┤ Sahte sensör verileri         │
+│         ▼                   ▼                               │
+│  ┌─────────────────────────────────────────────────┐        │
+│  │          ARAYÜZ (Interface)                     │        │
+│  │   Barometre, İvmeölçer, Jiroskop verileri       │        │
+│  └─────────────────────────────────────────────────┘        │
+└──────────────┬──────────────────────────────────────────────┘
+               │  (STM32 Seri Port Senkron Haberleşme)
+               ▼
+┌─────────────────────────────────────────────────────────────┐
+│              UÇUŞ YAZILIMI KATMANI                          │
+│         (STM32 Kartı Üzerindeki Yazılım)                    │
+│                                                             │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐       │
+│  │  Estimation  │  │     PID      │  │    Motor     │       │
+│  │  Core        │  │  Controller  │  │    Mixer     │       │
+│  │  (Filtreler) │  │  (Kazançlar) │  │  (Karıştırma)│       │
+│  └──────────────┘  └──────────────┘  └──────────────┘       │
+└─────────────────────────────────────────────────────────────┘
+
+---
+
+## 1. Fizik Motoru (Ground Truth)
+
+> Rol: Drone/Model Uydunun fiziksel davranışını simüle eden ana motor. Sahte sensör verisi üretir, fizik hesaplarını yapar.
+
+### 1.1 Ana Döngü (Fizik Adımı)
+
+Her fizik adımında çalışan işlemler:
+1. STM32'den gelen 16 baytlık İletim Paketi (MI1, MI2, MI3, MI4 ve durum bayrakları) alınır.
+2. Motor güçleri (0..1000) normalize edilerek devir (RPM) ve itki hesaplanır.
+3. Yerçekimi, aerodinamik sürtünme ve motor itki kuvvetleri vektörel olarak toplanır.
+4. X-Konfigürasyon tork kolu formülleriyle Pitch, Roll ve Yaw torkları hesaplanır.
+5. Kanat açık/kapalı durum bayrağına göre aktif eylemsizlik momenti seçilir.
+6. Doğrusal ve açısal hareket denklemleri (Euler yöntemi) entegre edilerek konum, hız, ivme ve rotasyon güncellenir.
+7. İvmeölçer, jiroskop, manyetometre, barometre ve GPS için sensör verileri (52 baytlık Alım Paketi) üretilir.
+
+### 1.2 Fizik Hesabı Detayları
+
+#### a) Motor İtki Hesabı
+İtki = k_motor × RPM²
+RPM = motorPower × maxRPM
+- k_motor = 1.5e-8 N/RPM² — Pervane itki katsayısı
+- maxRPM = 28428 — Motorun maksimum devri
+- motorPower — 0.0 ile 1.0 arasında normalize gaz değeri (MI / 1000)
+
+#### b) Kuvvet Hesabı — 3 Bileşen
+Yerçekimi:
+F_gravity = m × g × (aşağı yön)
+
+İtki kuvveti:
+F_thrust = orientation × Vector3.Up × totalThrust
+
+Hava sürtünmesi (Drag):
+F_drag = -½ × ρ × Cd × A × |v|² × v̂
+- ρ = 1.225 kg/m³, Cd = 0.8, A = 0.1256 m²
+
+#### c) Doğrusal Hareket Entegrasyonu (Euler Yöntemi)
+ivme = kuvvet / kütle
+hız += ivme × dt
+konum += hız × dt
+
+#### d) Tork Hesabı — "X" Konfigürasyon
+Motor yerleşimi:
+M0 (ÖnSol, CCW)     M1 (ÖnSağ, CW)
+        \                /
+         \              /
+          ┼────────────┼  (merkez)
+         /              \
+        /                \
+M2 (ArkaSol, CW)    M3 (ArkaSağ, CCW)
+
+Etkin moment kolu:
+d_eff = d × cos(45°) = 0.07388 × 0.7071 = 0.05224 m
+
+Pitch torku (X ekseni, ön-arka farkı):
+τ_pitch = d_eff × ((T0 + T1) − (T2 + T3))
+
+Roll torku (Z ekseni, sağ-sol farkı):
+τ_roll = d_eff × ((T1 + T3) − (T0 + T2))
+
+Yaw torku (Y ekseni, pervane reaktif torku):
+τ_yaw = cq × ((RPM1² + RPM2²) − (RPM0² + RPM3²))
+- Cq = 1.0e-9 N⋅m/RPM²
+
+#### e) Açısal Hareket Entegrasyonu
+açısal_ivme = tork / aktif_atalet_momenti
+açısal_hız += açısal_ivme × dt
+açısal_hız *= (1 - sönümleme)
+orientation = deltaRotation × orientation
+
+- Kanat Kapalı Atalet: (0.01016, 0.00342, 0.01016) kg⋅m²
+- Kanat Açık Atalet: (0.01800, 0.00500, 0.01800) kg⋅m²
+- Sönümleme: 0.02
+
+---
+
+## 2. Sensör Simülasyonu ve Paket Yapıları
+
+Ölçüm = Gerçek Değer + Gaussian Gürültü (N(0, σ))
+
+| Sensör | Gerçek Değer | Çıktı Alanı (Alım Paketi - 52 Byte) |
+|--------|-------------|-------------------------------------|
+| İvmeölçer | Δv / Δt + g | acc_x, acc_y, acc_z (short) |
+| Jiroskop | Açısal Hız | gyro_x, gyro_y, gyro_z (short) |
+| Manyetometre | Manyetik Alan Vektörü | mag_x, mag_y, mag_z (short) |
+| Barometre | İrtifa (m) | basinc (uint), sicaklik (short) |
+| GPS | Konum ve Hız | gps_lat, gps_lon, gps_alt (int), gps_vel (short) |
+| Batarya | Voltaj ve Akım | bat_v (ushort), bat_a (int) |
+
+---
+
+## 3. Senkron Haberleşme ve Loglama
+
+1. İletim Paketi (16 Byte): STM32'den alınır, Header (0xAA55) ve XOR Checksum doğrulaması yapılır.
+2. Fizik Motoru İşlemesi: Alınan motor değerleriyle fiziksel durum dt kadar ilerletilir.
+3. Alım Paketi (52 Byte): Yeni sensör verisi paketlenip STM32'ye gönderilir.
+4. Asenkron Loglama: RAM kuyruğu (BlockingCollection) ve arka plan iş parçacığı ile Gelen, Giden ve Birleşik CSV dosyaları kaydedilir.
