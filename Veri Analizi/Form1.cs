@@ -32,19 +32,10 @@ namespace Veri_Analizi
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            ScottPlotDarkModeUygula();
             formsPlot1.Plot.Title("RaSAT Veri Analizi — Lütfen Bir CSV Dosyası Yükleyin");
             formsPlot1.Plot.XLabel("X Ekseni");
             formsPlot1.Plot.YLabel("Değerler");
             formsPlot1.Refresh();
-        }
-
-        private void ScottPlotDarkModeUygula()
-        {
-            formsPlot1.Plot.FigureBackground.Color = ScottPlot.Color.FromHex("#1E1E2E");
-            formsPlot1.Plot.DataBackground.Color = ScottPlot.Color.FromHex("#252538");
-            formsPlot1.Plot.Axes.Color(ScottPlot.Color.FromHex("#E0E0E6"));
-            formsPlot1.Plot.Grid.MajorLineColor = ScottPlot.Color.FromHex("#3E3E5C");
         }
 
         private void btnDosyaSec_Click(object sender, EventArgs e)
@@ -67,7 +58,7 @@ namespace Veri_Analizi
                         dgvVeriler.ResumeLayout();
 
                         lblDosyaBilgi.Text = $"Seçilen Dosya: {Path.GetFileName(ofd.FileName)} ({veriYonetici.VeriTablosu.Rows.Count} satır, {veriYonetici.Basliklar.Count} kolon)";
-                        lblDosyaBilgi.ForeColor = Color.FromArgb(0, 210, 255);
+                        lblDosyaBilgi.ForeColor = Color.DarkGreen;
 
                         programatikDegisim = true;
 
@@ -179,7 +170,6 @@ namespace Veri_Analizi
             if (formsPlot1 == null || formsPlot1.IsDisposed) return;
 
             formsPlot1.Plot.Clear();
-            ScottPlotDarkModeUygula();
 
             int satirSayisi = veriYonetici.VeriTablosu.Rows.Count;
             double[] xVerileri;
