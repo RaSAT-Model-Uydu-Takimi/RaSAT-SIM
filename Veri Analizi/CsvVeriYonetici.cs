@@ -26,8 +26,13 @@ namespace Veri_Analizi
             if (satirlar.Length == 0)
                 throw new InvalidOperationException("CSV dosyası boş!");
 
+            // Ayraç tespit et (Noktalı virgül ';', Tab '\t' veya Virgül ',')
+            char ayrac = ',';
+            if (satirlar[0].Contains(';')) ayrac = ';';
+            else if (satirlar[0].Contains('\t')) ayrac = '\t';
+
             // İlk satır başlıklar
-            string[] rawHeaders = satirlar[0].Split(',');
+            string[] rawHeaders = satirlar[0].Split(ayrac);
             for (int i = 0; i < rawHeaders.Length; i++)
             {
                 string baslik = rawHeaders[i].Trim();
@@ -52,7 +57,7 @@ namespace Veri_Analizi
                 string satir = satirlar[i];
                 if (string.IsNullOrWhiteSpace(satir)) continue;
 
-                string[] hucreler = satir.Split(',');
+                string[] hucreler = satir.Split(ayrac);
                 DataRow row = VeriTablosu.NewRow();
                 for (int j = 0; j < Math.Min(hucreler.Length, Basliklar.Count); j++)
                 {
