@@ -13,6 +13,8 @@ namespace SensorAnalizi
         private PhysicsSimulationResult? currentPhysicsResult = null;
         private int playbackIndex = 0;
         private ScottPlot.Plottables.VerticalLine? cursorAltitudeLine = null;
+        private ScottPlot.Plottables.VerticalLine? cursorVelocityLine = null;
+        private ScottPlot.Plottables.VerticalLine? cursorAccelLine = null;
         private double currentBaroTrustPct = 68.0;
         private double currentImuTrustPct = 32.0;
         private double currentKalmanGain = 0.012;
@@ -41,11 +43,56 @@ namespace SensorAnalizi
                 grp.DoubleClick += (s, e) => { chk.Checked = !chk.Checked; };
             }
 
-            SetupToggle(chkToggleMassAero, grpMassAero, 195);
-            SetupToggle(chkToggleMission, grpMission, 115);
-            SetupToggle(chkTogglePID, grpPID, 115);
-            SetupToggle(chkToggleNoise, grpNoise, 315);
-            SetupToggle(chkToggleBucket, grpBucket, 115);
+            SetupToggle(chkToggleMassAero, grpMassAero, 310);
+            SetupToggle(chkToggleMission, grpMission, 192);
+            SetupToggle(chkTogglePID, grpPID, 192);
+            SetupToggle(chkToggleNoise, grpNoise, 525);
+            SetupToggle(chkToggleBucket, grpBucket, 192);
+        }
+
+        private void BtnResetMassAero_Click(object? sender, EventArgs e)
+        {
+            numMassCarrier.Value = 55.0m;
+            numMassPayload.Value = 125.0m;
+            numAreaCarrier.Value = 12.56m;
+            numAreaPayload.Value = 8.04m;
+            numAreaApam.Value = 50.26m;
+            numAirDensity.Value = 1.10m;
+        }
+
+        private void BtnResetMission_Click(object? sender, EventArgs e)
+        {
+            numHoverDuration.Value = 10.0m;
+            numHoverAltitude.Value = 200m;
+            numSeparationAlt.Value = 1000m;
+        }
+
+        private void BtnResetPID_Click(object? sender, EventArgs e)
+        {
+            numKp.Value = 3.5m;
+            numKi.Value = 0.4m;
+            numKd.Value = 4.2m;
+        }
+
+        private void BtnResetNoise_Click(object? sender, EventArgs e)
+        {
+            numBaroBias.Value = 2.0m;
+            numBaroNoise.Value = 1.5m;
+            numBaroErrPct.Value = 0.05m;
+            numBaroSpikeStd.Value = 15.0m;
+            numBaroSpikeFreq.Value = 0.02m;
+            numImuBias.Value = 0.5m;
+            numImuNoise.Value = 0.8m;
+            numImuSpikeStd.Value = 8.0m;
+            numImuSpikeFreq.Value = 0.01m;
+            numImuVib.Value = 2.5m;
+        }
+
+        private void BtnResetBucket_Click(object? sender, EventArgs e)
+        {
+            numFillRate.Value = 25.0m;
+            numLeakRate.Value = 10.0m;
+            numBucketThresh.Value = 100.0m;
         }
 
         private void BtnRunAllCompare_Click(object? sender, EventArgs e)
@@ -242,6 +289,8 @@ namespace SensorAnalizi
         private void RunPhysicsSimulation()
         {
             plotPhysicsAltitude.Plot.Clear();
+            plotPhysicsVelocity.Plot.Clear();
+            plotPhysicsAccel.Plot.Clear();
 
             var p = new PhysicsParameters
             {
@@ -289,26 +338,72 @@ namespace SensorAnalizi
             double[] imuAlt = res.Trajectory.Select(pt => pt.ImuIntegratedAltitude).ToArray();
             double[] estAlt = res.Trajectory.Select(pt => pt.EstimatedAltitude).ToArray();
 
-            // 1. Üst Grafik: 4'lü Sensör Füzyon Kestirim Başarısı Karşılaştırması
-            var sigTrue = plotPhysicsAltitude.Plot.Add.Scatter(timeArr, trueAlt);
-            sigTrue.LegendText = $"Gerçek İrtifa (Referans)";
-            sigTrue.LineWidth = 3;
-            sigTrue.Color = ScottPlot.Colors.Silver;
+            double[] trueVel = res.Trajectory.Select(pt => pt.TrueVelocity).ToArray();
+            double[] imuVel = res.Trajectory.Select(pt => pt.ImuIntegratedVelocity).ToArray();
+            double[] estVel = res.Trajectory.Select(pt => pt.EstimatedVelocity).ToArray();
+            double[] targetVel = res.Trajectory.Select(pt => pt.TargetVelocityMs).ToArray();
 
-            var sigBaro = plotPhysicsAltitude.Plot.Add.Scatter(timeArr, baroAlt);
-            sigBaro.LegendText = $"🔵 Barometre Ölçümü (Bias + Gürültü + Spike)";
-            sigBaro.LineWidth = 1;
-            sigBaro.Color = ScottPlot.Colors.DeepSkyBlue;
+            double[] trueAcc = res.Trajectory.Select(pt => pt.TrueAccel).ToArray();
+            double[] imuAcc = res.Trajectory.Select(pt => pt.SensorAccel).ToArray();
+            double[] estAcc = res.Trajectory.Select(pt => pt.EstimatedAccel).ToArray();
 
-            var sigImu = plotPhysicsAltitude.Plot.Add.Scatter(timeArr, imuAlt);
-            sigImu.LegendText = $"🟠 İvmeölçer (IMU) Çift İntegral (Drift / Kayma)";
-            sigImu.LineWidth = 2;
-            sigImu.Color = ScottPlot.Colors.Orange;
+            // 1. Grafik: İrtifa (Altitude vs Time)
+            var sigTrueAlt = plotPhysicsAltitude.Plot.Add.Scatter(timeArr, trueAlt);
+            sigTrueAlt.LegendText = "Gerçek İrtifa";
+            sigTrueAlt.LineWidth = 3;
+            sigTrueAlt.Color = ScottPlot.Colors.Silver;
 
-            var sigEst = plotPhysicsAltitude.Plot.Add.Scatter(timeArr, estAlt);
-            sigEst.LegendText = "🟢 Adaptif EKF Kestirim Çekirdeği (Füzyon)";
-            sigEst.LineWidth = 3;
-            sigEst.Color = ScottPlot.Colors.LimeGreen;
+            var sigBaroAlt = plotPhysicsAltitude.Plot.Add.Scatter(timeArr, baroAlt);
+            sigBaroAlt.LegendText = "🔵 Barometre Ölçümü";
+            sigBaroAlt.LineWidth = 1;
+            sigBaroAlt.Color = ScottPlot.Colors.DeepSkyBlue;
+
+            var sigImuAlt = plotPhysicsAltitude.Plot.Add.Scatter(timeArr, imuAlt);
+            sigImuAlt.LegendText = "🟠 İvmeölçer Çift İntegral";
+            sigImuAlt.LineWidth = 2;
+            sigImuAlt.Color = ScottPlot.Colors.Orange;
+
+            var sigEstAlt = plotPhysicsAltitude.Plot.Add.Scatter(timeArr, estAlt);
+            sigEstAlt.LegendText = "🟢 EKF Kestirim İrtifası";
+            sigEstAlt.LineWidth = 3;
+            sigEstAlt.Color = ScottPlot.Colors.LimeGreen;
+
+            // 2. Grafik: Hız (Velocity vs Time)
+            var sigTrueVel = plotPhysicsVelocity.Plot.Add.Scatter(timeArr, trueVel);
+            sigTrueVel.LegendText = "Gerçek Dikey Hız";
+            sigTrueVel.LineWidth = 3;
+            sigTrueVel.Color = ScottPlot.Colors.Silver;
+
+            var sigImuVel = plotPhysicsVelocity.Plot.Add.Scatter(timeArr, imuVel);
+            sigImuVel.LegendText = "🟠 İvmeölçer İntegral Hız";
+            sigImuVel.LineWidth = 2;
+            sigImuVel.Color = ScottPlot.Colors.Orange;
+
+            var sigEstVel = plotPhysicsVelocity.Plot.Add.Scatter(timeArr, estVel);
+            sigEstVel.LegendText = "🟢 EKF Kestirim Hız";
+            sigEstVel.LineWidth = 3;
+            sigEstVel.Color = ScottPlot.Colors.LimeGreen;
+
+            var sigTargetVel = plotPhysicsVelocity.Plot.Add.Scatter(timeArr, targetVel);
+            sigTargetVel.LegendText = "🎯 Hedef Limit Hız";
+            sigTargetVel.LineWidth = 1;
+            sigTargetVel.Color = ScottPlot.Colors.Gold;
+
+            // 3. Grafik: İvme (Acceleration vs Time)
+            var sigTrueAcc = plotPhysicsAccel.Plot.Add.Scatter(timeArr, trueAcc);
+            sigTrueAcc.LegendText = "Gerçek Dikey İvme";
+            sigTrueAcc.LineWidth = 3;
+            sigTrueAcc.Color = ScottPlot.Colors.Silver;
+
+            var sigImuAcc = plotPhysicsAccel.Plot.Add.Scatter(timeArr, imuAcc);
+            sigImuAcc.LegendText = "🟠 İvmeölçer Ölçümü (IMU Ham)";
+            sigImuAcc.LineWidth = 1;
+            sigImuAcc.Color = ScottPlot.Colors.Orange;
+
+            var sigEstAcc = plotPhysicsAccel.Plot.Add.Scatter(timeArr, estAcc);
+            sigEstAcc.LegendText = "🟢 EKF Kestirim İvme";
+            sigEstAcc.LineWidth = 3;
+            sigEstAcc.Color = ScottPlot.Colors.LimeGreen;
 
             // Hal geçiş dikey işaretleyicileri
             FlightState lastState = FlightState.S1_ASCENT;
@@ -316,17 +411,36 @@ namespace SensorAnalizi
             {
                 if (pt.State != lastState)
                 {
-                    var vLine = plotPhysicsAltitude.Plot.Add.VerticalLine(pt.Time);
-                    vLine.Text = pt.StateName;
-                    vLine.LineWidth = 2;
+                    var vAlt = plotPhysicsAltitude.Plot.Add.VerticalLine(pt.Time);
+                    vAlt.Text = pt.StateName;
+                    vAlt.LineWidth = 2;
+
+                    var vVel = plotPhysicsVelocity.Plot.Add.VerticalLine(pt.Time);
+                    vVel.Text = pt.StateName;
+                    vVel.LineWidth = 2;
+
+                    var vAcc = plotPhysicsAccel.Plot.Add.VerticalLine(pt.Time);
+                    vAcc.Text = pt.StateName;
+                    vAcc.LineWidth = 2;
+
                     lastState = pt.State;
                 }
             }
 
-            plotPhysicsAltitude.Plot.Title($"🚀 Dikey Fizik Motoru: Taşıyıcı ({p.MassCarrier:0.00}kg) + Görev Yükü ({p.MassPayload:0.00}kg) Uçuş Trajektörisi");
-            plotPhysicsAltitude.Plot.XLabel("Uçuş Zamanı (saniye)");
-            plotPhysicsAltitude.Plot.YLabel("İrtifa (metre)");
+            plotPhysicsAltitude.Plot.Title("📐 İrtifa Analizi (Gerçek vs Baro vs IMU vs EKF)");
+            plotPhysicsAltitude.Plot.XLabel("Uçuş Zamanı (s)");
+            plotPhysicsAltitude.Plot.YLabel("İrtifa (m)");
             plotPhysicsAltitude.Plot.ShowLegend();
+
+            plotPhysicsVelocity.Plot.Title("⚡ Hız Analizi (Gerçek vs IMU İntegral vs EKF)");
+            plotPhysicsVelocity.Plot.XLabel("Uçuş Zamanı (s)");
+            plotPhysicsVelocity.Plot.YLabel("Dikey Hız (m/s)");
+            plotPhysicsVelocity.Plot.ShowLegend();
+
+            plotPhysicsAccel.Plot.Title("🌊 İvme Analizi (Gerçek vs IMU Ölçümü vs EKF)");
+            plotPhysicsAccel.Plot.XLabel("Uçuş Zamanı (s)");
+            plotPhysicsAccel.Plot.YLabel("İvme (m/s²)");
+            plotPhysicsAccel.Plot.ShowLegend();
 
             // Oynatıcı ve İmleç Çizgileri
             trackTimeline.Minimum = 0;
@@ -336,6 +450,14 @@ namespace SensorAnalizi
 
             cursorAltitudeLine = plotPhysicsAltitude.Plot.Add.VerticalLine(0);
             cursorAltitudeLine.LineWidth = 2;
+            cursorVelocityLine = plotPhysicsVelocity.Plot.Add.VerticalLine(0);
+            cursorVelocityLine.LineWidth = 2;
+            cursorAccelLine = plotPhysicsAccel.Plot.Add.VerticalLine(0);
+            cursorAccelLine.LineWidth = 2;
+
+            plotPhysicsAltitude.Refresh();
+            plotPhysicsVelocity.Refresh();
+            plotPhysicsAccel.Refresh();
 
             UpdatePlaybackDashboard(0);
         }
@@ -422,6 +544,8 @@ namespace SensorAnalizi
 
             // İmleç çizgilerini kaydır
             if (cursorAltitudeLine != null) cursorAltitudeLine.X = pt.Time;
+            if (cursorVelocityLine != null) cursorVelocityLine.X = pt.Time;
+            if (cursorAccelLine != null) cursorAccelLine.X = pt.Time;
 
             // Progress Bar & Kova Durumunu Güncelle
             double thresh = (double)numBucketThresh.Value;
@@ -458,21 +582,44 @@ namespace SensorAnalizi
                 lblBucketCoreStatus.ForeColor = statusColor;
             }
 
-            // Sızdıran Kova Etkileyen Faktörleri Yazdır
+            // Sızdıran Kova Etkileyen Faktörleri ve Geçiş Hedeflerini Yazdır
             if (lblBucketCoreFactors != null)
             {
+                string transInfo = "";
+                string factorInfo = "";
+
                 if (pt.State == FlightState.S1_ASCENT)
-                    lblBucketCoreFactors.Text = $"Etkileyen Faktör: Tepe Noktası Beklentisi (Hız ≤ 0) | Dolum Hızı: +{numFillRate.Value}/s | Sızıntı Hızı: -{numLeakRate.Value}/s";
+                {
+                    transInfo = "Mevcut: S1 Yükselme ➔ Geçiş Hedefi: S2 Pasif İniş (Tepe Noktası Tespiti)";
+                    factorInfo = $"[+] Dikey Hız ≤ 0 (Tepe Ayrılması) (Dolum: +{numFillRate.Value}/s)\r\n[-] Sensör Gürültüsü / Anlık Sapma (Sızıntı: -{numLeakRate.Value}/s)";
+                }
                 else if (pt.State == FlightState.S2_PASSIVE_DESCENT)
-                    lblBucketCoreFactors.Text = $"Etkileyen Faktör: Ayrılma İrtifa Eşiği (≤ {numSeparationAlt.Value}m) | Dolum Hızı: +{numFillRate.Value}/s | Sızıntı: -{numLeakRate.Value}/s";
+                {
+                    transInfo = $"Mevcut: S2 Pasif İniş ➔ Geçiş Hedefi: S3 Ayrılma (Hedef İrtifa ≤ {numSeparationAlt.Value}m)";
+                    factorInfo = $"[+] Barometre & IMU İrtifası Eşik Altına İndi (Dolum: +{numFillRate.Value}/s)\r\n[-] Geçici Basınç Dalgalanmaları / Gürültü (Sızıntı: -{numLeakRate.Value}/s)";
+                }
                 else if (pt.State == FlightState.S3_SEPARATION)
-                    lblBucketCoreFactors.Text = $"Etkileyen Faktör: Ayrılma Şoku ve Görev Yükü Serbest Bırakma | Dolum Hızı: +{(double)numFillRate.Value * 2.0:0.0}/s (2x Hızlı Karar)";
+                {
+                    transInfo = "Mevcut: S3 Ayrılma ➔ Geçiş Hedefi: S4 Aktif İniş & Hover (Paraşüt Açılma)";
+                    factorInfo = $"[+] Görev Yükü Serbest Bırakıldı & Paraşüt Açıldı (Dolum: +{(double)numFillRate.Value * 2.0:0.0}/s 2x Hızlı)\r\n[-] Şok Titreşim Sönümlemesi (Sızıntı: -{numLeakRate.Value}/s)";
+                }
                 else if (pt.State == FlightState.S4_ACTIVE_DESCENT)
-                    lblBucketCoreFactors.Text = $"Etkileyen Faktör: Kova Mühürlendi | APAM Aşırı Hız Koruma Eşiği (> 20.0 m/s)";
+                {
+                    transInfo = "Mevcut: S4 Aktif İniş / Hover ➔ Geçiş Hedefi: S5 İniş Tamamlandı";
+                    factorInfo = $"[+] Kova Mühürlendi (Karar Kesin) | PID İtki Kontrolü Aktif\r\n[🚨 APAM Koruma] Limit Aşımı (> 20.0 m/s) Durumunda Acil APAM Devreye Girer";
+                }
                 else if (pt.State == FlightState.APAM_EMERGENCY)
-                    lblBucketCoreFactors.Text = $"Etkileyen Faktör: 🚨 ACİL DURUM APAM TETİKLENDİ | İrtifa > 100m ve Aşırı İniş Hızı";
+                {
+                    transInfo = "🚨 ACİL DURUM: APAM TETİKLENDİ ➔ Güvenli Acil İniş Modu";
+                    factorInfo = "Tetikleyen Faktörler: İrtifa > 100m ve Aşırı İniş Hızı Tespiti\r\nAcil Paraşüt (0.50 m²) Açıldı | Tüm Sistemler Koruma Altında";
+                }
                 else
-                    lblBucketCoreFactors.Text = $"Etkileyen Faktör: İniş Tamamlandı / Stabil";
+                {
+                    transInfo = "Mevcut: S5 İniş Tamamlandı ➔ Görev Başarıyla Sonlandı";
+                    factorInfo = "Etkileyen Faktörler: Yer Yüzeyine İndi | Hız = 0 m/s | Sistem Stabil";
+                }
+
+                lblBucketCoreFactors.Text = $"{transInfo}\r\n{factorInfo}";
             }
 
             // Adaptif EKF: Anlık İrtifa, Hız, Şok ve Kovaryans Dinamiklerine Göre Gerçek Zamanlı 100% Güven Dağılımı
@@ -514,6 +661,8 @@ namespace SensorAnalizi
             if (picEkfStackedBar != null) picEkfStackedBar.Invalidate();
 
             plotPhysicsAltitude.Refresh();
+            plotPhysicsVelocity.Refresh();
+            plotPhysicsAccel.Refresh();
         }
 
         private void PicEkfStackedBar_Paint(object? sender, PaintEventArgs e)
@@ -554,6 +703,44 @@ namespace SensorAnalizi
                 plotAltitude.Plot.SavePng(sfd.FileName.Replace(".png", "_Irtifa.png"), 1200, 800);
                 plotVelocity.Plot.SavePng(sfd.FileName.Replace(".png", "_Hiz.png"), 1200, 800);
                 MessageBox.Show("Grafikler başarıyla kaydedildi!", "Başarılı", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
+        private void BtnManualSeparate_Click(object? sender, EventArgs e)
+        {
+            if (progBucketCore != null) progBucketCore.Value = 100;
+            if (lblBucketCoreStatus != null)
+            {
+                lblBucketCoreStatus.Text = "🛸 YER İSTASYONU KOMUTU: Manuel Ayrılma (S3) Komutu İletildi! Karar Kesinleştirildi!";
+                lblBucketCoreStatus.ForeColor = System.Drawing.Color.Gold;
+            }
+        }
+
+        private void BtnManualParachute_Click(object? sender, EventArgs e)
+        {
+            if (progBucketCore != null) progBucketCore.Value = 100;
+            if (lblBucketCoreStatus != null)
+            {
+                lblBucketCoreStatus.Text = "🪂 YER İSTASYONU KOMUTU: ACİL PARAŞÜT AÇILDI! (APAM Koruma Aktif)";
+                lblBucketCoreStatus.ForeColor = System.Drawing.Color.OrangeRed;
+            }
+        }
+
+        private void BtnManualHover_Click(object? sender, EventArgs e)
+        {
+            if (lblBucketCoreStatus != null)
+            {
+                lblBucketCoreStatus.Text = "🚁 YER İSTASYONU KOMUTU: S4b Asılı Kalma (Hover) Modu Devreye Alındı!";
+                lblBucketCoreStatus.ForeColor = System.Drawing.Color.DeepSkyBlue;
+            }
+        }
+
+        private void BtnManualLanding_Click(object? sender, EventArgs e)
+        {
+            if (lblBucketCoreStatus != null)
+            {
+                lblBucketCoreStatus.Text = "🛬 YER İSTASYONU KOMUTU: İniş Onayı Verildi. Görev Güvenle Tamamlanıyor!";
+                lblBucketCoreStatus.ForeColor = System.Drawing.Color.LimeGreen;
             }
         }
     }

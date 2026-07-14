@@ -36,6 +36,7 @@ namespace SensorAnalizi
             numAreaApam = new NumericUpDown();
             lblAirDensity = new Label();
             numAirDensity = new NumericUpDown();
+            btnResetMassAero = new Button();
             grpMission = new GroupBox();
             chkToggleMission = new CheckBox();
             lblHoverDuration = new Label();
@@ -44,6 +45,7 @@ namespace SensorAnalizi
             numHoverAltitude = new NumericUpDown();
             lblSeparationAlt = new Label();
             numSeparationAlt = new NumericUpDown();
+            btnResetMission = new Button();
             grpPID = new GroupBox();
             chkTogglePID = new CheckBox();
             lblKp = new Label();
@@ -52,6 +54,7 @@ namespace SensorAnalizi
             numKi = new NumericUpDown();
             lblKd = new Label();
             numKd = new NumericUpDown();
+            btnResetPID = new Button();
             grpNoise = new GroupBox();
             chkToggleNoise = new CheckBox();
             lblBaroBias = new Label();
@@ -74,6 +77,7 @@ namespace SensorAnalizi
             numImuSpikeFreq = new NumericUpDown();
             lblImuVib = new Label();
             numImuVib = new NumericUpDown();
+            btnResetNoise = new Button();
             grpBucket = new GroupBox();
             chkToggleBucket = new CheckBox();
             lblFillRate = new Label();
@@ -82,6 +86,7 @@ namespace SensorAnalizi
             numLeakRate = new NumericUpDown();
             lblBucketThresh = new Label();
             numBucketThresh = new NumericUpDown();
+            btnResetBucket = new Button();
             btnRunPhysics = new Button();
             panelPlayer = new Panel();
             btnPlayPause = new Button();
@@ -96,10 +101,30 @@ namespace SensorAnalizi
             lblDashKinematics = new Label();
             lblDashActuators = new Label();
             plotPhysicsAltitude = new ScottPlot.WinForms.FormsPlot();
+            panelPhysicsPlotsTable = new TableLayoutPanel();
+            plotPhysicsVelocity = new ScottPlot.WinForms.FormsPlot();
+            plotPhysicsAccel = new ScottPlot.WinForms.FormsPlot();
             panelDualCoreDashboard = new TableLayoutPanel();
             grpEkfKernelCore = new GroupBox();
             picEkfStackedBar = new PictureBox();
             lblEkfTrustDetails = new Label();
+            grpLeakyBucketCore = new GroupBox();
+
+            btnManualSeparate = new Button();
+
+            btnManualParachute = new Button();
+
+            btnManualHover = new Button();
+
+            btnManualLanding = new Button();
+            progBucketCore = new ProgressBar();
+            lblBucketCoreStatus = new Label();
+            lblBucketCoreFactors = new Label();
+            panelBucketCommands = new FlowLayoutPanel();
+            btnCmdSeparate = new Button();
+            btnCmdDeployParachute = new Button();
+            btnCmdHover = new Button();
+            btnCmdResetBucket = new Button();
             tabPageCompare = new TabPage();
             mainLayout = new TableLayoutPanel();
             topControlPanel = new Panel();
@@ -121,10 +146,6 @@ namespace SensorAnalizi
             colEvaluation = new DataGridViewTextBoxColumn();
             btnPanel = new Panel();
             btnExportPng = new Button();
-            grpLeakyBucketCore = new GroupBox();
-            progBucketCore = new ProgressBar();
-            lblBucketCoreStatus = new Label();
-            lblBucketCoreFactors = new Label();
             timerPlayback = new System.Windows.Forms.Timer(components);
             tabMain.SuspendLayout();
             tabPagePhysics.SuspendLayout();
@@ -163,9 +184,12 @@ namespace SensorAnalizi
             panelPlayer.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)trackTimeline).BeginInit();
             panelLiveDashboard.SuspendLayout();
+            panelPhysicsPlotsTable.SuspendLayout();
             panelDualCoreDashboard.SuspendLayout();
             grpEkfKernelCore.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)picEkfStackedBar).BeginInit();
+            grpLeakyBucketCore.SuspendLayout();
+            panelBucketCommands.SuspendLayout();
             tabPageCompare.SuspendLayout();
             mainLayout.SuspendLayout();
             topControlPanel.SuspendLayout();
@@ -174,7 +198,6 @@ namespace SensorAnalizi
             bottomPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dgvMetrics).BeginInit();
             btnPanel.SuspendLayout();
-            grpLeakyBucketCore.SuspendLayout();
             SuspendLayout();
             // 
             // tabMain
@@ -209,8 +232,8 @@ namespace SensorAnalizi
             physicsLayout.Controls.Add(panelPhysicsParams, 0, 0);
             physicsLayout.Controls.Add(panelPlayer, 1, 0);
             physicsLayout.Controls.Add(panelLiveDashboard, 1, 1);
-            physicsLayout.Controls.Add(plotPhysicsAltitude, 1, 2);
-            physicsLayout.Controls.Add(panelDualCoreDashboard, 1, 3);
+            physicsLayout.Controls.Add(panelDualCoreDashboard, 1, 2);
+            physicsLayout.Controls.Add(panelPhysicsPlotsTable, 1, 3);
             physicsLayout.Dock = DockStyle.Fill;
             physicsLayout.Location = new Point(4, 5);
             physicsLayout.Margin = new Padding(4, 5, 4, 5);
@@ -218,8 +241,8 @@ namespace SensorAnalizi
             physicsLayout.RowCount = 4;
             physicsLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 83F));
             physicsLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 183F));
+            physicsLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 260F));
             physicsLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            physicsLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 247F));
             physicsLayout.Size = new Size(1955, 1362);
             physicsLayout.TabIndex = 0;
             // 
@@ -246,6 +269,7 @@ namespace SensorAnalizi
             // 
             // grpMassAero
             // 
+            grpMassAero.Controls.Add(btnResetMassAero);
             grpMassAero.Controls.Add(chkToggleMassAero);
             grpMassAero.Controls.Add(lblMassCarrier);
             grpMassAero.Controls.Add(numMassCarrier);
@@ -267,6 +291,19 @@ namespace SensorAnalizi
             grpMassAero.TabIndex = 0;
             grpMassAero.TabStop = false;
             grpMassAero.Text = "Kütle (kg) & Paraşüt Yüzey Alanları (m²)";
+            // 
+            // btnResetMassAero
+            // 
+            btnResetMassAero.Location = new Point(222, 0);
+            btnResetMassAero.Name = "btnResetMassAero";
+            btnResetMassAero.Size = new Size(82, 33);
+            btnResetMassAero.TabIndex = 15;
+            btnResetMassAero.Text = "↺ Sıfırla";
+            btnResetMassAero.FlatStyle = FlatStyle.Flat;
+            btnResetMassAero.BackColor = Color.FromArgb(60, 60, 60);
+            btnResetMassAero.ForeColor = Color.Gold;
+            btnResetMassAero.Font = new Font("Segoe UI", 8F, FontStyle.Bold);
+            btnResetMassAero.Click += BtnResetMassAero_Click;
             // 
             // chkToggleMassAero
             // 
@@ -302,6 +339,7 @@ namespace SensorAnalizi
             lblMassPayload.Location = new Point(17, 87);
             lblMassPayload.Margin = new Padding(4, 0, 4, 0);
             lblMassPayload.Name = "lblMassPayload";
+
             lblMassPayload.Size = new Size(143, 38);
             lblMassPayload.TabIndex = 3;
             lblMassPayload.Text = "Görev Yükü Kütle (kg):";
@@ -399,6 +437,7 @@ namespace SensorAnalizi
             // 
             // grpMission
             // 
+            grpMission.Controls.Add(btnResetMission);
             grpMission.Controls.Add(chkToggleMission);
             grpMission.Controls.Add(lblHoverDuration);
             grpMission.Controls.Add(numHoverDuration);
@@ -414,6 +453,19 @@ namespace SensorAnalizi
             grpMission.TabIndex = 1;
             grpMission.TabStop = false;
             grpMission.Text = "Görev Süreleri & Hedef İrtifalar";
+            // 
+            // btnResetMission
+            // 
+            btnResetMission.Location = new Point(222, 0);
+            btnResetMission.Name = "btnResetMission";
+            btnResetMission.Size = new Size(82, 33);
+            btnResetMission.TabIndex = 15;
+            btnResetMission.Text = "↺ Sıfırla";
+            btnResetMission.FlatStyle = FlatStyle.Flat;
+            btnResetMission.BackColor = Color.FromArgb(60, 60, 60);
+            btnResetMission.ForeColor = Color.Gold;
+            btnResetMission.Font = new Font("Segoe UI", 8F, FontStyle.Bold);
+            btnResetMission.Click += BtnResetMission_Click;
             // 
             // chkToggleMission
             // 
@@ -485,6 +537,7 @@ namespace SensorAnalizi
             // 
             // grpPID
             // 
+            grpPID.Controls.Add(btnResetPID);
             grpPID.Controls.Add(chkTogglePID);
             grpPID.Controls.Add(lblKp);
             grpPID.Controls.Add(numKp);
@@ -500,6 +553,19 @@ namespace SensorAnalizi
             grpPID.TabIndex = 2;
             grpPID.TabStop = false;
             grpPID.Text = "Dikey PID Kontrol Katsayıları";
+            // 
+            // btnResetPID
+            // 
+            btnResetPID.Location = new Point(222, 0);
+            btnResetPID.Name = "btnResetPID";
+            btnResetPID.Size = new Size(82, 33);
+            btnResetPID.TabIndex = 15;
+            btnResetPID.Text = "↺ Sıfırla";
+            btnResetPID.FlatStyle = FlatStyle.Flat;
+            btnResetPID.BackColor = Color.FromArgb(60, 60, 60);
+            btnResetPID.ForeColor = Color.Gold;
+            btnResetPID.Font = new Font("Segoe UI", 8F, FontStyle.Bold);
+            btnResetPID.Click += BtnResetPID_Click;
             // 
             // chkTogglePID
             // 
@@ -526,6 +592,7 @@ namespace SensorAnalizi
             numKp.Location = new Point(243, 43);
             numKp.Margin = new Padding(4, 5, 4, 5);
             numKp.Name = "numKp";
+
             numKp.Size = new Size(171, 33);
             numKp.TabIndex = 2;
             numKp.Value = new decimal(new int[] { 35, 0, 0, 65536 });
@@ -572,6 +639,8 @@ namespace SensorAnalizi
             // 
             // grpNoise
             // 
+            grpNoise.Controls.Add(btnResetNoise);
+
             grpNoise.Controls.Add(chkToggleNoise);
             grpNoise.Controls.Add(lblBaroBias);
             grpNoise.Controls.Add(numBaroBias);
@@ -601,6 +670,19 @@ namespace SensorAnalizi
             grpNoise.TabIndex = 3;
             grpNoise.TabStop = false;
             grpNoise.Text = "Sensör Gürültü ve Hata Parametreleri";
+            // 
+            // btnResetNoise
+            // 
+            btnResetNoise.Location = new Point(222, 0);
+            btnResetNoise.Name = "btnResetNoise";
+            btnResetNoise.Size = new Size(82, 33);
+            btnResetNoise.TabIndex = 15;
+            btnResetNoise.Text = "↺ Sıfırla";
+            btnResetNoise.FlatStyle = FlatStyle.Flat;
+            btnResetNoise.BackColor = Color.FromArgb(60, 60, 60);
+            btnResetNoise.ForeColor = Color.Gold;
+            btnResetNoise.Font = new Font("Segoe UI", 8F, FontStyle.Bold);
+            btnResetNoise.Click += BtnResetNoise_Click;
             // 
             // chkToggleNoise
             // 
@@ -810,6 +892,8 @@ namespace SensorAnalizi
             // 
             // grpBucket
             // 
+            grpBucket.Controls.Add(btnResetBucket);
+
             grpBucket.Controls.Add(chkToggleBucket);
             grpBucket.Controls.Add(lblFillRate);
             grpBucket.Controls.Add(numFillRate);
@@ -825,6 +909,19 @@ namespace SensorAnalizi
             grpBucket.TabIndex = 4;
             grpBucket.TabStop = false;
             grpBucket.Text = "Sızdıran Kova (Leaky Bucket) Ayarları";
+            // 
+            // btnResetBucket
+            // 
+            btnResetBucket.Location = new Point(222, 0);
+            btnResetBucket.Name = "btnResetBucket";
+            btnResetBucket.Size = new Size(82, 33);
+            btnResetBucket.TabIndex = 15;
+            btnResetBucket.Text = "↺ Sıfırla";
+            btnResetBucket.FlatStyle = FlatStyle.Flat;
+            btnResetBucket.BackColor = Color.FromArgb(60, 60, 60);
+            btnResetBucket.ForeColor = Color.Gold;
+            btnResetBucket.Font = new Font("Segoe UI", 8F, FontStyle.Bold);
+            btnResetBucket.Click += BtnResetBucket_Click;
             // 
             // chkToggleBucket
             // 
@@ -1059,15 +1156,54 @@ namespace SensorAnalizi
             lblDashActuators.TabIndex = 4;
             lblDashActuators.Text = "KONTROL: Motor RPM = 0 | İtki = 0.0 N | Kova Havuz (ACC) = 0.00";
             // 
+            // panelPhysicsPlotsTable
+            // 
+            panelPhysicsPlotsTable.ColumnCount = 2;
+            panelPhysicsPlotsTable.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            panelPhysicsPlotsTable.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            panelPhysicsPlotsTable.Controls.Add(plotPhysicsAltitude, 0, 0);
+            panelPhysicsPlotsTable.Controls.Add(plotPhysicsVelocity, 0, 1);
+            panelPhysicsPlotsTable.Controls.Add(plotPhysicsAccel, 1, 1);
+            panelPhysicsPlotsTable.Dock = DockStyle.Fill;
+            panelPhysicsPlotsTable.Location = new Point(477, 533);
+            panelPhysicsPlotsTable.Margin = new Padding(6, 7, 6, 7);
+            panelPhysicsPlotsTable.Name = "panelPhysicsPlotsTable";
+            panelPhysicsPlotsTable.RowCount = 2;
+            panelPhysicsPlotsTable.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
+            panelPhysicsPlotsTable.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
+            panelPhysicsPlotsTable.Size = new Size(1472, 819);
+            panelPhysicsPlotsTable.TabIndex = 1;
+            panelPhysicsPlotsTable.SetColumnSpan(plotPhysicsAltitude, 2);
+            // 
             // plotPhysicsAltitude
             // 
             plotPhysicsAltitude.DisplayScale = 1.5F;
             plotPhysicsAltitude.Dock = DockStyle.Fill;
-            plotPhysicsAltitude.Location = new Point(477, 273);
-            plotPhysicsAltitude.Margin = new Padding(6, 7, 6, 7);
+            plotPhysicsAltitude.Location = new Point(0, 0);
+            plotPhysicsAltitude.Margin = new Padding(4, 5, 4, 5);
             plotPhysicsAltitude.Name = "plotPhysicsAltitude";
-            plotPhysicsAltitude.Size = new Size(1472, 835);
-            plotPhysicsAltitude.TabIndex = 1;
+            plotPhysicsAltitude.Size = new Size(490, 835);
+            plotPhysicsAltitude.TabIndex = 0;
+            // 
+            // plotPhysicsVelocity
+            // 
+            plotPhysicsVelocity.DisplayScale = 1.5F;
+            plotPhysicsVelocity.Dock = DockStyle.Fill;
+            plotPhysicsVelocity.Location = new Point(490, 0);
+            plotPhysicsVelocity.Margin = new Padding(4, 5, 4, 5);
+            plotPhysicsVelocity.Name = "plotPhysicsVelocity";
+            plotPhysicsVelocity.Size = new Size(490, 835);
+            plotPhysicsVelocity.TabIndex = 1;
+            // 
+            // plotPhysicsAccel
+            // 
+            plotPhysicsAccel.DisplayScale = 1.5F;
+            plotPhysicsAccel.Dock = DockStyle.Fill;
+            plotPhysicsAccel.Location = new Point(980, 0);
+            plotPhysicsAccel.Margin = new Padding(4, 5, 4, 5);
+            plotPhysicsAccel.Name = "plotPhysicsAccel";
+            plotPhysicsAccel.Size = new Size(492, 835);
+            plotPhysicsAccel.TabIndex = 2;
             // 
             // panelDualCoreDashboard
             // 
@@ -1077,12 +1213,12 @@ namespace SensorAnalizi
             panelDualCoreDashboard.Controls.Add(grpEkfKernelCore, 0, 0);
             panelDualCoreDashboard.Controls.Add(grpLeakyBucketCore, 1, 0);
             panelDualCoreDashboard.Dock = DockStyle.Fill;
-            panelDualCoreDashboard.Location = new Point(477, 1122);
+            panelDualCoreDashboard.Location = new Point(477, 273);
             panelDualCoreDashboard.Margin = new Padding(6, 7, 6, 7);
             panelDualCoreDashboard.Name = "panelDualCoreDashboard";
             panelDualCoreDashboard.RowCount = 1;
             panelDualCoreDashboard.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            panelDualCoreDashboard.Size = new Size(1472, 233);
+            panelDualCoreDashboard.Size = new Size(1472, 255);
             panelDualCoreDashboard.TabIndex = 2;
             // 
             // grpEkfKernelCore
@@ -1349,6 +1485,10 @@ namespace SensorAnalizi
             grpLeakyBucketCore.Controls.Add(progBucketCore);
             grpLeakyBucketCore.Controls.Add(lblBucketCoreStatus);
             grpLeakyBucketCore.Controls.Add(lblBucketCoreFactors);
+            grpLeakyBucketCore.Controls.Add(btnManualSeparate);
+            grpLeakyBucketCore.Controls.Add(btnManualParachute);
+            grpLeakyBucketCore.Controls.Add(btnManualHover);
+            grpLeakyBucketCore.Controls.Add(btnManualLanding);
             grpLeakyBucketCore.Dock = DockStyle.Fill;
             grpLeakyBucketCore.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
             grpLeakyBucketCore.ForeColor = Color.White;
@@ -1356,7 +1496,7 @@ namespace SensorAnalizi
             grpLeakyBucketCore.Margin = new Padding(4, 5, 4, 5);
             grpLeakyBucketCore.Name = "grpLeakyBucketCore";
             grpLeakyBucketCore.Padding = new Padding(4, 5, 4, 5);
-            grpLeakyBucketCore.Size = new Size(654, 220);
+            grpLeakyBucketCore.Size = new Size(654, 245);
             grpLeakyBucketCore.TabIndex = 2;
             grpLeakyBucketCore.TabStop = false;
             grpLeakyBucketCore.Text = "🔒 SIZDIRAN KOVA KARAR VE TETİKLEME ÇEKİRDEĞİ";
@@ -1382,14 +1522,70 @@ namespace SensorAnalizi
             // 
             // lblBucketCoreFactors
             // 
-            lblBucketCoreFactors.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom;
+            lblBucketCoreFactors.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             lblBucketCoreFactors.Font = new Font("Segoe UI", 9.2F);
             lblBucketCoreFactors.ForeColor = Color.LemonChiffon;
             lblBucketCoreFactors.Location = new Point(16, 104);
             lblBucketCoreFactors.Name = "lblBucketCoreFactors";
-            lblBucketCoreFactors.Size = new Size(622, 104);
+            lblBucketCoreFactors.Size = new Size(622, 90);
             lblBucketCoreFactors.TabIndex = 2;
             lblBucketCoreFactors.Text = "Etkileyen Faktörler: İrtifa eşiği ve sızıntı hızı bekleniyor...";
+            // 
+            // btnManualSeparate
+            // 
+            btnManualSeparate.BackColor = Color.FromArgb(180, 50, 50);
+            btnManualSeparate.FlatStyle = FlatStyle.Flat;
+            btnManualSeparate.Font = new Font("Segoe UI", 8.5F, FontStyle.Bold);
+            btnManualSeparate.ForeColor = Color.White;
+            btnManualSeparate.Location = new Point(16, 198);
+            btnManualSeparate.Name = "btnManualSeparate";
+            btnManualSeparate.Size = new Size(146, 34);
+            btnManualSeparate.TabIndex = 3;
+            btnManualSeparate.Text = "🛸 Ayrıl (S3)";
+            btnManualSeparate.UseVisualStyleBackColor = false;
+            btnManualSeparate.Click += BtnManualSeparate_Click;
+            // 
+            // btnManualParachute
+            // 
+            btnManualParachute.BackColor = Color.FromArgb(190, 110, 0);
+            btnManualParachute.FlatStyle = FlatStyle.Flat;
+            btnManualParachute.Font = new Font("Segoe UI", 8.5F, FontStyle.Bold);
+            btnManualParachute.ForeColor = Color.White;
+            btnManualParachute.Location = new Point(170, 198);
+            btnManualParachute.Name = "btnManualParachute";
+            btnManualParachute.Size = new Size(150, 34);
+            btnManualParachute.TabIndex = 4;
+            btnManualParachute.Text = "🪂 Paraşüt Aç";
+            btnManualParachute.UseVisualStyleBackColor = false;
+            btnManualParachute.Click += BtnManualParachute_Click;
+            // 
+            // btnManualHover
+            // 
+            btnManualHover.BackColor = Color.FromArgb(0, 120, 212);
+            btnManualHover.FlatStyle = FlatStyle.Flat;
+            btnManualHover.Font = new Font("Segoe UI", 8.5F, FontStyle.Bold);
+            btnManualHover.ForeColor = Color.White;
+            btnManualHover.Location = new Point(328, 198);
+            btnManualHover.Name = "btnManualHover";
+            btnManualHover.Size = new Size(150, 34);
+            btnManualHover.TabIndex = 5;
+            btnManualHover.Text = "🚁 Hover Modu";
+            btnManualHover.UseVisualStyleBackColor = false;
+            btnManualHover.Click += BtnManualHover_Click;
+            // 
+            // btnManualLanding
+            // 
+            btnManualLanding.BackColor = Color.FromArgb(16, 124, 65);
+            btnManualLanding.FlatStyle = FlatStyle.Flat;
+            btnManualLanding.Font = new Font("Segoe UI", 8.5F, FontStyle.Bold);
+            btnManualLanding.ForeColor = Color.White;
+            btnManualLanding.Location = new Point(486, 198);
+            btnManualLanding.Name = "btnManualLanding";
+            btnManualLanding.Size = new Size(150, 34);
+            btnManualLanding.TabIndex = 6;
+            btnManualLanding.Text = "🛬 İniş Onayı";
+            btnManualLanding.UseVisualStyleBackColor = false;
+            btnManualLanding.Click += BtnManualLanding_Click;
             timerPlayback.Interval = 50;
             timerPlayback.Tick += TimerPlayback_Tick;
             // 
@@ -1442,6 +1638,8 @@ namespace SensorAnalizi
             panelPlayer.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)trackTimeline).EndInit();
             panelLiveDashboard.ResumeLayout(false);
+            panelPhysicsPlotsTable.ResumeLayout(false);
+
             panelDualCoreDashboard.ResumeLayout(false);
             grpEkfKernelCore.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)picEkfStackedBar).EndInit();
@@ -1577,6 +1775,14 @@ namespace SensorAnalizi
         private ScottPlot.WinForms.FormsPlot plotPhysicsAltitude;
         private System.Windows.Forms.TableLayoutPanel panelDualCoreDashboard;
         private System.Windows.Forms.GroupBox grpLeakyBucketCore;
+
+        private System.Windows.Forms.Button btnManualSeparate;
+
+        private System.Windows.Forms.Button btnManualParachute;
+
+        private System.Windows.Forms.Button btnManualHover;
+
+        private System.Windows.Forms.Button btnManualLanding;
         private System.Windows.Forms.ProgressBar progBucketCore;
         private System.Windows.Forms.Label lblBucketCoreStatus;
         private System.Windows.Forms.Label lblBucketCoreFactors;
@@ -1584,5 +1790,18 @@ namespace SensorAnalizi
         private System.Windows.Forms.PictureBox picEkfStackedBar;
         private System.Windows.Forms.Label lblEkfTrustDetails;
         private System.Windows.Forms.Timer timerPlayback;
+        private System.Windows.Forms.Button btnResetMassAero;
+        private System.Windows.Forms.Button btnResetMission;
+        private System.Windows.Forms.Button btnResetPID;
+        private System.Windows.Forms.Button btnResetNoise;
+        private System.Windows.Forms.Button btnResetBucket;
+        private System.Windows.Forms.TableLayoutPanel panelPhysicsPlotsTable;
+        private ScottPlot.WinForms.FormsPlot plotPhysicsVelocity;
+        private ScottPlot.WinForms.FormsPlot plotPhysicsAccel;
+        private System.Windows.Forms.FlowLayoutPanel panelBucketCommands;
+        private System.Windows.Forms.Button btnCmdSeparate;
+        private System.Windows.Forms.Button btnCmdDeployParachute;
+        private System.Windows.Forms.Button btnCmdHover;
+        private System.Windows.Forms.Button btnCmdResetBucket;
     }
 }

@@ -82,6 +82,11 @@ namespace SensorAnalizi.Simulation
         public double BucketThreshold { get; set; } = 4.0;
 
         public bool UseEKFFusion { get; set; } = true;
+        // 9. Yer İstasyonu Telekomut (Manual Override) Bayrakları
+        public FlightState? ManualOverrideState { get; set; } = null;
+        public bool ManualApamTriggered { get; set; } = false;
+        public bool ManualHoverTriggered { get; set; } = false;
+        public bool ManualResetBucket { get; set; } = false;
     }
 
     public class PhysicsSimPoint
@@ -94,8 +99,11 @@ namespace SensorAnalizi.Simulation
         public double SensorAltitude { get; set; }
         public double EstimatedAltitude { get; set; }
         public double EstimatedVelocity { get; set; }
+        public double EstimatedAccel { get; set; }
+        public double SensorAccel { get; set; }
         public double BaroMeasuredAltitude { get; set; }
         public double ImuIntegratedAltitude { get; set; }
+        public double ImuIntegratedVelocity { get; set; }
 
         // Ana Durum ve Modüler Alt-Senaryo Durumu
         public FlightState State { get; set; }
@@ -192,6 +200,7 @@ namespace SensorAnalizi.Simulation
 
                 double sensorAlt = baroMeasuredAlt;
                 double sensorAccel = imuMeasuredAccel;
+                double prevEstVel = estVel;
 
                 // 2. Kestirim Çekirdeği (EKF 3. Kademe)
                 if (p.UseEKFFusion)
@@ -210,6 +219,23 @@ namespace SensorAnalizi.Simulation
                 {
                     estAlt = sensorAlt;
                     estVel = v;
+                }
+
+                double estAccel = (time > 0) ? (estVel - prevEstVel) / dt : sensorAccel;
+
+                // Yer İstasyonu Telekomut (Manual Override) Kontrolleri
+                if (p.ManualResetBucket) { bucketACC = 0.0; }
+                if (p.ManualApamTriggered && state != FlightState.APAM_EMERGENCY && state != FlightState.S5_RECOVERY)
+                {
+                    result.ApamTriggered = true;
+                    state = FlightState.APAM_EMERGENCY;
+                    subState = FlightSubState.APAM_EmergencyDeployment;
+                }
+                if (p.ManualOverrideState.HasValue && state != p.ManualOverrideState.Value && state != FlightState.S5_RECOVERY)
+                {
+                    state = p.ManualOverrideState.Value;
+                    if (state == FlightState.S3_SEPARATION) subState = FlightSubState.S3_PayloadSeparationShock;
+                    else if (state == FlightState.S4_ACTIVE_DESCENT) subState = FlightSubState.S4a_RapidApproachDescent;
                 }
 
                 // 3. Durum ve Modüler Alt-Senaryo Yönetimi
@@ -442,8 +468,11 @@ namespace SensorAnalizi.Simulation
                     SensorAltitude = sensorAlt,
                     EstimatedAltitude = estAlt,
                     EstimatedVelocity = estVel,
+                    EstimatedAccel = estAccel,
+                    SensorAccel = sensorAccel,
                     BaroMeasuredAltitude = baroMeasuredAlt,
                     ImuIntegratedAltitude = imuIntegratedAlt,
+                    ImuIntegratedVelocity = imuIntegratedVel,
                     State = state,
                     StateName = GetStateDisplayName(state),
                     SubState = subState,
