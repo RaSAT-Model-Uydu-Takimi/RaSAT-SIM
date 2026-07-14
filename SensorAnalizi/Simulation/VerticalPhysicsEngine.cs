@@ -56,13 +56,27 @@ namespace SensorAnalizi.Simulation
         public double Ki { get; set; } = 0.4;
         public double Kd { get; set; } = 4.2;
 
-        // 6. Gürültü ve Sensör Hata Parametreleri
+        // 6. Barometre Gelişmiş Hata Modeli
+        public double BaroBiasMeters { get; set; } = 2.5; // Mutlak Hata (Bias - m)
+        public double BaroScaleErrorPct { get; set; } = 1.5; // Bağıl Hata (%)
+        public double BaroThermalNoiseStd { get; set; } = 1.2; // Termal Gürültü (1 sigma - m)
+        public double BaroSpikeStd { get; set; } = 15.0; // Darbe Gürültüsü Büyüklüğü (m)
+        public double BaroSpikeFreqPct { get; set; } = 4.0; // Darbe Gürültüsü Sıklığı (%)
+
+        // 7. İvmeölçer (IMU) Gelişmiş Hata Modeli
+        public double ImuBiasMs2 { get; set; } = 0.08; // Mutlak Hata (Bias - m/s²)
+        public double ImuScaleErrorPct { get; set; } = 1.2; // Bağıl Hata (%)
+        public double ImuThermalNoiseStd { get; set; } = 0.35; // Termal Gürültü (1 sigma - m/s²)
+        public double ImuSpikeStd { get; set; } = 4.5; // Darbe Gürültüsü Büyüklüğü (m/s²)
+        public double ImuSpikeFreqPct { get; set; } = 2.0; // Darbe Gürültüsü Sıklığı (%)
+        public double ImuVibrationStd { get; set; } = 1.4; // Gövde/Motor Titreşim Gürültüsü (m/s²)
+
+        // 8. Eski Uyumluluk Alanları
         public double BaroNoiseStd { get; set; } = 1.2; // m
         public double ImuNoiseStd { get; set; } = 0.08; // m/s²
-        public double BaroScaleErrorPct { get; set; } = 20.0; // %20 Hatalı ölçüm
-        public double ImuBiasShift { get; set; } = 0.12; // m/s² Zero-g shift
+        public double ImuBiasShift { get; set; } = 0.08; // m/s² Zero-g shift
 
-        // 7. Sızdıran Kova (Leaky Bucket) Parametreleri
+        // 9. Sızdıran Kova (Leaky Bucket) Parametreleri
         public double BucketFillRate { get; set; } = 2.5;
         public double BucketLeakRate { get; set; } = 1.2;
         public double BucketThreshold { get; set; } = 4.0;
@@ -80,6 +94,8 @@ namespace SensorAnalizi.Simulation
         public double SensorAltitude { get; set; }
         public double EstimatedAltitude { get; set; }
         public double EstimatedVelocity { get; set; }
+        public double BaroMeasuredAltitude { get; set; }
+        public double ImuIntegratedAltitude { get; set; }
 
         // Ana Durum ve Modüler Alt-Senaryo Durumu
         public FlightState State { get; set; }
@@ -140,6 +156,9 @@ namespace SensorAnalizi.Simulation
             double estAlt = 0.0;
             double estVel = v;
 
+            double imuIntegratedAlt = 0.0;
+            double imuIntegratedVel = v;
+
             double pidIntegral = 0.0;
             double prevError = 0.0;
 
@@ -153,13 +172,26 @@ namespace SensorAnalizi.Simulation
 
             while (time <= maxTime)
             {
-                // 1. Sensör Okuması
-                double scaleMult = 1.0 + (p.BaroScaleErrorPct / 100.0);
-                double baroNoise = GenerateGaussianNoise(rand, 0.0, p.BaroNoiseStd);
-                double imuNoise = GenerateGaussianNoise(rand, 0.0, p.ImuNoiseStd);
+                // 1. Gelişmiş Barometre ve İvmeölçer (IMU) Ölçüm ve Hata Simülasyonu
+                double baroScaleMult = 1.0 + (p.BaroScaleErrorPct / 100.0);
+                double baroThermal = GenerateGaussianNoise(rand, 0.0, p.BaroThermalNoiseStd);
+                double baroSpike = (rand.NextDouble() < (p.BaroSpikeFreqPct / 100.0)) ? (rand.NextDouble() > 0.5 ? p.BaroSpikeStd : -p.BaroSpikeStd) : 0.0;
+                double baroMeasuredAlt = Math.Max(0.0, y * baroScaleMult + p.BaroBiasMeters + baroThermal + baroSpike);
 
-                double sensorAlt = Math.Max(0.0, y * scaleMult + baroNoise);
-                double sensorAccel = a + p.ImuBiasShift + imuNoise;
+                double imuScaleMult = 1.0 + (p.ImuScaleErrorPct / 100.0);
+                double imuThermal = GenerateGaussianNoise(rand, 0.0, p.ImuThermalNoiseStd);
+                double imuSpike = (rand.NextDouble() < (p.ImuSpikeFreqPct / 100.0)) ? (rand.NextDouble() > 0.5 ? p.ImuSpikeStd : -p.ImuSpikeStd) : 0.0;
+                
+                // Motor çalışırken veya ayrılma şokunda gövde titreşim (vibration) gürültüsü
+                double vibNoise = (state == FlightState.S1_ASCENT || state == FlightState.S3_SEPARATION || state == FlightState.S4_ACTIVE_DESCENT) ? GenerateGaussianNoise(rand, 0.0, p.ImuVibrationStd) : 0.0;
+                double imuMeasuredAccel = a * imuScaleMult + p.ImuBiasMs2 + p.ImuBiasShift + imuThermal + imuSpike + vibNoise;
+
+                // IMU Çift İntegrali (Konum/İrtifa Kestirimi - Parabolik Drift Gösterimi)
+                imuIntegratedVel += imuMeasuredAccel * dt;
+                imuIntegratedAlt = Math.Max(0.0, imuIntegratedAlt + imuIntegratedVel * dt);
+
+                double sensorAlt = baroMeasuredAlt;
+                double sensorAccel = imuMeasuredAccel;
 
                 // 2. Kestirim Çekirdeği (EKF 3. Kademe)
                 if (p.UseEKFFusion)
@@ -410,6 +442,8 @@ namespace SensorAnalizi.Simulation
                     SensorAltitude = sensorAlt,
                     EstimatedAltitude = estAlt,
                     EstimatedVelocity = estVel,
+                    BaroMeasuredAltitude = baroMeasuredAlt,
+                    ImuIntegratedAltitude = imuIntegratedAlt,
                     State = state,
                     StateName = GetStateDisplayName(state),
                     SubState = subState,

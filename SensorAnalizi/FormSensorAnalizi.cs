@@ -22,8 +22,30 @@ namespace SensorAnalizi
         public FormSensorAnalizi()
         {
             InitializeComponent();
+            SetupCollapsiblePanels();
             RunAllScenarios();
             RunPhysicsSimulation();
+        }
+
+        private void SetupCollapsiblePanels()
+        {
+            void SetupToggle(CheckBox chk, GroupBox grp, int fullHeight)
+            {
+                chk.Checked = true;
+                chk.Text = "▼ Açık";
+                chk.CheckedChanged += (s, e) =>
+                {
+                    grp.Height = chk.Checked ? fullHeight : 26;
+                    chk.Text = chk.Checked ? "▼ Açık" : "▶ Gizli";
+                };
+                grp.DoubleClick += (s, e) => { chk.Checked = !chk.Checked; };
+            }
+
+            SetupToggle(chkToggleMassAero, grpMassAero, 195);
+            SetupToggle(chkToggleMission, grpMission, 115);
+            SetupToggle(chkTogglePID, grpPID, 115);
+            SetupToggle(chkToggleNoise, grpNoise, 315);
+            SetupToggle(chkToggleBucket, grpBucket, 115);
         }
 
         private void BtnRunAllCompare_Click(object? sender, EventArgs e)
@@ -78,16 +100,17 @@ namespace SensorAnalizi
             {
                 var s3 = plotAltitude.Plot.Add.Scatter(timeArr, estAltArr);
                 s3.LegendText = "EKF Füzyon Kestirimi";
-                s3.LineWidth = 3;
+                s3.LineWidth = 2;
             }
 
-            var sigVel = plotVelocity.Plot.Add.Scatter(timeArr, velArr);
-            sigVel.LegendText = "Aşağı Yönlü İniş Hızı (m/s)";
-            sigVel.LineWidth = 3;
+            var v1 = plotVelocity.Plot.Add.Scatter(timeArr, velArr);
+            v1.LegendText = "Dikey Hız (-v_z)";
+            v1.LineWidth = 2;
+            v1.Color = ScottPlot.Colors.OrangeRed;
 
-            plotAltitude.Plot.Title($"Özel Senaryo: Gerçek vs Ölçülen İrtifa (%{errPercent:0} Baro Hatası)");
-            plotAltitude.Plot.XLabel("Zaman (saniye)");
-            plotAltitude.Plot.YLabel("İrtifa (metre)");
+            plotAltitude.Plot.Title("Özel Senaryo - İrtifa vs Zaman");
+            plotAltitude.Plot.XLabel("Zaman (s)");
+            plotAltitude.Plot.YLabel("İrtifa (m)");
             plotAltitude.Plot.ShowLegend();
 
             plotVelocity.Plot.Title("Özel Senaryo İniş Hızı Profil Grafigi");
@@ -236,9 +259,21 @@ namespace SensorAnalizi
                 Kp = (double)numKp.Value,
                 Ki = (double)numKi.Value,
                 Kd = (double)numKd.Value,
+
+                BaroBiasMeters = (double)numBaroBias.Value,
+                BaroThermalNoiseStd = (double)numBaroNoise.Value,
                 BaroNoiseStd = (double)numBaroNoise.Value,
                 BaroScaleErrorPct = (double)numBaroErrPct.Value,
+                BaroSpikeStd = (double)numBaroSpikeStd.Value,
+                BaroSpikeFreqPct = (double)numBaroSpikeFreq.Value,
+
+                ImuBiasMs2 = (double)numImuBias.Value,
+                ImuThermalNoiseStd = (double)numImuNoise.Value,
                 ImuNoiseStd = (double)numImuNoise.Value,
+                ImuSpikeStd = (double)numImuSpikeStd.Value,
+                ImuSpikeFreqPct = (double)numImuSpikeFreq.Value,
+                ImuVibrationStd = (double)numImuVib.Value,
+
                 BucketFillRate = (double)numFillRate.Value,
                 BucketLeakRate = (double)numLeakRate.Value,
                 BucketThreshold = (double)numBucketThresh.Value,
@@ -250,23 +285,30 @@ namespace SensorAnalizi
 
             double[] timeArr = res.Trajectory.Select(pt => pt.Time).ToArray();
             double[] trueAlt = res.Trajectory.Select(pt => pt.TrueAltitude).ToArray();
-            double[] sensorAlt = res.Trajectory.Select(pt => pt.SensorAltitude).ToArray();
+            double[] baroAlt = res.Trajectory.Select(pt => pt.BaroMeasuredAltitude).ToArray();
+            double[] imuAlt = res.Trajectory.Select(pt => pt.ImuIntegratedAltitude).ToArray();
             double[] estAlt = res.Trajectory.Select(pt => pt.EstimatedAltitude).ToArray();
-            double[] bucketAcc = res.Trajectory.Select(pt => pt.BucketACC).ToArray();
-            double[] trueVel = res.Trajectory.Select(pt => pt.TrueVelocity).ToArray();
 
-            // 1. Üst Grafik: Konum - Zaman trajektörisi
+            // 1. Üst Grafik: 4'lü Sensör Füzyon Kestirim Başarısı Karşılaştırması
             var sigTrue = plotPhysicsAltitude.Plot.Add.Scatter(timeArr, trueAlt);
-            sigTrue.LegendText = $"Gerçek İrtifa (Top. Kütle: {p.MassTotal:0.00} kg)";
+            sigTrue.LegendText = $"Gerçek İrtifa (Referans)";
             sigTrue.LineWidth = 3;
+            sigTrue.Color = ScottPlot.Colors.Silver;
 
-            var sigSensor = plotPhysicsAltitude.Plot.Add.Scatter(timeArr, sensorAlt);
-            sigSensor.LegendText = $"Ham Barometre (%{p.BaroScaleErrorPct:0} Hata + σ={p.BaroNoiseStd}m)";
-            sigSensor.LineWidth = 1;
+            var sigBaro = plotPhysicsAltitude.Plot.Add.Scatter(timeArr, baroAlt);
+            sigBaro.LegendText = $"🔵 Barometre Ölçümü (Bias + Gürültü + Spike)";
+            sigBaro.LineWidth = 1;
+            sigBaro.Color = ScottPlot.Colors.DeepSkyBlue;
+
+            var sigImu = plotPhysicsAltitude.Plot.Add.Scatter(timeArr, imuAlt);
+            sigImu.LegendText = $"🟠 İvmeölçer (IMU) Çift İntegral (Drift / Kayma)";
+            sigImu.LineWidth = 2;
+            sigImu.Color = ScottPlot.Colors.Orange;
 
             var sigEst = plotPhysicsAltitude.Plot.Add.Scatter(timeArr, estAlt);
-            sigEst.LegendText = "Kestirim Çekirdeği (EKF 3. Kademe)";
+            sigEst.LegendText = "🟢 Adaptif EKF Kestirim Çekirdeği (Füzyon)";
             sigEst.LineWidth = 3;
+            sigEst.Color = ScottPlot.Colors.LimeGreen;
 
             // Hal geçiş dikey işaretleyicileri
             FlightState lastState = FlightState.S1_ASCENT;
@@ -384,7 +426,6 @@ namespace SensorAnalizi
             // Progress Bar & Kova Durumunu Güncelle
             double thresh = (double)numBucketThresh.Value;
             int pct = (int)Math.Min(100.0, Math.Round((pt.BucketACC / thresh) * 100.0));
-            progBucket.Value = pct;
             if (progBucketCore != null) progBucketCore.Value = pct;
 
             string statusMsg = "";
@@ -411,8 +452,6 @@ namespace SensorAnalizi
                 statusColor = System.Drawing.Color.FromArgb(16, 124, 65);
             }
 
-            lblBucketStatusText.Text = statusMsg;
-            lblBucketStatusText.ForeColor = statusColor;
             if (lblBucketCoreStatus != null)
             {
                 lblBucketCoreStatus.Text = statusMsg;

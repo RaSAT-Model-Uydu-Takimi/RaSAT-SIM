@@ -143,4 +143,28 @@ void ControlLoop_100Hz(void) {
     SetMotorPWM(throttle);
 }
 ```
+--------------------------------------------------------------------------------
+5. KESTİRİM ÇEKİRDEĞİ & SIZDIRAN KOVA (LEAKY BUCKET) HAL GEÇİŞ VE HATALI TETİKLEME ÖNLEME
+--------------------------------------------------------------------------------
+
+Barometre üzerindeki ani basınç patlamaları (spike) ile IMU üzerindeki motor titreşim
+ve parabolik kayma (drift) hatalarını sönümlemek için 3 kademeli EKF (Ön Kestirim ->
+İnovasyon -> Düzeltme) çekirdeği kullanılır:
+  • h_pred = h_k-1 + v_k-1*dt + 0.5*a_vert*dt^2
+  • e_innov = h_baro - h_pred
+  • h_est = h_pred + K_h * e_innov  (K_h = 0.18)
+  • v_est = v_pred + K_v * e_innov  (K_v = 0.005)
+
+Uçuş Safhalarında (State) statik eşik (if) yerine Sızdıran Kova (Leaky Bucket) kullanılır:
+  ACC_k = max(0, ACC_k-1 + [R_fill * I(Koşul) - R_leak * (1 - I(Koşul))] * dt)
+  • TT (Eşik) = 4.0 birim aşılınca durum LATCHED (kesinleşir/mühürlenir) olur.
+  • S1 (Roket): v_z <= 0 koşulunda kova 1.6 saniyede dolar, sahte spike/dalgalanma sızdırılır.
+  • S2 (Pasif İniş): h <= 400m koşulunda kova dolar, erken ayrılma engellenir.
+  • S4a -> S4b (Hover): h <= 200m koşulunda kova dolar, asılı kalma tetiklenir.
+  • S4b -> S4c (Son İniş): 10 saniyelik hover süresi bitince kova dolar, yumuşak iniş başlar.
+  • S4c -> S5 (Touchdown): h <= 0.5m & |v_z| <= 0.5m/s koşulunda kova dolar, motor %0 kesilir.
+  • APAM (Acil Yedek): |v_z| > 25m/s veya devrilmede kova 0.4 sn'de dolarak yedek paraşüt açar.
+
+[BİLGİ] Tam matematiksel denklemler, Mermaid diyagramları ve detaylı analizler için
+proje dizinindeki `HATALI_TETIKLEME_VE_UCUS_MIMARISI_RAPORU.md` dosyasını inceliyiniz.
 ================================================================================
