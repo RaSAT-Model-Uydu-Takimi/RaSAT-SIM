@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sayısıal Similasyon", "Sa
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Veri Analizi", "Veri Analizi\Veri Analizi.csproj", "{6BF59728-B422-454C-98C4-717FC6F35FE5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SensorAnalizi", "SensorAnalizi\SensorAnalizi.csproj", "{B62559CE-B01E-4A94-A971-9C1EDAEF8120}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -41,6 +43,18 @@ Global
 		{6BF59728-B422-454C-98C4-717FC6F35FE5}.Release|x64.Build.0 = Release|Any CPU
 		{6BF59728-B422-454C-98C4-717FC6F35FE5}.Release|x86.ActiveCfg = Release|Any CPU
 		{6BF59728-B422-454C-98C4-717FC6F35FE5}.Release|x86.Build.0 = Release|Any CPU
+		{B62559CE-B01E-4A94-A971-9C1EDAEF8120}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B62559CE-B01E-4A94-A971-9C1EDAEF8120}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B62559CE-B01E-4A94-A971-9C1EDAEF8120}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{B62559CE-B01E-4A94-A971-9C1EDAEF8120}.Debug|x64.Build.0 = Debug|Any CPU
+		{B62559CE-B01E-4A94-A971-9C1EDAEF8120}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{B62559CE-B01E-4A94-A971-9C1EDAEF8120}.Debug|x86.Build.0 = Debug|Any CPU
+		{B62559CE-B01E-4A94-A971-9C1EDAEF8120}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B62559CE-B01E-4A94-A971-9C1EDAEF8120}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B62559CE-B01E-4A94-A971-9C1EDAEF8120}.Release|x64.ActiveCfg = Release|Any CPU
+		{B62559CE-B01E-4A94-A971-9C1EDAEF8120}.Release|x64.Build.0 = Release|Any CPU
+		{B62559CE-B01E-4A94-A971-9C1EDAEF8120}.Release|x86.ActiveCfg = Release|Any CPU
+		{B62559CE-B01E-4A94-A971-9C1EDAEF8120}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

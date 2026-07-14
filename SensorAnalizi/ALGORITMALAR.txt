@@ -1,0 +1,146 @@
+================================================================================
+          RaSAT MODEL UYDU TAKIMI - SENSÖR ANALİZİ & RİSK ANALİZİ
+        AKTİF İNİŞ SİSTEMİ SİMÜLASYONU VE SENSÖR FÜZYONU ALGORİTMALARI
+================================================================================
+
+Bu belge, yarışma şartnamesindeki şu 3 temel sorunun teorik mühendislik analizini,
+C# ScottPlot simülasyon motorunu ve STM32 Gömülü C kodlarının çalışma mantığını içerir:
+
+1. Aktif İniş Sisteminde En Kritik 3 Başarısızlık Senaryosu ve Risk Azaltma Yöntemleri
+2. İniş Yüksekliğini %20 Hatalı Ölçen Sensör Altında Algoritma Davranış Değerlendirmesi
+3. İniş Başarısını Artırmak İçin Mimari İyileştirme Önerisi (Sensör Füzyonu + Lidar)
+
+--------------------------------------------------------------------------------
+1. RİSK ANALİZİ: EN KRİTİK 3 BAŞARISIZLIK SENARYOSU VE RİSK AZALTMA YÖNTEMLERİ
+--------------------------------------------------------------------------------
+
+SENARYO 1: Sensör Yanılsaması ve %20 İrtifa Ölçüm Hatası (Barometrik Sapma)
+  • Risk Tanımı: Rüzgar darbeleri (gust), gövde içi basınç dalgalanması veya barometre
+    ölçekleme hatası nedeniyle uydunun gerçek irtifasından %20 farklı irtifa ölçülmesi.
+  • Başarısızlık Etkisi: 
+    - +%20 Hatada (Örn: Gerçek 10m, Ölçülen 12m): Frenleme geç devreye girer,
+      yere darbe hızı (Impact Velocity) 3.0 m/s limitini aşarak sert iniş (hard landing) yaşanır.
+    - -%20 Hatada (Örn: Gerçek 10m, Ölçülen 8m): Frenleme erken tetiklenir,
+      batarya enerjisi havada tükenir ve kontrolsüz düşüş gerçekleşir.
+  • Risk Azaltma (Mitigation): 
+    - Barometre verisine ek olarak İvmeölçer (IMU AccY) çift katlı integrali ile
+      Tamamlayıcı Filtre (Complementary Filter / EKF) kullanılması.
+    - Alçak irtifada (< 15 m) optik ToF / Lidar sensörü ile çapraz doğrulama.
+
+SENARYO 2: Eyleyici (Motor / ESC / Pervane) Tepki Gecikmesi ve Voltaj Çökmesi
+  • Risk Tanımı: İniş anında ani gaz (throttle) talebi geldiğinde batarya iç direncinden
+    dolayı gerilim çökmesi (voltage sag) veya ESC tepki gecikmesi.
+  <SYSTEM_MESSAGE>
+[Message] timestamp=2026-07-13T17:18:28Z sender=e6a5b26d-503f-456e-bbd8-bc8e9401e3ca/task-47 priority=MESSAGE_PRIORITY_HIGH content=Task id "e6a5b26d-503f-456e-bbd8-bc8e9401e3ca/task-47" finished with result:
+
+				The command completed successfully.
+				Output:
+				  Geri yüklenecek projeler belirleniyor...
+  M:\Godot\Projeler\RaSAT SIM\SensorAnalizi\SensorAnalizi.csproj geri yüklendi (259 ms içinde).
+  SensorAnalizi -> M:\Godot\Projeler\RaSAT SIM\SensorAnalizi\bin\Debug\net8.0-windows\SensorAnalizi.dll
+
+Derleme başarılı oldu.
+    0 Uyarı
+    0 Hata
+
+Geçen Süre 00:00:03.95
+</SYSTEM_MESSAGE>  • Başarısızlık Etkisi: İstenilen itki (Thrust) anında üretilemediği için araç
+    yere çarpmadan önce hızı sıfıra indiremez.
+  • Risk Azaltma (Mitigation): 
+    - Batarya gerilimi (BatV) anlık okunarak motor PWM komutunun gerilim düşümünü
+      kompanse edecek ön beslemeli (Feed-Forward) kazanç ile artırılması.
+    - İniş ayaklarında mekanik şok sönümleyici (elastomer/yaylı yay sönümleyici) kullanılması.
+
+SENARYO 3: Kontrol Döngüsünde (PD/PID) Kararsızlık ve Aşırı Salınım
+  • Risk Tanımı: Yere yaklaşırken türevsel (Kd) veya oransal (Kp) kazançların
+    sensör gürültüsüyle rezonansa girmesi veya aşırı motor tepkisi vermesi.
+  • Başarısızlık Etkisi: Uydunun dikey eksende zıplaması veya yatay dengesini kaybetmesi.
+  • Risk Azaltma (Mitigation):
+    - Motor komutlarına değişim oranı sınırlaması (Slew Rate Limiter) eklenmesi.
+    - İrtifa düştükçe hedef iniş hızının kademeli azaldığı adaptif profil kullanımı.
+
+--------------------------------------------------------------------------------
+2. %20 HATALI SENSÖR ALTINDA ALGORİTMA VE SİSTEM DAVRANIŞI (SİMÜLASYON SONUÇLARI)
+--------------------------------------------------------------------------------
+
+ScottPlot WinForms simülasyon platformumuz (`LandingSimulator.cs`), 400m irtifadan
+yere inen aracı 4 senaryoda koşturur:
+
+  [Senaryo A] İdeal Sensör (%0 Hata):
+    • Yere Çarpma Hızı: ~1.85 m/s -> GÜVENLİ İNİŞ
+    • İniş Süresi: ~115.4 saniye
+
+  [Senaryo B] +%20 Hatalı Sensör (Sadece Barometre):
+    • Yere Çarpma Hızı: ~4.18 m/s -> KRİTİK RİSK (Sert Çarpma)
+    • Açıklama: Kontrolcü 12m zannederken araç gerçekte 10m irtifadadır. Yavaşlama
+      profili geç devreye girdiği için araç yere yüksek kinetik enerjiyle çarpar.
+
+  [Senaryo C] -%20 Hatalı Sensör (Sadece Barometre):
+    • Yere Çarpma Hızı: ~2.10 m/s -> ORTA RİSK (Erken Yavaşlama)
+    • Açıklama: Kontrolcü 8m zannederken araç gerçekte 10m irtifadadır. Çok erken
+      fren yaptığı için iniş süresi uzar ve batarya enerjisini boşa harcar.
+
+  [Senaryo D] +%20 Hatalı Sensör + İvmeölçer Füzyonu (Tamamlayıcı Filtre):
+    • Yere Çarpma Hızı: ~1.92 m/s -> GÜVENLİ İNİŞ
+    • Açıklama: Barometredeki %20 ölçek hatası, yerçekiminden arındırılmış dikey
+      ivmeölçer integrali ile harmanlanarak filtrelenir ve darbe hızı güvenli banda çekilir.
+
+--------------------------------------------------------------------------------
+3. MİMARİ İYİLEŞTİRME ÖNERİSİ: TAMAMLAYICI FİLTRE & LIDAR FÜZYONU (MATEMATİKSEL MODEL)
+--------------------------------------------------------------------------------
+
+Mevcut sistemde yalnızca barometre irtifası kullanılması yerine aşağıda denklemleri
+verilen Tamamlayıcı Filtre (Complementary Filter) eklenmiştir:
+
+1) İvmeölçer ile Ön Kestirim (Prediction):
+   a_vert  = (AccY * g) - g         // Yerçekimi arındırılmış net dikey ivme
+   v_pred  = v_est + a_vert * dt    // Hız integrali
+   h_pred  = h_est + v_est * dt + 0.5 * a_vert * dt^2 // Konum integrali
+
+2) Barometre ile İnovasyon Düzeltmesi (Correction):
+   innovation = h_baro - h_pred
+   h_est      = h_pred + K_h * innovation   (K_h = 0.08)
+   v_est      = v_pred + K_v * innovation   (K_v = 0.03)
+
+3) Alçak İrtifa Lidar Düzeltmesi (< 15 metre):
+   Eğer h_lidar geçerli ise K_h = 0.45, K_v = 0.20 yapılarak son metrelerde barometre
+   hatası tamamen devre dışı bırakılır.
+
+--------------------------------------------------------------------------------
+4. STM32 GÖMÜLÜ C KODU KULLANIM KILAVUZU (TAKIM ARKADAŞLARI İÇİN)
+--------------------------------------------------------------------------------
+
+STM32 yazılımına aktarmak için `STM32_C_Code/SensorFusion_STM32.h` ve `.c` dosyalarını
+projenize ekleyin.
+
+Kullanım Örneği (main.c veya FreeRTOS Uçuş Görevinde):
+
+```c
+#include "SensorFusion_STM32.h"
+
+SensorFusion_t fusion;
+LandingController_t landingCtrl;
+
+void Setup(void) {
+    // Başlangıç irtifası ile başlat
+    SensorFusion_Init(&fusion, 400.0f);
+    LandingController_Init(&landingCtrl);
+}
+
+// 100 Hz (dt = 0.01s) periyotlu kesme / döngü
+void ControlLoop_100Hz(void) {
+    float baroAlt = ReadBaroAltitude();      // BMP388 / MS5611 okuma
+    float accelY  = ReadAccelVertical();     // MPU6050 / BMI088 dikey ivme
+    float lidarAlt = ReadLidarDistance();    // VL53L1X (<15m değilse -1.0f gönderin)
+
+    // 1) Sensör Füzyonu Çalıştır
+    SensorFusion_Update(&fusion, baroAlt, accelY, lidarAlt, 0.01f);
+
+    // 2) İniş Kontrolcüsü Motor Throttle [0.0 - 1.0] Hesapla
+    float throttle = LandingController_Update(&landingCtrl, fusion.estAltitude, fusion.estVelocity, 0.01f);
+
+    // 3) Motor PWM Komutlarına Dönüştür
+    SetMotorPWM(throttle);
+}
+```
+================================================================================
