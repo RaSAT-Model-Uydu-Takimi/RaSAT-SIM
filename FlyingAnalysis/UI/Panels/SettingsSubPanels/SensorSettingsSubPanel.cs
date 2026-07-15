@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using FlyingAnalysis.Models;
 using Color = System.Drawing.Color;
 
 namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
@@ -36,6 +37,7 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             InitializeComponent();
             SetupEventHandlers();
             cmbSensorType.SelectedIndex = 0;
+            SyncToGlobalSensorProfile();
             LogToConsole("Sensör Hata ve Kalibrasyon Modülü (Faz 5) başarıyla başlatıldı.", Color.FromArgb(((int)(((byte)(16)))), ((int)(((byte)(185)))), ((int)(((byte)(129))))));
         }
 
@@ -59,6 +61,11 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
 
             // Sayfa 1 - Rezidüel güncelleme ve uygulama
             btnApplyToSim.Click += (s, e) => UpdateComparisonAndResiduals();
+            numProcessedBias.ValueChanged += (s, e) => SyncToGlobalSensorProfile();
+            numThermalStdDev.ValueChanged += (s, e) => SyncToGlobalSensorProfile();
+            chkEnableBias.CheckedChanged += (s, e) => SyncToGlobalSensorProfile();
+            chkEnableThermal.CheckedChanged += (s, e) => SyncToGlobalSensorProfile();
+            cmbSensorType.SelectedIndexChanged += (s, e) => SyncToGlobalSensorProfile();
 
             // Sayfa 2 - Analiz & Çizim
             btnP2SelectRawFile.Click += BtnP2SelectRawFile_Click;
@@ -546,8 +553,38 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             double resBias = injBias - calcBias;
             double resScale = injScale - calcScale;
 
+            SyncToGlobalSensorProfile();
             lblResidualInfo.Text = $"Rezidüel Fark: b = {resBias:F4} | S = %{resScale:F4}";
             LogToConsole($"Rezidüeller güncellendi (Fark: b={resBias:F4}, S=%{resScale:F4}).");
+        }
+
+        private void SyncToGlobalSensorProfile()
+        {
+            try
+            {
+                double biasVal = (double)numProcessedBias.Value;
+                if (Math.Abs(biasVal) < 1e-6 && chkEnableBias.Checked)
+                {
+                    biasVal = (double)numBias.Value;
+                }
+                double noiseVal = chkEnableThermal.Checked ? (double)numThermalStdDev.Value : 0.0;
+                if (Math.Abs(noiseVal) < 1e-6) noiseVal = 0.5;
+
+                if (cmbSensorType.SelectedIndex == 0 || cmbSensorType.SelectedItem?.ToString()?.Contains("Barometre") == true)
+                {
+                    GlobalSimulationConfig.BaroBiasMeter = biasVal;
+                    GlobalSimulationConfig.BaroNoiseStdMeter = noiseVal;
+                }
+                else
+                {
+                    GlobalSimulationConfig.AccBiasMps2 = biasVal;
+                    GlobalSimulationConfig.AccNoiseStdMps2 = noiseVal;
+                }
+            }
+            catch
+            {
+                // UI başlatılırken veya değer dönüştürülürken istisnaları yoksay
+            }
         }
 
         #endregion

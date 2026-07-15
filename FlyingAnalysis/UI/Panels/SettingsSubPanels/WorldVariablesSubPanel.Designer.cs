@@ -25,9 +25,6 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             this.numAirDensity = new System.Windows.Forms.NumericUpDown();
             this.lblDensityUnit = new System.Windows.Forms.Label();
             this.lblDensityInfo = new System.Windows.Forms.Label();
-            this.grpDragCoeff = new System.Windows.Forms.GroupBox();
-            this.numDragCoeff = new System.Windows.Forms.NumericUpDown();
-            this.lblDragInfo = new System.Windows.Forms.Label();
             this.grpTemperature = new System.Windows.Forms.GroupBox();
             this.numTempC = new System.Windows.Forms.NumericUpDown();
             this.lblTempUnit = new System.Windows.Forms.Label();
@@ -39,8 +36,6 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             ((System.ComponentModel.ISupportInitialize)(this.numGravity)).BeginInit();
             this.grpAirDensity.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numAirDensity)).BeginInit();
-            this.grpDragCoeff.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.numDragCoeff)).BeginInit();
             this.grpTemperature.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numTempC)).BeginInit();
             this.grpLapseRate.SuspendLayout();
@@ -143,48 +138,15 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             // 
             // grpDragCoeff
             // 
-            this.grpDragCoeff.Controls.Add(this.lblDragInfo);
-            this.grpDragCoeff.Controls.Add(this.numDragCoeff);
-            this.grpDragCoeff.Font = new System.Drawing.Font("Segoe UI Semibold", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.grpDragCoeff.Location = new System.Drawing.Point(475, 75);
-            this.grpDragCoeff.Name = "grpDragCoeff";
-            this.grpDragCoeff.Size = new System.Drawing.Size(420, 100);
-            this.grpDragCoeff.TabIndex = 3;
-            this.grpDragCoeff.TabStop = false;
-            this.grpDragCoeff.Text = "Sürüklenme Katsayısı (Cd)";
-            // 
-            // numDragCoeff
-            // 
-            this.numDragCoeff.DecimalPlaces = 2;
-            this.numDragCoeff.Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.numDragCoeff.Increment = new decimal(new int[] { 5, 0, 0, 131072 });
-            this.numDragCoeff.Location = new System.Drawing.Point(20, 40);
-            this.numDragCoeff.Maximum = new decimal(new int[] { 5, 0, 0, 0 });
-            this.numDragCoeff.Name = "numDragCoeff";
-            this.numDragCoeff.Size = new System.Drawing.Size(180, 32);
-            this.numDragCoeff.TabIndex = 0;
-            this.numDragCoeff.Value = new decimal(new int[] { 150, 0, 0, 131072 });
-            // 
-            // lblDragInfo
-            // 
-            this.lblDragInfo.AutoSize = true;
-            this.lblDragInfo.Font = new System.Drawing.Font("Segoe UI", 8.5F, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblDragInfo.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(99)))), ((int)(((byte)(235)))));
-            this.lblDragInfo.Location = new System.Drawing.Point(210, 44);
-            this.lblDragInfo.Name = "lblDragInfo";
-            this.lblDragInfo.Size = new System.Drawing.Size(190, 20);
-            this.lblDragInfo.TabIndex = 1;
-            this.lblDragInfo.Text = "Çapraz (Cruciform) Paraşüt";
-            // 
             // grpTemperature
             // 
             this.grpTemperature.Controls.Add(this.lblTempUnit);
             this.grpTemperature.Controls.Add(this.numTempC);
             this.grpTemperature.Font = new System.Drawing.Font("Segoe UI Semibold", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.grpTemperature.Location = new System.Drawing.Point(475, 195);
+            this.grpTemperature.Location = new System.Drawing.Point(475, 75);
             this.grpTemperature.Name = "grpTemperature";
             this.grpTemperature.Size = new System.Drawing.Size(420, 120);
-            this.grpTemperature.TabIndex = 4;
+            this.grpTemperature.TabIndex = 3;
             this.grpTemperature.TabStop = false;
             this.grpTemperature.Text = "Deniz Seviyesi Sıcaklığı (T0)";
             // 
@@ -209,6 +171,7 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             this.lblTempUnit.Name = "lblTempUnit";
             this.lblTempUnit.Size = new System.Drawing.Size(158, 23);
             this.lblTempUnit.TabIndex = 1;
+            this.lblTempUnit.Text = "°C (Standart: 15 °C)";
             // 
             // grpLapseRate
             // 
@@ -216,10 +179,10 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             this.grpLapseRate.Controls.Add(this.lblLapseUnit);
             this.grpLapseRate.Controls.Add(this.numLapseRate);
             this.grpLapseRate.Font = new System.Drawing.Font("Segoe UI Semibold", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.grpLapseRate.Location = new System.Drawing.Point(475, 330);
+            this.grpLapseRate.Location = new System.Drawing.Point(475, 215);
             this.grpLapseRate.Name = "grpLapseRate";
             this.grpLapseRate.Size = new System.Drawing.Size(420, 120);
-            this.grpLapseRate.TabIndex = 5;
+            this.grpLapseRate.TabIndex = 4;
             this.grpLapseRate.TabStop = false;
             this.grpLapseRate.Text = "Sıcaklık Düşüş Oranı (Lapse Rate - L)";
             // 
@@ -264,7 +227,6 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(241)))), ((int)(((byte)(245)))), ((int)(((byte)(249)))));
             this.Controls.Add(this.grpLapseRate);
             this.Controls.Add(this.grpTemperature);
-            this.Controls.Add(this.grpDragCoeff);
             this.Controls.Add(this.grpAirDensity);
             this.Controls.Add(this.grpGravity);
             this.Controls.Add(this.lblPanelTitle);
@@ -277,9 +239,6 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             this.grpAirDensity.ResumeLayout(false);
             this.grpAirDensity.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numAirDensity)).EndInit();
-            this.grpDragCoeff.ResumeLayout(false);
-            this.grpDragCoeff.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.numDragCoeff)).EndInit();
             this.grpTemperature.ResumeLayout(false);
             this.grpTemperature.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numTempC)).EndInit();
@@ -301,9 +260,6 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
         private System.Windows.Forms.NumericUpDown numAirDensity;
         private System.Windows.Forms.Label lblDensityUnit;
         private System.Windows.Forms.Label lblDensityInfo;
-        private System.Windows.Forms.GroupBox grpDragCoeff;
-        private System.Windows.Forms.NumericUpDown numDragCoeff;
-        private System.Windows.Forms.Label lblDragInfo;
         private System.Windows.Forms.GroupBox grpTemperature;
         private System.Windows.Forms.NumericUpDown numTempC;
         private System.Windows.Forms.Label lblTempUnit;

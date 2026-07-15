@@ -40,7 +40,6 @@ namespace FlyingAnalysis.UI.Panels
             this.btnTab3_Ascent = new System.Windows.Forms.Button();
             this.btnTab2_SatellitePhysics = new System.Windows.Forms.Button();
             this.btnTab1_WorldVariables = new System.Windows.Forms.Button();
-            this.btnTab9_SensorCalibration = new System.Windows.Forms.Button();
 
             this.pnlSubContentContainer = new System.Windows.Forms.Panel();
             this.pnlBottomStatusBar = new System.Windows.Forms.Panel();
@@ -90,7 +89,6 @@ namespace FlyingAnalysis.UI.Panels
             // pnlSidebarMenu
             // 
             this.pnlSidebarMenu.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(41)))), ((int)(((byte)(59)))));
-            this.pnlSidebarMenu.Controls.Add(this.btnTab9_SensorCalibration);
             this.pnlSidebarMenu.Controls.Add(this.btnTab8_Contingency);
 
             this.pnlSidebarMenu.Controls.Add(this.btnTab7_Landing);
@@ -243,23 +241,6 @@ namespace FlyingAnalysis.UI.Panels
             this.btnTab8_Contingency.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.btnTab8_Contingency.UseVisualStyleBackColor = true;
             // 
-            // btnTab9_SensorCalibration
-            // 
-            this.btnTab9_SensorCalibration.Dock = System.Windows.Forms.DockStyle.Top;
-            this.btnTab9_SensorCalibration.FlatAppearance.BorderSize = 0;
-            this.btnTab9_SensorCalibration.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnTab9_SensorCalibration.Font = new System.Drawing.Font("Segoe UI Semibold", 10.5F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnTab9_SensorCalibration.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(203)))), ((int)(((byte)(213)))), ((int)(((byte)(225)))));
-            this.btnTab9_SensorCalibration.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnTab9_SensorCalibration.Location = new System.Drawing.Point(0, 440);
-            this.btnTab9_SensorCalibration.Name = "btnTab9_SensorCalibration";
-            this.btnTab9_SensorCalibration.Padding = new System.Windows.Forms.Padding(15, 0, 0, 0);
-            this.btnTab9_SensorCalibration.Size = new System.Drawing.Size(280, 55);
-            this.btnTab9_SensorCalibration.TabIndex = 8;
-            this.btnTab9_SensorCalibration.Text = "9. Sensör Hata & Kalibrasyon Modeli";
-            this.btnTab9_SensorCalibration.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnTab9_SensorCalibration.UseVisualStyleBackColor = true;
-            // 
             // pnlSubContentContainer
 
             // 
@@ -340,7 +321,6 @@ namespace FlyingAnalysis.UI.Panels
         private System.Windows.Forms.Button btnTab6_ControlledDescent;
         private System.Windows.Forms.Button btnTab7_Landing;
         private System.Windows.Forms.Button btnTab8_Contingency;
-        private System.Windows.Forms.Button btnTab9_SensorCalibration;
         private System.Windows.Forms.Panel pnlSubContentContainer;
 
         private System.Windows.Forms.Panel pnlBottomStatusBar;

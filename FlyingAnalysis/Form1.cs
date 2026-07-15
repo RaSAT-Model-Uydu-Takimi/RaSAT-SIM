@@ -2,6 +2,7 @@ using System;
 using System.Drawing;
 using System.Windows.Forms;
 using FlyingAnalysis.UI.Panels;
+using FlyingAnalysis.UI.Panels.SettingsSubPanels;
 
 namespace FlyingAnalysis
 {
@@ -13,10 +14,14 @@ namespace FlyingAnalysis
         {
             InitializeComponent();
 
+            btnNavSettings.Text = "PARAMETRE VE AYARLAR";
+            btnNavSimulation.Text = "TIMELINE & UÇUŞ SİMÜLASYONU";
+            btnNavAnalysis.Text = "SENSÖR KALİBRASYON ANALİZİ";
+
             // Üst navigasyon butonlarına tıklama olayları
             btnNavSettings.Click += (s, e) => LoadMainView(new SimulationConfigDashboard(), btnNavSettings);
-            btnNavSimulation.Click += (s, e) => ShowPlaceholderView("Simülasyon ve Gerçek Zamanlı Uçuş Ekranı (İleride Eklenecek)", btnNavSimulation);
-            btnNavAnalysis.Click += (s, e) => ShowPlaceholderView("Sensör ve Uçuş Veri Analiz Grafik Paneli (İleride Eklenecek)", btnNavAnalysis);
+            btnNavSimulation.Click += (s, e) => LoadMainView(new TimelineStudioSubPanel(), btnNavSimulation);
+            btnNavAnalysis.Click += (s, e) => LoadMainView(new SensorSettingsSubPanel(), btnNavAnalysis);
 
             // Form açıldığında varsayılan olarak Ayarlar ve Simülasyon Konfigürasyonu panelini yükle
             this.Load += (s, e) => {

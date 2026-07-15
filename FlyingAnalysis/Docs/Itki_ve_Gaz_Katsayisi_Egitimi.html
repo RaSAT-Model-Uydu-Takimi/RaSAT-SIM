@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İtki ve Gaz Katsayısı Etkileşimli Eğitim Laboratuvarı</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-glass: rgba(30, 41, 59, 0.75);
+            --accent-blue: #3b82f6;
+            --accent-cyan: #06b6d4;
+            --accent-emerald: #10b981;
+            --accent-rose: #f43f5e;
+            --accent-amber: #f59e0b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: radial-gradient(circle at top right, #1e1b4b, var(--bg-primary) 60%);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .header-container {
+            text-align: center;
+            max-width: 850px;
+            margin-bottom: 2.5rem;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+            color: white;
+            font-size: 0.85rem;
+            font-weight: 700;
+            padding: 0.4rem 1rem;
+            border-radius: 50px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3);
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            font-weight: 800;
+            line-height: 1.2;
+            background: linear-gradient(135deg, #ffffff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.8rem;
+        }
+
+        p.subtitle {
+            font-size: 1.15rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* Main Dashboard Grid */
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1.1fr;
+            gap: 2rem;
+            width: 100%;
+            max-width: 1300px;
+        }
+
+        @media (max-width: 992px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Glass Cards */
+        .card {
+            background: var(--bg-glass);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .card-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+        }
+
+        /* Controls Area */
+        .control-group {
+            margin-bottom: 1.8rem;
+        }
+
+        .control-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.6rem;
+        }
+
+        .control-label {
+            font-weight: 600;
+            font-size: 1.05rem;
+            color: var(--text-main);
+        }
+
+        .control-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            font-size: 1.15rem;
+            color: var(--accent-cyan);
+            background: rgba(6, 182, 212, 0.1);
+            padding: 0.2rem 0.6rem;
+            border-radius: 8px;
+            border: 1px solid rgba(6, 182, 212, 0.3);
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 10px;
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            outline: none;
+            -webkit-appearance: none;
+            transition: background 0.3s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--accent-cyan);
+            cursor: pointer;
+            box-shadow: 0 0 15px var(--accent-cyan);
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            background: #ffffff;
+        }
+
+        /* Quick Presets Buttons */
+        .presets {
+            display: flex;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+            margin-top: 0.5rem;
+        }
+
+        .btn-preset {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 0.5rem 1rem;
+            border-radius: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-preset:hover {
+            background: var(--accent-blue);
+            border-color: var(--accent-blue);
+            transform: translateY(-2px);
+        }
+
+        /* Simulation Canvas & Visuals */
+        .visual-container {
+            position: relative;
+            height: 360px;
+            background: linear-gradient(180deg, #070b14 0%, #111c35 100%);
+            border-radius: 16px;
+            border: 1px inset rgba(255, 255, 255, 0.08);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Grid lines in background */
+        .visual-container::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        .satellite-box {
+            position: absolute;
+            width: 130px;
+            padding: 1rem;
+            background: linear-gradient(135deg, #334155, #1e293b);
+            border: 2px solid var(--accent-cyan);
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+            transition: top 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: 10;
+        }
+
+        .sat-label {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--accent-cyan);
+            margin-bottom: 0.2rem;
+        }
+
+        .sat-weight {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.95rem;
+            font-weight: 700;
+        }
+
+        /* Force Arrows */
+        .arrow {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 14px;
+            border-radius: 8px;
+            transition: height 0.3s ease, opacity 0.3s ease;
+            z-index: 5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .arrow-up {
+            bottom: 100%;
+            background: linear-gradient(0deg, var(--accent-emerald), #34d399);
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.6);
+        }
+
+        .arrow-up::after {
+            content: '▲';
+            position: absolute;
+            top: -16px;
+            color: #34d399;
+            font-size: 1.2rem;
+        }
+
+        .arrow-down {
+            top: 100%;
+            background: linear-gradient(180deg, var(--accent-rose), #fb7185);
+            box-shadow: 0 0 20px rgba(244, 63, 94, 0.6);
+        }
+
+        .arrow-down::after {
+            content: '▼';
+            position: absolute;
+            bottom: -16px;
+            color: #fb7185;
+            font-size: 1.2rem;
+        }
+
+        .force-tag {
+            position: absolute;
+            left: 24px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            font-weight: 700;
+            white-space: nowrap;
+            background: rgba(0,0,0,0.7);
+            padding: 2px 8px;
+            border-radius: 6px;
+        }
+
+        /* Status & Math Breakdown */
+        .math-box {
+            background: rgba(0, 0, 0, 0.3);
+            border-left: 4px solid var(--accent-blue);
+            border-radius: 12px;
+            padding: 1.2rem;
+            margin-bottom: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+
+        .highlight-emerald { color: var(--accent-emerald); font-weight: 700; }
+        .highlight-rose { color: var(--accent-rose); font-weight: 700; }
+        .highlight-cyan { color: var(--accent-cyan); font-weight: 700; }
+        .highlight-amber { color: var(--accent-amber); font-weight: 700; }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.8rem;
+            padding: 1rem;
+            border-radius: 16px;
+            font-weight: 700;
+            font-size: 1.15rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .status-hover {
+            background: rgba(245, 158, 11, 0.15);
+            border: 2px solid var(--accent-amber);
+            color: var(--accent-amber);
+        }
+
+        .status-up {
+            background: rgba(16, 185, 129, 0.15);
+            border: 2px solid var(--accent-emerald);
+            color: var(--accent-emerald);
+        }
+
+        .status-down {
+            background: rgba(244, 63, 94, 0.15);
+            border: 2px solid var(--accent-rose);
+            color: var(--accent-rose);
+        }
+
+        /* Analogy Section */
+        .analogy-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-top: 2rem;
+            width: 100%;
+            max-width: 1300px;
+        }
+
+        @media (max-width: 768px) {
+            .analogy-grid { grid-template-columns: 1fr; }
+        }
+
+        .analogy-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 1.8rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .analogy-icon {
+            font-size: 2.5rem;
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-container">
+        <span class="badge">RaSAT Uçuş Dinamiği Laboratuvarı</span>
+        <h1>Maksimum İtki ile İtki (Gaz) Katsayısı Farkı</h1>
+        <p class="subtitle">
+            Karmaşık formülleri unutun. Sürgüleri kaydırın; motor yüzdesinin (%50, %26) uydunuzu nasıl yükselttiğini, sabit tuttuğunu (Hover) veya düşürdüğünü canlı ve görsel olarak deneyimleyin.
+        </p>
+    </div>
+
+    <div class="dashboard">
+        <!-- Sol: Kontroller -->
+        <div class="card">
+            <div class="card-title">🎛️ Motor ve Kütle Kontrol Paneli</div>
+            
+            <div class="control-group">
+                <div class="control-header">
+                    <span class="control-label">Maksimum Toplam İtki (Tavan Kapasite)</span>
+                    <span class="control-value" id="valMaxThrust">4800 gram (4.8 kg)</span>
+                </div>
+                <input type="range" id="sliderMaxThrust" min="2000" max="8000" step="200" value="4800">
+                <div style="font-size:0.85rem; color:var(--text-muted); margin-top:0.4rem;">
+                    💡 Motorların %100 tam gazda üretebileceği en son limit güç (Depo hacmi).
+                </div>
+            </div>
+
+            <div class="control-group">
+                <div class="control-header">
+                    <span class="control-label">Görev Yükü Ağırlığı (Yerçekimi Kuvveti)</span>
+                    <span class="control-value" id="valWeight">1250 gram (1.25 kg)</span>
+                </div>
+                <input type="range" id="sliderWeight" min="500" max="3000" step="50" value="1250">
+                <div style="font-size:0.85rem; color:var(--text-muted); margin-top:0.4rem;">
+                    💡 Uydunun aşağı doğru çekilen sabit ağırlığı.
+                </div>
+            </div>
+
+            <div class="control-group" style="background: rgba(6, 182, 212, 0.06); padding: 1.2rem; border-radius: 16px; border: 1px solid rgba(6, 182, 212, 0.2);">
+                <div class="control-header">
+                    <span class="control-label" style="color:var(--accent-cyan); font-size:1.15rem;">⚡ İtki (Gaz) Katsayısı / Yüzdesi</span>
+                    <span class="control-value" id="valThrottle" style="background:var(--accent-cyan); color:#000; font-size:1.3rem;">%50 (0.50)</span>
+                </div>
+                <input type="range" id="sliderThrottle" min="0" max="100" step="1" value="50">
+                
+                <div class="presets">
+                    <button class="btn-preset" onclick="setThrottle(0)">%0 (Kapalı)</button>
+                    <button class="btn-preset" id="btnHoverPreset" onclick="setHoverPreset()">%26 (Hover Denge)</button>
+                    <button class="btn-preset" onclick="setThrottle(50)">%50 (Yarım Gaz)</button>
+                    <button class="btn-preset" onclick="setThrottle(100)">%100 (Tam Güç)</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sağ: Görsel Simülasyon & Sonuçlar -->
+        <div class="card">
+            <div class="card-title">🚀 Canlı Kuvvet Dengesi & Simülasyon</div>
+
+            <div class="visual-container">
+                <div class="satellite-box" id="satBox" style="top: 45%;">
+                    <!-- Yukarı İtki Ok -->
+                    <div class="arrow arrow-up" id="arrowUp" style="height: 60px;">
+                        <span class="force-tag" id="tagUp" style="color:var(--accent-emerald);">F_itki = 2400g</span>
+                    </div>
+
+                    <div class="sat-label">GÖREV YÜKÜ</div>
+                    <div class="sat-weight" id="satWeightText">1250 g</div>
+
+                    <!-- Aşağı Yerçekimi Ok -->
+                    <div class="arrow arrow-down" id="arrowDown" style="height: 40px;">
+                        <span class="force-tag" id="tagDown" style="color:var(--accent-rose);">F_yerçekimi = 1250g</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="math-box" id="mathBreakdown">
+                👉 Üretilen İtki = 4800g × %50 = <span class="highlight-emerald">2400 gram</span><br>
+                👉 Uydu Ağırlığı = <span class="highlight-rose">1250 gram</span><br>
+                👉 Net Fark = 2400 - 1250 = <span class="highlight-cyan">+1150 gram (Yukarı Çekiyor!)</span>
+            </div>
+
+            <div class="status-badge status-up" id="statusBox">
+                🚀 İTKİ AĞIRLIKTAN BÜYÜK: UYDU YUKARI DOĞRU HIZLANIR!
+            </div>
+        </div>
+    </div>
+
+    <!-- Analoji Kartları -->
+    <div class="analogy-grid">
+        <div class="analogy-card">
+            <div class="analogy-icon">🏎️</div>
+            <h3 style="font-size: 1.3rem; color: var(--accent-cyan);">Araba Pedalı Analojisi ile Farkı Anla</h3>
+            <p style="color: var(--text-muted); line-height: 1.6;">
+                <strong>Maksimum İtki (4800 g):</strong> Arabanızın motorunun çıkabileceği maksimum son hızdır (Örn: 200 km/s kadran veya tam dolu depo gücü).<br><br>
+                <strong>İtki Katsayısı (%50 veya %26 vb.):</strong> Ayağınızı gaz pedalına <em>ne kadar bastığınızdır</em>. Eğer motorunuz çok güçlüyse (4800g), pedala sadece <strong>%26</strong> bastığınızda bile araba yerçekimini karşılar ve havada asılı kalır!
+            </p>
+        </div>
+
+        <div class="analogy-card">
+            <div class="analogy-icon">🎯</div>
+            <h3 style="font-size: 1.3rem; color: var(--accent-emerald);">Neden %50 Gazda Uydu Yükselir?</h3>
+            <p style="color: var(--text-muted); line-height: 1.6;">
+                Çünkü motorun %50'si <strong>2400 gram</strong> kuvvet üretir. Uydumuz ise sadece <strong>1250 gram</strong> ağırlığındadır!<br><br>
+                Yani motorlarımız o kadar güçlüdür ki yarı yarıya çalışsalar bile uydunun ağırlığının yaklaşık <strong>2 katı</strong> güç üretirler. Bu yüzden uydu durmaz, roket gibi yukarı tırmanır. Hover için sadece <strong>%26</strong> gaz yeterlidir.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        const sliderMaxThrust = document.getElementById('sliderMaxThrust');
+        const sliderWeight = document.getElementById('sliderWeight');
+        const sliderThrottle = document.getElementById('sliderThrottle');
+
+        const valMaxThrust = document.getElementById('valMaxThrust');
+        const valWeight = document.getElementById('valWeight');
+        const valThrottle = document.getElementById('valThrottle');
+
+        const arrowUp = document.getElementById('arrowUp');
+        const arrowDown = document.getElementById('arrowDown');
+        const tagUp = document.getElementById('tagUp');
+        const tagDown = document.getElementById('tagDown');
+        const satBox = document.getElementById('satBox');
+        const satWeightText = document.getElementById('satWeightText');
+
+        const mathBreakdown = document.getElementById('mathBreakdown');
+        const statusBox = document.getElementById('statusBox');
+        const btnHoverPreset = document.getElementById('btnHoverPreset');
+
+        function updateSimulation() {
+            const maxThrust = parseInt(sliderMaxThrust.value);
+            const weight = parseInt(sliderWeight.value);
+            const throttlePct = parseInt(sliderThrottle.value);
+            const throttleRatio = throttlePct / 100.0;
+
+            // Anlık İtki Hesapla
+            const currentThrust = Math.round(maxThrust * throttleRatio);
+            const netForce = currentThrust - weight;
+
+            // Hover Yüzdesini Bul
+            const hoverPctExact = (weight / maxThrust) * 100;
+            const hoverPctRounded = Math.round(hoverPctExact);
+
+            // Metinleri Güncelle
+            valMaxThrust.textContent = `${maxThrust} gram (${(maxThrust/1000).toFixed(2)} kg)`;
+            valWeight.textContent = `${weight} gram (${(weight/1000).toFixed(2)} kg)`;
+            valThrottle.textContent = `%${throttlePct} (${throttleRatio.toFixed(2)})`;
+            satWeightText.textContent = `${weight} g`;
+
+            btnHoverPreset.textContent = `%${hoverPctRounded} (Hover Denge)`;
+
+            // Okların Boyutlarını Ayarla (maksimum 120px sınırında)
+            const maxScale = Math.max(maxThrust, weight, 1000);
+            const upHeight = Math.max(10, Math.min(130, (currentThrust / maxScale) * 150));
+            const downHeight = Math.max(10, Math.min(130, (weight / maxScale) * 150));
+
+            arrowUp.style.height = `${upHeight}px`;
+            arrowDown.style.height = `${downHeight}px`;
+
+            tagUp.textContent = `▲ F_itki = ${currentThrust}g`;
+            tagDown.textContent = `▼ F_yerçekimi = ${weight}g`;
+
+            // Matematik Kutusu
+            mathBreakdown.innerHTML = `
+                👉 Üretilen İtki = ${maxThrust}g × %${throttlePct} = <span class="highlight-emerald">${currentThrust} gram</span><br>
+                👉 Uydu Ağırlığı = <span class="highlight-rose">${weight} gram</span><br>
+                👉 Net Kuvvet Farkı = ${currentThrust} - ${weight} = <span class="${netForce > 0 ? 'highlight-emerald' : netForce < 0 ? 'highlight-rose' : 'highlight-amber'}">${netForce > 0 ? '+' : ''}${netForce} gram ${netForce > 0 ? '(Yukarı Çekiyor!)' : netForce < 0 ? '(Aşağı Çekiyor!)' : '(TAM DENGENDE!)'}</span>
+            `;
+
+            // Uydu Pozisyonu & Durum Değerlendirme
+            if (Math.abs(netForce) <= Math.max(25, weight * 0.02)) {
+                // Hover (Denge)
+                satBox.style.top = '45%';
+                satBox.style.borderColor = 'var(--accent-amber)';
+                statusBox.className = 'status-badge status-hover';
+                statusBox.innerHTML = `⚖️ TAM HOVER (ASILI KALMA) DENGESİ: İTKİ AĞIRLIĞA EŞİT! (%${hoverPctRounded} Gaz)`;
+            } else if (netForce > 0) {
+                // Yukarı İtiyor
+                satBox.style.top = '15%';
+                satBox.style.borderColor = 'var(--accent-emerald)';
+                statusBox.className = 'status-badge status-up';
+                statusBox.innerHTML = `🚀 İTKİ (${currentThrust}g) > AĞIRLIK (${weight}g): UYDU YUKARI HIZLANIR!`;
+            } else {
+                // Aşağı Düşüyor
+                satBox.style.top = '75%';
+                satBox.style.borderColor = 'var(--accent-rose)';
+                statusBox.className = 'status-badge status-down';
+                statusBox.innerHTML = `▼ İTKİ (${currentThrust}g) < AĞIRLIK (${weight}g): UYDU AŞAĞI DOĞRU DÜŞER!`;
+            }
+        }
+
+        function setThrottle(val) {
+            sliderThrottle.value = val;
+            updateSimulation();
+        }
+
+        function setHoverPreset() {
+            const maxThrust = parseInt(sliderMaxThrust.value);
+            const weight = parseInt(sliderWeight.value);
+            const hoverPctExact = Math.round((weight / maxThrust) * 100);
+            sliderThrottle.value = hoverPctExact;
+            updateSimulation();
+        }
+
+        sliderMaxThrust.addEventListener('input', updateSimulation);
+        sliderWeight.addEventListener('input', updateSimulation);
+        sliderThrottle.addEventListener('input', updateSimulation);
+
+        // İlk açılışta çalıştır
+        updateSimulation();
+    </script>
+</body>
+</html>

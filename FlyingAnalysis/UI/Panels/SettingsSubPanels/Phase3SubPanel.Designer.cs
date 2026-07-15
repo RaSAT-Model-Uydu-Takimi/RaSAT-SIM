@@ -1,3 +1,7 @@
+using System;
+using System.Drawing;
+using System.Windows.Forms;
+
 namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
 {
     partial class Phase3SubPanel
@@ -28,12 +32,10 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             this.lblCheckFreq = new System.Windows.Forms.Label();
             this.numCheckFreq = new System.Windows.Forms.NumericUpDown();
             this.lblLoopInfo = new System.Windows.Forms.Label();
-            this.grpSigmaDeploy = new System.Windows.Forms.GroupBox();
-            this.lblSigmaArea = new System.Windows.Forms.Label();
-            this.numSigmaArea = new System.Windows.Forms.NumericUpDown();
-            this.lblLinearTransitionTime = new System.Windows.Forms.Label();
-            this.numLinearTransitionTime = new System.Windows.Forms.NumericUpDown();
-            this.lblLinearNote = new System.Windows.Forms.Label();
+            this.grpClosedWingDeploy = new System.Windows.Forms.GroupBox();
+            this.lblWingClosedArea = new System.Windows.Forms.Label();
+            this.numWingClosedArea = new System.Windows.Forms.NumericUpDown();
+            this.lblClosedWingNote = new System.Windows.Forms.Label();
             this.grpForceDiagram = new System.Windows.Forms.GroupBox();
             this.lblForceHeader = new System.Windows.Forms.Label();
             this.lblForceDiagramVisual = new System.Windows.Forms.Label();
@@ -43,9 +45,8 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             ((System.ComponentModel.ISupportInitialize)(this.numTimeout)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numThreshold)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numCheckFreq)).BeginInit();
-            this.grpSigmaDeploy.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.numSigmaArea)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.numLinearTransitionTime)).BeginInit();
+            this.grpClosedWingDeploy.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numWingClosedArea)).BeginInit();
             this.grpForceDiagram.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -79,9 +80,9 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             this.lblSeparateMech.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(51)))), ((int)(((byte)(65)))), ((int)(((byte)(85)))));
             this.lblSeparateMech.Location = new System.Drawing.Point(20, 40);
             this.lblSeparateMech.Name = "lblSeparateMech";
-            this.lblSeparateMech.Size = new System.Drawing.Size(685, 21);
+            this.lblSeparateMech.Size = new System.Drawing.Size(730, 21);
             this.lblSeparateMech.TabIndex = 0;
-            this.lblSeparateMech.Text = "Durum: S2 halinden \"Separate\" tetikleyicisi geldi. Piroteknik/Mekanik ayırıcı komut bloğu çalıştırılır.";
+            this.lblSeparateMech.Text = "Durum: S2 halinden \"Separate\" tetikleyicisi geldi. Taşıyıcı (550g) ayrılır, Görev Yükü (1250g) tek başına kalır.";
             // 
             // grpSeparationCheckLoop
             // 
@@ -179,76 +180,52 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             this.lblLoopInfo.TabIndex = 6;
             this.lblLoopInfo.Text = "Not: Bu fazda sızdıran kova YOKTUR. \"Ayrıldı Mı?\" şart bloğu evet dönene kadar sorgu döngüsü çalışır.";
             // 
-            // grpSigmaDeploy
+            // grpClosedWingDeploy
             // 
-            this.grpSigmaDeploy.Controls.Add(this.lblSigmaArea);
-            this.grpSigmaDeploy.Controls.Add(this.numSigmaArea);
-            this.grpSigmaDeploy.Controls.Add(this.lblLinearTransitionTime);
-            this.grpSigmaDeploy.Controls.Add(this.numLinearTransitionTime);
-            this.grpSigmaDeploy.Controls.Add(this.lblLinearNote);
-            this.grpSigmaDeploy.Font = new System.Drawing.Font("Segoe UI Semibold", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.grpSigmaDeploy.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(41)))), ((int)(((byte)(59)))));
-            this.grpSigmaDeploy.Location = new System.Drawing.Point(25, 380);
-            this.grpSigmaDeploy.Name = "grpSigmaDeploy";
-            this.grpSigmaDeploy.Size = new System.Drawing.Size(870, 175);
-            this.grpSigmaDeploy.TabIndex = 3;
-            this.grpSigmaDeploy.TabStop = false;
-            this.grpSigmaDeploy.Text = "Komut Bloğu 2: SİGMA Takımlarını Aç (Doğrusal Alan Geçişi)";
+            this.grpClosedWingDeploy.Controls.Add(this.lblWingClosedArea);
+            this.grpClosedWingDeploy.Controls.Add(this.numWingClosedArea);
+            this.grpClosedWingDeploy.Controls.Add(this.lblClosedWingNote);
+            this.grpClosedWingDeploy.Font = new System.Drawing.Font("Segoe UI Semibold", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.grpClosedWingDeploy.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(41)))), ((int)(((byte)(59)))));
+            this.grpClosedWingDeploy.Location = new System.Drawing.Point(25, 380);
+            this.grpClosedWingDeploy.Name = "grpClosedWingDeploy";
+            this.grpClosedWingDeploy.Size = new System.Drawing.Size(870, 150);
+            this.grpClosedWingDeploy.TabIndex = 3;
+            this.grpClosedWingDeploy.TabStop = false;
+            this.grpClosedWingDeploy.Text = "Komut Bloğu 2: Görev Yükü Kapalı Kanat Süzülüşü (Taşıyıcısız Düşüş)";
             // 
-            // lblSigmaArea
+            // lblWingClosedArea
             // 
-            this.lblSigmaArea.AutoSize = true;
-            this.lblSigmaArea.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblSigmaArea.Location = new System.Drawing.Point(20, 40);
-            this.lblSigmaArea.Name = "lblSigmaArea";
-            this.lblSigmaArea.Size = new System.Drawing.Size(225, 21);
-            this.lblSigmaArea.TabIndex = 0;
-            this.lblSigmaArea.Text = "SİGMA Hedef Ref. Alan (A) [m²]:";
+            this.lblWingClosedArea.AutoSize = true;
+            this.lblWingClosedArea.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblWingClosedArea.Location = new System.Drawing.Point(20, 40);
+            this.lblWingClosedArea.Name = "lblWingClosedArea";
+            this.lblWingClosedArea.Size = new System.Drawing.Size(215, 21);
+            this.lblWingClosedArea.TabIndex = 0;
+            this.lblWingClosedArea.Text = "Kapalı Kanat Kesit Alanı [m²]:";
             // 
-            // numSigmaArea
+            // numWingClosedArea
             // 
-            this.numSigmaArea.DecimalPlaces = 4;
-            this.numSigmaArea.Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.numSigmaArea.Increment = new decimal(new int[] { 1, 0, 0, 196608 });
-            this.numSigmaArea.Location = new System.Drawing.Point(20, 70);
-            this.numSigmaArea.Maximum = new decimal(new int[] { 5, 0, 0, 0 });
-            this.numSigmaArea.Name = "numSigmaArea";
-            this.numSigmaArea.Size = new System.Drawing.Size(180, 32);
-            this.numSigmaArea.TabIndex = 1;
-            this.numSigmaArea.Value = new decimal(new int[] { 1256, 0, 0, 262144 });
+            this.numWingClosedArea.DecimalPlaces = 4;
+            this.numWingClosedArea.Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.numWingClosedArea.Increment = new decimal(new int[] { 1, 0, 0, 196608 });
+            this.numWingClosedArea.Location = new System.Drawing.Point(20, 70);
+            this.numWingClosedArea.Maximum = new decimal(new int[] { 5, 0, 0, 0 });
+            this.numWingClosedArea.Name = "numWingClosedArea";
+            this.numWingClosedArea.Size = new System.Drawing.Size(180, 32);
+            this.numWingClosedArea.TabIndex = 1;
+            this.numWingClosedArea.Value = new decimal(new int[] { 150, 0, 0, 262144 });
             // 
-            // lblLinearTransitionTime
+            // lblClosedWingNote
             // 
-            this.lblLinearTransitionTime.AutoSize = true;
-            this.lblLinearTransitionTime.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblLinearTransitionTime.Location = new System.Drawing.Point(298, 40);
-            this.lblLinearTransitionTime.Name = "lblLinearTransitionTime";
-            this.lblLinearTransitionTime.Size = new System.Drawing.Size(262, 21);
-            this.lblLinearTransitionTime.TabIndex = 2;
-            this.lblLinearTransitionTime.Text = "Doğrusal Geçiş Süresi (t_şişme) [sn]:";
-            // 
-            // numLinearTransitionTime
-            // 
-            this.numLinearTransitionTime.DecimalPlaces = 2;
-            this.numLinearTransitionTime.Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.numLinearTransitionTime.Increment = new decimal(new int[] { 1, 0, 0, 65536 });
-            this.numLinearTransitionTime.Location = new System.Drawing.Point(300, 70);
-            this.numLinearTransitionTime.Maximum = new decimal(new int[] { 10, 0, 0, 0 });
-            this.numLinearTransitionTime.Name = "numLinearTransitionTime";
-            this.numLinearTransitionTime.Size = new System.Drawing.Size(180, 32);
-            this.numLinearTransitionTime.TabIndex = 3;
-            this.numLinearTransitionTime.Value = new decimal(new int[] { 120, 0, 0, 131072 });
-            // 
-            // lblLinearNote
-            // 
-            this.lblLinearNote.AutoSize = true;
-            this.lblLinearNote.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblLinearNote.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(16)))), ((int)(((byte)(185)))), ((int)(((byte)(129)))));
-            this.lblLinearNote.Location = new System.Drawing.Point(20, 125);
-            this.lblLinearNote.Name = "lblLinearNote";
-            this.lblLinearNote.Size = new System.Drawing.Size(645, 20);
-            this.lblLinearNote.TabIndex = 4;
-            this.lblLinearNote.Text = "Kural: Yüzey alanı asla 0\'dan başlamaz. A_mevcut değerinden A_hedef değerine doğrusal olarak artar.";
+            this.lblClosedWingNote.AutoSize = true;
+            this.lblClosedWingNote.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblClosedWingNote.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(16)))), ((int)(((byte)(185)))), ((int)(((byte)(129)))));
+            this.lblClosedWingNote.Location = new System.Drawing.Point(20, 115);
+            this.lblClosedWingNote.Name = "lblClosedWingNote";
+            this.lblClosedWingNote.Size = new System.Drawing.Size(720, 20);
+            this.lblClosedWingNote.TabIndex = 2;
+            this.lblClosedWingNote.Text = "Kural: Taşıyıcı ayrıldıktan sonra sadece Görev Yükü kütlesi (1250g) ve kapalı kanat alanı ile limit hız belirlenir.";
             // 
             // grpForceDiagram
             // 
@@ -273,7 +250,7 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             this.lblForceHeader.Name = "lblForceHeader";
             this.lblForceHeader.Size = new System.Drawing.Size(310, 42);
             this.lblForceHeader.TabIndex = 0;
-            this.lblForceHeader.Text = "▼ Fg (Yerçekimi Kuvveti) = 11.77 N\r\n▲ Fd (Hava Sürtünmesi) = 11.77 N";
+            this.lblForceHeader.Text = "▼ Fg (Yerçekimi Kuvveti) = 12.26 N\r\n▲ Fd (Hava Sürtünmesi) = 12.26 N";
             // 
             // lblForceDiagramVisual
             // 
@@ -284,7 +261,7 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             this.lblForceDiagramVisual.Name = "lblForceDiagramVisual";
             this.lblForceDiagramVisual.Size = new System.Drawing.Size(305, 230);
             this.lblForceDiagramVisual.TabIndex = 1;
-            this.lblForceDiagramVisual.Text = "     ▲  Fd (Sürtünme Kuvveti)\r\n     │  = 11.77 Newton\r\n     │  (Limit Hızda Fg\'ye Eşit)\r\n┌────┴────┐\r\n│  GÖREV  │  (Ayrılma Halinde)\r\n│  YÜKÜ   │  A = 0.08 m²\r\n└────┬────┘  Cd = 1.3\r\n     │\r\n     ▼  Fg (Yerçekimi Kuvveti)\r\n        = 1.2 kg × 9.807 m/s²\r\n        = 11.77 Newton\r\n\r\n(Denge Noktası: F_net = 0 N)";
+            this.lblForceDiagramVisual.Text = "     ▲  Fd (Sürtünme Kuvveti)\r\n     │  = 12.26 Newton\r\n     │  (Limit Hızda Fg\'ye Eşit)\r\n┌────┴────┐\r\n│  GÖREV  │  (Taşıyıcı Ayrıldı)\r\n│  YÜKÜ   │  A = 0.0150 m²\r\n└────┬────┘  Cd = 0.80\r\n     │\r\n     ▼  Fg (Yerçekimi Kuvveti)\r\n        = 1.25 kg × 9.807 m/s²\r\n        = 12.26 Newton\r\n\r\n(Denge Noktası: F_net = 0 N)";
             // 
             // lblTerminalVelCalc
             // 
@@ -295,7 +272,7 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             this.lblTerminalVelCalc.Name = "lblTerminalVelCalc";
             this.lblTerminalVelCalc.Size = new System.Drawing.Size(320, 120);
             this.lblTerminalVelCalc.TabIndex = 2;
-            this.lblTerminalVelCalc.Text = "🚀 Teorik Limit Hız (v_limit):\r\n   = 13.60 m/s (~48.96 km/h)\r\n\r\nFormül:\r\nv = √( 2·m·g / (ρ·Cd·A) )\r\n= √( 2×1.2×9.807 / (1.225×1.3×0.08) )";
+            this.lblTerminalVelCalc.Text = "🚀 Teorik Limit Hız (v_limit):\r\n   = 40.83 m/s (~146.98 km/h)\r\n\r\nFormül:\r\nv = √( 2·m·g / (ρ·Cd·A) )\r\n= √( 2×1.25×9.807 / (1.100×0.80×0.0150) )";
             // 
             // Phase3SubPanel
             // 
@@ -304,7 +281,7 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             this.AutoScroll = true;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(248)))), ((int)(((byte)(250)))), ((int)(((byte)(252)))));
             this.Controls.Add(this.grpForceDiagram);
-            this.Controls.Add(this.grpSigmaDeploy);
+            this.Controls.Add(this.grpClosedWingDeploy);
             this.Controls.Add(this.grpSeparationCheckLoop);
             this.Controls.Add(this.grpSeparateTrigger);
             this.Controls.Add(this.lblTitle);
@@ -318,10 +295,9 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             ((System.ComponentModel.ISupportInitialize)(this.numTimeout)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numThreshold)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numCheckFreq)).EndInit();
-            this.grpSigmaDeploy.ResumeLayout(false);
-            this.grpSigmaDeploy.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.numSigmaArea)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.numLinearTransitionTime)).EndInit();
+            this.grpClosedWingDeploy.ResumeLayout(false);
+            this.grpClosedWingDeploy.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numWingClosedArea)).EndInit();
             this.grpForceDiagram.ResumeLayout(false);
             this.grpForceDiagram.PerformLayout();
             this.ResumeLayout(false);
@@ -342,16 +318,13 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
         private System.Windows.Forms.Label lblCheckFreq;
         private System.Windows.Forms.NumericUpDown numCheckFreq;
         private System.Windows.Forms.Label lblLoopInfo;
-        private System.Windows.Forms.GroupBox grpSigmaDeploy;
-        private System.Windows.Forms.Label lblSigmaArea;
-        private System.Windows.Forms.NumericUpDown numSigmaArea;
-        private System.Windows.Forms.Label lblLinearTransitionTime;
-        private System.Windows.Forms.NumericUpDown numLinearTransitionTime;
-        private System.Windows.Forms.Label lblLinearNote;
+        private System.Windows.Forms.GroupBox grpClosedWingDeploy;
+        private System.Windows.Forms.Label lblWingClosedArea;
+        private System.Windows.Forms.NumericUpDown numWingClosedArea;
+        private System.Windows.Forms.Label lblClosedWingNote;
         private System.Windows.Forms.GroupBox grpForceDiagram;
         private System.Windows.Forms.Label lblForceHeader;
         private System.Windows.Forms.Label lblForceDiagramVisual;
         private System.Windows.Forms.Label lblTerminalVelCalc;
     }
 }
-

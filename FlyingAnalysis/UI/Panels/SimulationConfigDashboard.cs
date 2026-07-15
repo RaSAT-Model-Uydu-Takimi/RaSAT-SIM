@@ -22,7 +22,6 @@ namespace FlyingAnalysis.UI.Panels
             btnTab6_ControlledDescent.Click += (s, e) => LoadSubPanel(new Phase4SubPanel(), "DURUM: 6. Faz 4 (Aktif İniş - 4 Alt Fazlı Kademeli PID & APAM) Paneli Aktif.");
             btnTab7_Landing.Click += (s, e) => LoadSubPanel(new ApamSubPanel(), "DURUM: 7. APAM (Acil Durum Paraşütü, Sızdıran Kova & Limit Hız) Paneli Aktif.");
             btnTab8_Contingency.Click += (s, e) => LoadSubPanel(new Phase5SubPanel(), "DURUM: 8. Faz 5 (Yere İniş Doğrulaması & İniş Sertliği Kriterleri) Paneli Aktif.");
-            btnTab9_SensorCalibration.Click += (s, e) => LoadSubPanel(new SensorSettingsSubPanel(), "DURUM: 9. Sensör Hata Enjeksiyonu & Kalibrasyon Modeli Paneli Aktif.");
 
 
 

@@ -137,7 +137,7 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             this.grpSigmaLeakyBucket.Size = new System.Drawing.Size(870, 450);
             this.grpSigmaLeakyBucket.TabIndex = 2;
             this.grpSigmaLeakyBucket.TabStop = false;
-            this.grpSigmaLeakyBucket.Text = "2. Kısım: SİGMA Ayrılma Kararı (Faz 3\'e Geçiş Sızdıran Kova ve Telekomut)";
+            this.grpSigmaLeakyBucket.Text = "2. Kısım: Taşıyıcı Ayrılma Kararı (Faz 3\'e Geçiş Sızdıran Kova ve Telekomut)";
             // 
             // numBucketCapacity
             // 
