@@ -26,6 +26,8 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             cmbSensorType = new ComboBox();
             btnPage1_Settings = new Button();
             btnPage2_Chart = new Button();
+            btnPage3_Estimation = new Button();
+            pnlPage3_Estimation = new Panel();
             grpRange = new GroupBox();
             lblFullScaleInfo = new Label();
             lblRangeMax = new Label();
@@ -182,10 +184,32 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             btnPage2_Chart.ForeColor = Color.White;
             btnPage2_Chart.Location = new Point(605, 60);
             btnPage2_Chart.Name = "btnPage2_Chart";
-            btnPage2_Chart.Size = new Size(560, 44);
+            btnPage2_Chart.Size = new Size(380, 44);
             btnPage2_Chart.TabIndex = 4;
-            btnPage2_Chart.Text = "Sayfa 2: Zaman Serisi & Dağılım Analizi (Grafikler)";
+            btnPage2_Chart.Text = "Sayfa 2: Zaman Serisi & Dağılım Analizi";
             btnPage2_Chart.UseVisualStyleBackColor = false;
+            // 
+            // btnPage3_Estimation
+            // 
+            btnPage3_Estimation.BackColor = Color.FromArgb(51, 65, 85);
+            btnPage3_Estimation.FlatAppearance.BorderSize = 0;
+            btnPage3_Estimation.FlatStyle = FlatStyle.Flat;
+            btnPage3_Estimation.Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            btnPage3_Estimation.ForeColor = Color.White;
+            btnPage3_Estimation.Location = new Point(1005, 60);
+            btnPage3_Estimation.Name = "btnPage3_Estimation";
+            btnPage3_Estimation.Size = new Size(310, 44);
+            btnPage3_Estimation.TabIndex = 5;
+            btnPage3_Estimation.Text = "Sayfa 3: Kestirim Çekirdeği (EKF)";
+            btnPage3_Estimation.UseVisualStyleBackColor = false;
+            // 
+            // pnlPage3_Estimation
+            // 
+            pnlPage3_Estimation.Location = new Point(25, 120);
+            pnlPage3_Estimation.Name = "pnlPage3_Estimation";
+            pnlPage3_Estimation.Size = new Size(1340, 750);
+            pnlPage3_Estimation.Visible = false;
+            pnlPage3_Estimation.BackColor = Color.FromArgb(15, 23, 42);
             // 
             // grpRange
             // 
@@ -1080,11 +1104,13 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             AutoScaleMode = AutoScaleMode.Font;
             AutoScroll = true;
             BackColor = Color.FromArgb(241, 245, 249);
+            Controls.Add(pnlPage3_Estimation);
             Controls.Add(grpPage2_AnalysisAndPlots);
             Controls.Add(grpConsoleLog);
             Controls.Add(grpFileAndCalibrationModules);
             Controls.Add(grpErrorsAndCalculated);
             Controls.Add(grpRange);
+            Controls.Add(btnPage3_Estimation);
             Controls.Add(btnPage2_Chart);
             Controls.Add(btnPage1_Settings);
             Controls.Add(btnSaveSensorProfile);
@@ -1170,6 +1196,8 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
         private System.Windows.Forms.ComboBox cmbSensorType;
         private System.Windows.Forms.Button btnPage1_Settings;
         private System.Windows.Forms.Button btnPage2_Chart;
+        private System.Windows.Forms.Button btnPage3_Estimation;
+        private System.Windows.Forms.Panel pnlPage3_Estimation;
 
         private System.Windows.Forms.GroupBox grpRange;
         private System.Windows.Forms.Label lblRangeMin;

@@ -54,6 +54,9 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
         private System.Windows.Forms.GroupBox grpLiveForceDiagram;
         private System.Windows.Forms.Label lblLiveForceAscii;
 
+        private System.Windows.Forms.Label lblConfidenceDisplay;
+        private System.Windows.Forms.ProgressBar prgConfidence;
+
         private System.Windows.Forms.Timer timerPlayback;
 
         protected override void Dispose(bool disposing)
@@ -114,6 +117,8 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             this.plotAcceleration = new ScottPlot.WinForms.FormsPlot();
             this.grpLiveForceDiagram = new System.Windows.Forms.GroupBox();
             this.lblLiveForceAscii = new System.Windows.Forms.Label();
+            this.lblConfidenceDisplay = new System.Windows.Forms.Label();
+            this.prgConfidence = new System.Windows.Forms.ProgressBar();
 
             this.pnlHeaderControls.SuspendLayout();
             this.grpAddEvent.SuspendLayout();
@@ -136,6 +141,8 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             // pnlHeaderControls
             // 
             this.pnlHeaderControls.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(15)))), ((int)(((byte)(23)))), ((int)(((byte)(42)))));
+            this.pnlHeaderControls.Controls.Add(this.prgConfidence);
+            this.pnlHeaderControls.Controls.Add(this.lblConfidenceDisplay);
             this.pnlHeaderControls.Controls.Add(this.btnRunSimulation);
             this.pnlHeaderControls.Controls.Add(this.cmbPhysicsFreqHz);
             this.pnlHeaderControls.Controls.Add(this.lblFreqTitle);
@@ -546,6 +553,24 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             this.lblLiveForceAscii.Padding = new System.Windows.Forms.Padding(4);
             this.lblLiveForceAscii.Size = new System.Drawing.Size(388, 134);
             this.lblLiveForceAscii.Text = "     ▲ F_d (Hava Sürtünmesi @ A=0.0450m²) = +0.00 N\r\n     ▲ F_dış (Timeline Aktör Kuvveti)        = +0.00 N\r\n┌────┴─────────────────────────────────────────────┐\r\n│  GÖREV YÜKÜ (FAZ 4): 1.25 kg (Açık Kanat)     │\r\n└────┬─────────────────────────────────────────────┘\r\n     ▼ F_g (Yerçekimi Kuvveti)                 = -12.26 N\r\n------------------------------------------------------\r\n  NET BİLEŞKE: -12.26 N | İVME: -9.81 m/s²";
+
+            // lblConfidenceDisplay
+            this.lblConfidenceDisplay.Font = new System.Drawing.Font("Segoe UI Semibold", 10F, System.Drawing.FontStyle.Bold);
+            this.lblConfidenceDisplay.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(16)))), ((int)(((byte)(185)))), ((int)(((byte)(129)))));
+            this.lblConfidenceDisplay.Location = new System.Drawing.Point(835, 5);
+            this.lblConfidenceDisplay.Name = "lblConfidenceDisplay";
+            this.lblConfidenceDisplay.Size = new System.Drawing.Size(180, 24);
+            this.lblConfidenceDisplay.Text = "🟢 Güven: %100.0";
+
+            // prgConfidence
+            this.prgConfidence.Location = new System.Drawing.Point(835, 32);
+            this.prgConfidence.Name = "prgConfidence";
+            this.prgConfidence.Size = new System.Drawing.Size(180, 14);
+            this.prgConfidence.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
+            this.prgConfidence.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(16)))), ((int)(((byte)(185)))), ((int)(((byte)(129)))));
+            this.prgConfidence.Minimum = 0;
+            this.prgConfidence.Maximum = 100;
+            this.prgConfidence.Value = 100;
 
             // 
             // TimelineStudioSubPanel

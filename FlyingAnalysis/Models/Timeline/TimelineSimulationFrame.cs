@@ -24,8 +24,17 @@ namespace FlyingAnalysis.Models.Timeline
         public double DragForceNewton { get; set; }
         public double NetForceNewton { get; set; }
 
-        // Durumlar
+        // Durumlar ve Sensör Kesintileri
         public bool IsSensorCutoffActive { get; set; }
+        public bool IsBaroCutoffActive { get; set; }
+        public bool IsAccCutoffActive { get; set; }
+        public bool IsTempCutoffActive { get; set; }
         public bool IsSpecialNoiseActive { get; set; }
+
+        // Gelişmiş Kalman (Estimation Core) Çıktıları
+        public double EstimatedPosition { get; set; }
+        public double EstimatedVelocity { get; set; }
+        public double EstimatedAcceleration { get; set; }
+        public double ConfidenceScore { get; set; } = 100.0; // Güven Katsayısı [%0..100]
     }
 }

@@ -57,13 +57,19 @@ namespace FlyingAnalysis.Services
 
             bool hasBeenAirborne = initialAltitudeMeter > 0.1;
 
+            var estimationEngine = new EstimationCoreEngine();
+            double initialTemp = GlobalSimulationConfig.CalculateTemperatureCelsius(currentPos);
+            estimationEngine.Reset(currentPos, initialTemp);
+
             for (int step = 0; step <= totalSteps; step++)
             {
                 double t = step * dt;
 
                 // 1. Olayları Tara
                 double activeForceNewton = 0.0;
-                bool isCutoff = false;
+                bool isBaroCutoff = false;
+                bool isAccCutoff = false;
+                bool isTempCutoff = false;
                 bool isSpecialNoise = false;
                 double extraNoiseSigma = 0.0;
 
@@ -79,7 +85,9 @@ namespace FlyingAnalysis.Services
                             }
                             else if (ev.EventType == TimelineEventType.SensorCutoff)
                             {
-                                isCutoff = true;
+                                if (ev.TargetSensor == TargetSensorType.All || ev.TargetSensor == TargetSensorType.Barometer) isBaroCutoff = true;
+                                if (ev.TargetSensor == TargetSensorType.All || ev.TargetSensor == TargetSensorType.Accelerometer) isAccCutoff = true;
+                                if (ev.TargetSensor == TargetSensorType.All || ev.TargetSensor == TargetSensorType.Temperature) isTempCutoff = true;
                             }
                             else if (ev.EventType == TimelineEventType.SpecialConditionNoise)
                             {
@@ -94,6 +102,7 @@ namespace FlyingAnalysis.Services
                 // 2. Sıcaklık ve Basınç (Atmosferik Hidrostatik Zincir)
                 double temp = GlobalSimulationConfig.CalculateTemperatureCelsius(currentPos);
                 double truePressurePa = GlobalSimulationConfig.CalculatePressurePa(currentPos);
+                if (isTempCutoff) temp = double.NaN;
 
                 // 3. Kuvvetler ve İvme (Aşağı yön -gravity, hareket yönüne ters sürtünme)
                 double fGravity = -massKg * gravity;
@@ -120,15 +129,16 @@ namespace FlyingAnalysis.Services
                 double rawAcc = double.NaN;
                 double calAcc = double.NaN;
 
-                if (!isCutoff)
+                if (!isBaroCutoff)
                 {
-                    // Barometre: İrtifa -> Basınç -> Forward Error Model -> İrtifa -> Ters Kalibrasyon
                     double noisyAltitude = GlobalSimulationConfig.ApplySensorForwardError(currentPos, true, _rand, step, totalSteps, isSpecialNoise, extraNoiseSigma * 1.5);
                     double measuredPressurePa = GlobalSimulationConfig.CalculatePressurePa(Math.Max(0.0, noisyAltitude));
                     rawBaro = GlobalSimulationConfig.CalculateAltitudeFromPressure(measuredPressurePa);
                     calBaro = GlobalSimulationConfig.ApplySensorReverseCalibration(rawBaro, true);
+                }
 
-                    // İvmeölçer: Doğrudan İvme -> Forward Error Model -> Ters Kalibrasyon
+                if (!isAccCutoff)
+                {
                     rawAcc = GlobalSimulationConfig.ApplySensorForwardError(currentAcc, false, _rand, step, totalSteps, isSpecialNoise, extraNoiseSigma * 0.4);
                     calAcc = GlobalSimulationConfig.ApplySensorReverseCalibration(rawAcc, false);
                 }
@@ -148,9 +158,16 @@ namespace FlyingAnalysis.Services
                     GravityForceNewton = fGravity,
                     DragForceNewton = fDrag,
                     NetForceNewton = fNet,
-                    IsSensorCutoffActive = isCutoff,
+                    IsSensorCutoffActive = isBaroCutoff || isAccCutoff || isTempCutoff,
+                    IsBaroCutoffActive = isBaroCutoff,
+                    IsAccCutoffActive = isAccCutoff,
+                    IsTempCutoffActive = isTempCutoff,
                     IsSpecialNoiseActive = isSpecialNoise
                 };
+
+                // Kestirim Çekirdeği (Gelişmiş Kalman) Adımı
+                estimationEngine.Step(frame, dt);
+
                 frames.Add(frame);
 
                 // Yere Çarpma / İniş (Impact Stop) Kontrolü: Havalanıp tekrar yere düştüğünde simülasyon anında durur

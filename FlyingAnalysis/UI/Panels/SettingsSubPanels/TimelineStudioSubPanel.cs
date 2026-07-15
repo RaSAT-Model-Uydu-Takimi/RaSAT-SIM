@@ -313,6 +313,7 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             double[] posTrue = _simulationFrames.Select(f => f.TruePosition).ToArray();
             double[] posRaw = _simulationFrames.Select(f => f.RawBaroPosition).ToArray();
             double[] posCal = _simulationFrames.Select(f => f.CalibratedBaroPosition).ToArray();
+            double[] posEst = _simulationFrames.Select(f => f.EstimatedPosition).ToArray();
 
             var posLayers = new List<(int Order, Action DrawAction)>();
             if (profile.PosTrue.Show)
@@ -345,6 +346,16 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
                     sPosCal.MarkerSize = 0f;
                 }));
             }
+            if (profile.PosEst.Show)
+            {
+                posLayers.Add((profile.PosEst.DrawOrder, () => {
+                    var sPosEst = plotPosition.Plot.Add.Scatter(xs, posEst);
+                    sPosEst.LegendText = "Kalman Kestirim";
+                    sPosEst.Color = ToSpColor(profile.PosEst.Color);
+                    sPosEst.LineWidth = profile.PosEst.LineWidth;
+                    sPosEst.MarkerSize = 0f;
+                }));
+            }
             foreach (var item in posLayers.OrderBy(x => x.Order)) item.DrawAction();
 
             _vlinePos = plotPosition.Plot.Add.VerticalLine(timelineControl.CurrentPlayheadTime);
@@ -356,15 +367,30 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
 
             // 2. Hız Grafiği
             plotVelocity.Plot.Clear();
+            var velLayers = new List<(int Order, Action DrawAction)>();
             if (profile.VelTrue.Show)
             {
-                double[] velTrue = _simulationFrames.Select(f => f.TrueVelocity).ToArray();
-                var sVelTrue = plotVelocity.Plot.Add.Scatter(xs, velTrue);
-                sVelTrue.LegendText = "Gerçek Hız";
-                sVelTrue.Color = ToSpColor(profile.VelTrue.Color);
-                sVelTrue.LineWidth = profile.VelTrue.LineWidth;
-                sVelTrue.MarkerSize = 0f;
+                velLayers.Add((profile.VelTrue.DrawOrder, () => {
+                    double[] velTrue = _simulationFrames.Select(f => f.TrueVelocity).ToArray();
+                    var sVelTrue = plotVelocity.Plot.Add.Scatter(xs, velTrue);
+                    sVelTrue.LegendText = "Gerçek Hız";
+                    sVelTrue.Color = ToSpColor(profile.VelTrue.Color);
+                    sVelTrue.LineWidth = profile.VelTrue.LineWidth;
+                    sVelTrue.MarkerSize = 0f;
+                }));
             }
+            if (profile.VelEst.Show)
+            {
+                velLayers.Add((profile.VelEst.DrawOrder, () => {
+                    double[] velEst = _simulationFrames.Select(f => f.EstimatedVelocity).ToArray();
+                    var sVelEst = plotVelocity.Plot.Add.Scatter(xs, velEst);
+                    sVelEst.LegendText = "Kalman Kestirim Hız";
+                    sVelEst.Color = ToSpColor(profile.VelEst.Color);
+                    sVelEst.LineWidth = profile.VelEst.LineWidth;
+                    sVelEst.MarkerSize = 0f;
+                }));
+            }
+            foreach (var item in velLayers.OrderBy(x => x.Order)) item.DrawAction();
 
             _vlineVel = plotVelocity.Plot.Add.VerticalLine(timelineControl.CurrentPlayheadTime);
             _vlineVel.Color = ScottPlot.Colors.Red;
@@ -378,6 +404,7 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             double[] accTrue = _simulationFrames.Select(f => f.TrueAcceleration).ToArray();
             double[] accRaw = _simulationFrames.Select(f => f.RawAcceleration).ToArray();
             double[] accCal = _simulationFrames.Select(f => f.CalibratedAcceleration).ToArray();
+            double[] accEst = _simulationFrames.Select(f => f.EstimatedAcceleration).ToArray();
 
             var accLayers = new List<(int Order, Action DrawAction)>();
             if (profile.AccTrue.Show)
@@ -410,6 +437,16 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
                     sAccCal.MarkerSize = 0f;
                 }));
             }
+            if (profile.AccEst.Show)
+            {
+                accLayers.Add((profile.AccEst.DrawOrder, () => {
+                    var sAccEst = plotAcceleration.Plot.Add.Scatter(xs, accEst);
+                    sAccEst.LegendText = "Kalman Kestirim İvme";
+                    sAccEst.Color = ToSpColor(profile.AccEst.Color);
+                    sAccEst.LineWidth = profile.AccEst.LineWidth;
+                    sAccEst.MarkerSize = 0f;
+                }));
+            }
             foreach (var item in accLayers.OrderBy(x => x.Order)) item.DrawAction();
 
             _vlineAcc = plotAcceleration.Plot.Add.VerticalLine(timelineControl.CurrentPlayheadTime);
@@ -436,6 +473,22 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
                 lblTimeDisplay.Text = $"⏱️ Zaman: {frame.Time:F2} s / {_simulationDuration:F1} s";
                 lblAltitudeDisplay.Text = $"🚀 İrtifa: {frame.TruePosition:F1} m";
                 lblTemperatureDisplay.Text = $"🌡️ Sıcaklık: {frame.Temperature:+0.0;-0.0;0.0} °C";
+
+                // Güven Katsayısı Gösterimi
+                double conf = frame.ConfidenceScore;
+                string confEmoji = conf >= 80.0 ? "🟢" : conf >= 50.0 ? "🟡" : conf >= 20.0 ? "🟠" : "🔴";
+                lblConfidenceDisplay.Text = $"{confEmoji} Güven: %{conf:F1}";
+                prgConfidence.Value = Math.Max(0, Math.Min(100, (int)conf));
+
+                // Güven bar rengini dinamik ayarla
+                if (conf >= 80.0)
+                    prgConfidence.ForeColor = Color.FromArgb(16, 185, 129); // Yeşil
+                else if (conf >= 50.0)
+                    prgConfidence.ForeColor = Color.FromArgb(250, 204, 21); // Sarı
+                else if (conf >= 20.0)
+                    prgConfidence.ForeColor = Color.FromArgb(249, 115, 22); // Turuncu
+                else
+                    prgConfidence.ForeColor = Color.FromArgb(239, 68, 68); // Kırmızı
 
                 UpdateLiveForceDiagram(frame);
             }

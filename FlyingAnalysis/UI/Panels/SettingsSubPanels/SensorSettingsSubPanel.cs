@@ -47,6 +47,7 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             // Sayfa Geçişleri
             btnPage1_Settings.Click += (s, e) => SwitchToPage(1);
             btnPage2_Chart.Click += (s, e) => SwitchToPage(2);
+            btnPage3_Estimation.Click += (s, e) => SwitchToPage(3);
 
             // Sayfa 1 - 3.1: Sensör Verisi Üret
             btnGenerateAndSaveCsv.Click += BtnGenerateAndSaveCsv_Click;
@@ -109,29 +110,46 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
 
         private void SwitchToPage(int pageIndex)
         {
+            // Tüm sayfaları gizle
+            grpRange.Visible = false;
+            grpErrorsAndCalculated.Visible = false;
+            grpFileAndCalibrationModules.Visible = false;
+            grpConsoleLog.Visible = false;
+            grpPage2_AnalysisAndPlots.Visible = false;
+            pnlPage3_Estimation.Visible = false;
+
+            // Butonları pasif renge al
+            btnPage1_Settings.BackColor = Color.FromArgb(51, 65, 85);
+            btnPage2_Chart.BackColor = Color.FromArgb(51, 65, 85);
+            btnPage3_Estimation.BackColor = Color.FromArgb(51, 65, 85);
+
             if (pageIndex == 1)
             {
                 grpRange.Visible = true;
                 grpErrorsAndCalculated.Visible = true;
                 grpFileAndCalibrationModules.Visible = true;
                 grpConsoleLog.Visible = true;
-                grpPage2_AnalysisAndPlots.Visible = false;
-
-                btnPage1_Settings.BackColor = Color.FromArgb(((int)(((byte)(15)))), ((int)(((byte)(118)))), ((int)(((byte)(110)))));
-                btnPage2_Chart.BackColor = Color.FromArgb(((int)(((byte)(51)))), ((int)(((byte)(65)))), ((int)(((byte)(85)))));
+                btnPage1_Settings.BackColor = Color.FromArgb(15, 118, 110);
                 LogToConsole("Sayfa 1: Ayarlar, Kalibrasyon ve Dosya Modülleri aktifleştirildi.");
             }
-            else
+            else if (pageIndex == 2)
             {
-                grpRange.Visible = false;
-                grpErrorsAndCalculated.Visible = false;
-                grpFileAndCalibrationModules.Visible = false;
-                grpConsoleLog.Visible = false;
                 grpPage2_AnalysisAndPlots.Visible = true;
-
-                btnPage1_Settings.BackColor = Color.FromArgb(((int)(((byte)(51)))), ((int)(((byte)(65)))), ((int)(((byte)(85)))));
-                btnPage2_Chart.BackColor = Color.FromArgb(((int)(((byte)(15)))), ((int)(((byte)(118)))), ((int)(((byte)(110)))));
+                btnPage2_Chart.BackColor = Color.FromArgb(15, 118, 110);
                 LogToConsole("Sayfa 2: ScottPlot Zaman Serisi ve Çift Çan Eğrisi (PDF) Analiz ekranına geçildi.");
+            }
+            else if (pageIndex == 3)
+            {
+                pnlPage3_Estimation.Visible = true;
+                btnPage3_Estimation.BackColor = Color.FromArgb(15, 118, 110);
+
+                // Dinamik yükle (ilk açılışta)
+                if (pnlPage3_Estimation.Controls.Count == 0)
+                {
+                    var estPanel = new SensorEstimationSubPanel { Dock = DockStyle.Fill };
+                    pnlPage3_Estimation.Controls.Add(estPanel);
+                }
+                LogToConsole("Sayfa 3: Kestirim Çekirdeği (Gelişmiş Kalman Filtresi) parametreleri açıldı.");
             }
         }
 

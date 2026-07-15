@@ -9,10 +9,19 @@ namespace FlyingAnalysis.Models.Timeline
         SpecialConditionNoise  // 3. Özel Durum Gürültüsü [±σ Şok] (Eski adı: Ayrılma/Faz Gürültüsü)
     }
 
+    public enum TargetSensorType
+    {
+        All,           // Tüm Sensörler (Barometre, İvmeölçer, Sıcaklık)
+        Accelerometer, // Sadece İvmeölçer
+        Barometer,     // Sadece Barometre
+        Temperature    // Sadece Sıcaklık Sensörü
+    }
+
     public class TimelineEventItem
     {
         public string Label { get; set; } = string.Empty;
         public TimelineEventType EventType { get; set; }
+        public TargetSensorType TargetSensor { get; set; } = TargetSensorType.All;
         public double StartTime { get; set; }
         public double EndTime { get; set; }
         public double StartValue { get; set; }  // Kuvvet için [Newton], Gürültü için [±σ]

@@ -91,6 +91,15 @@ namespace FlyingAnalysis.Models
         public static double AccProcessedBias { get; set; } = 0.0;
         public static double AccProcessedScalePercent { get; set; } = 0.0;
 
+        // 8. Kestirim Çekirdeği (Estimation Core - EKF) Parametreleri
+        public static double EstProcessNoiseQBase { get; set; } = 0.1;
+        public static double EstBaroNoiseRBase { get; set; } = 0.64;
+        public static double EstAccNoiseRBase { get; set; } = 0.0225;
+        public static double EstBaroCutoffPenalty { get; set; } = 40.0; // Barometre kesildiğinde % güven düşüşü
+        public static double EstAccCutoffPenalty { get; set; } = 30.0;  // İvmeölçer kesildiğinde % güven düşüşü
+        public static double EstTempCutoffPenalty { get; set; } = 8.0;  // Sıcaklık sensörü kesildiğinde % güven düşüşü
+        public static double EstCoastDecayRatePerSec { get; set; } = 2.0; // Kör uçuşta saniyelik güven erimesi
+
         // Merkezi Sensör Ham Hata Uygulayıcısı (Forward Error Model)
         public static double ApplySensorForwardError(double trueValue, bool isBaro, Random rand, int step = -1, int totalSteps = -1, bool isSpecialCondition = false, double extraSigma = 0.0)
         {
@@ -271,7 +280,9 @@ namespace FlyingAnalysis.Models
                     CarrierCrossSectionArea, CarrierCd, MainParachuteArea, MainParachuteCd,
                     WingClosedArea, WingOpenedArea, BodyCd,
                     ApamParachuteArea, ApamParachuteCd,
-                    Phase1Duration, Phase2ToPhase3Delay, Phase3ToPhase4DeployTime, Phase4ToApamDelay
+                    Phase1Duration, Phase2ToPhase3Delay, Phase3ToPhase4DeployTime, Phase4ToApamDelay,
+                    EstProcessNoiseQBase, EstBaroNoiseRBase, EstAccNoiseRBase,
+                    EstBaroCutoffPenalty, EstAccCutoffPenalty, EstTempCutoffPenalty, EstCoastDecayRatePerSec
                 };
                 string json = System.Text.Json.JsonSerializer.Serialize(cfg, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
                 System.IO.File.WriteAllText(filePath, json);
@@ -311,6 +322,13 @@ namespace FlyingAnalysis.Models
                 if (root.TryGetProperty("Phase2ToPhase3Delay", out var p17)) Phase2ToPhase3Delay = p17.GetDouble();
                 if (root.TryGetProperty("Phase3ToPhase4DeployTime", out var p18)) Phase3ToPhase4DeployTime = p18.GetDouble();
                 if (root.TryGetProperty("Phase4ToApamDelay", out var p19)) Phase4ToApamDelay = p19.GetDouble();
+                if (root.TryGetProperty("EstProcessNoiseQBase", out var p20)) EstProcessNoiseQBase = p20.GetDouble();
+                if (root.TryGetProperty("EstBaroNoiseRBase", out var p21)) EstBaroNoiseRBase = p21.GetDouble();
+                if (root.TryGetProperty("EstAccNoiseRBase", out var p22)) EstAccNoiseRBase = p22.GetDouble();
+                if (root.TryGetProperty("EstBaroCutoffPenalty", out var p23)) EstBaroCutoffPenalty = p23.GetDouble();
+                if (root.TryGetProperty("EstAccCutoffPenalty", out var p24)) EstAccCutoffPenalty = p24.GetDouble();
+                if (root.TryGetProperty("EstTempCutoffPenalty", out var p25)) EstTempCutoffPenalty = p25.GetDouble();
+                if (root.TryGetProperty("EstCoastDecayRatePerSec", out var p26)) EstCoastDecayRatePerSec = p26.GetDouble();
                 return true;
             }
             catch (Exception ex)
@@ -324,7 +342,8 @@ namespace FlyingAnalysis.Models
         {
             { "RawData", new ChartLayerInfo { DisplayName = "Ham Sensör Verisi", ColorHex = "#FF4500", LineWidth = 1.0f, DrawOrder = 1, Show = true } },
             { "CalibratedData", new ChartLayerInfo { DisplayName = "Kalibre Edilmiş Veri", ColorHex = "#32CD32", LineWidth = 1.5f, DrawOrder = 2, Show = true } },
-            { "TrueData", new ChartLayerInfo { DisplayName = "Gerçek Referans Verisi", ColorHex = "#FFD700", LineWidth = 3.2f, DrawOrder = 3, Show = true } }
+            { "TrueData", new ChartLayerInfo { DisplayName = "Gerçek Referans Verisi", ColorHex = "#FFD700", LineWidth = 3.2f, DrawOrder = 3, Show = true } },
+            { "EstimatedData", new ChartLayerInfo { DisplayName = "Gelişmiş Kalman Kestirim", ColorHex = "#00FFFF", LineWidth = 2.5f, DrawOrder = 4, Show = true } }
         };
     }
 
@@ -352,14 +371,17 @@ namespace FlyingAnalysis.Models
         public ChartLayerInfo PosTrue { get; set; } = new ChartLayerInfo { DisplayName = "Gerçek Konum", Show = true, Color = System.Drawing.Color.FromArgb(255, 215, 0), LineWidth = 3f, DrawOrder = 1 }; // Gold
         public ChartLayerInfo PosRaw { get; set; } = new ChartLayerInfo { DisplayName = "Ham Barometre Konum", Show = true, Color = System.Drawing.Color.FromArgb(255, 69, 0), LineWidth = 1f, DrawOrder = 2 }; // OrangeRed
         public ChartLayerInfo PosCal { get; set; } = new ChartLayerInfo { DisplayName = "Kalibre Barometre Konum", Show = true, Color = System.Drawing.Color.FromArgb(50, 205, 50), LineWidth = 2f, DrawOrder = 3 }; // LimeGreen
+        public ChartLayerInfo PosEst { get; set; } = new ChartLayerInfo { DisplayName = "Kalman Kestirim Konum", Show = true, Color = System.Drawing.Color.FromArgb(0, 255, 255), LineWidth = 2.5f, DrawOrder = 4 }; // Cyan
 
         // 2. Hız Grafiği Katmanları
         public ChartLayerInfo VelTrue { get; set; } = new ChartLayerInfo { DisplayName = "Gerçek Hız", Show = true, Color = System.Drawing.Color.FromArgb(135, 206, 235), LineWidth = 2.5f, DrawOrder = 1 }; // SkyBlue
+        public ChartLayerInfo VelEst { get; set; } = new ChartLayerInfo { DisplayName = "Kalman Kestirim Hız", Show = true, Color = System.Drawing.Color.FromArgb(0, 255, 255), LineWidth = 2f, DrawOrder = 2 }; // Cyan
 
         // 3. İvme Grafiği Katmanları
         public ChartLayerInfo AccTrue { get; set; } = new ChartLayerInfo { DisplayName = "Gerçek İvme", Show = true, Color = System.Drawing.Color.FromArgb(0, 255, 255), LineWidth = 2.5f, DrawOrder = 1 }; // Cyan
         public ChartLayerInfo AccRaw { get; set; } = new ChartLayerInfo { DisplayName = "Ham İvme", Show = true, Color = System.Drawing.Color.FromArgb(255, 69, 0), LineWidth = 1f, DrawOrder = 2 }; // OrangeRed
         public ChartLayerInfo AccCal { get; set; } = new ChartLayerInfo { DisplayName = "Kalibre İvme", Show = true, Color = System.Drawing.Color.FromArgb(50, 205, 50), LineWidth = 2f, DrawOrder = 3 }; // LimeGreen
+        public ChartLayerInfo AccEst { get; set; } = new ChartLayerInfo { DisplayName = "Kalman Kestirim İvme", Show = true, Color = System.Drawing.Color.FromArgb(0, 255, 255), LineWidth = 2f, DrawOrder = 4 }; // Cyan
 
         // 4. Sensör Kalibrasyon Sayfa 2 - Zaman Serisi Grafiği Katmanları
         public ChartLayerInfo SensorTsTrue { get; set; } = new ChartLayerInfo { DisplayName = "Sensor Referans", Show = true, Color = System.Drawing.Color.FromArgb(255, 215, 0), LineWidth = 3.2f, DrawOrder = 1 }; // Gold
@@ -377,9 +399,13 @@ namespace FlyingAnalysis.Models
         public System.Drawing.Color ColorPosRaw { get => PosRaw.Color; set => PosRaw.Color = value; }
         public bool ShowPosCal { get => PosCal.Show; set => PosCal.Show = value; }
         public System.Drawing.Color ColorPosCal { get => PosCal.Color; set => PosCal.Color = value; }
+        public bool ShowPosEst { get => PosEst.Show; set => PosEst.Show = value; }
+        public System.Drawing.Color ColorPosEst { get => PosEst.Color; set => PosEst.Color = value; }
 
         public bool ShowVelTrue { get => VelTrue.Show; set => VelTrue.Show = value; }
         public System.Drawing.Color ColorVelTrue { get => VelTrue.Color; set => VelTrue.Color = value; }
+        public bool ShowVelEst { get => VelEst.Show; set => VelEst.Show = value; }
+        public System.Drawing.Color ColorVelEst { get => VelEst.Color; set => VelEst.Color = value; }
 
         public bool ShowAccTrue { get => AccTrue.Show; set => AccTrue.Show = value; }
         public System.Drawing.Color ColorAccTrue { get => AccTrue.Color; set => AccTrue.Color = value; }
@@ -387,6 +413,8 @@ namespace FlyingAnalysis.Models
         public System.Drawing.Color ColorAccRaw { get => AccRaw.Color; set => AccRaw.Color = value; }
         public bool ShowAccCal { get => AccCal.Show; set => AccCal.Show = value; }
         public System.Drawing.Color ColorAccCal { get => AccCal.Color; set => AccCal.Color = value; }
+        public bool ShowAccEst { get => AccEst.Show; set => AccEst.Show = value; }
+        public System.Drawing.Color ColorAccEst { get => AccEst.Color; set => AccEst.Color = value; }
 
         public int RowIndexPos { get; set; } = 0;
         public int RowIndexVel { get; set; } = 1;
