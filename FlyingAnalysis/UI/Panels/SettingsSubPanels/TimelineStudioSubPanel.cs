@@ -474,21 +474,26 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
                 lblAltitudeDisplay.Text = $"🚀 İrtifa: {frame.TruePosition:F1} m";
                 lblTemperatureDisplay.Text = $"🌡️ Sıcaklık: {frame.Temperature:+0.0;-0.0;0.0} °C";
 
-                // Güven Katsayısı Gösterimi
+                // 1. Genel Güven Katsayısı Gösterimi
                 double conf = frame.ConfidenceScore;
                 string confEmoji = conf >= 80.0 ? "🟢" : conf >= 50.0 ? "🟡" : conf >= 20.0 ? "🟠" : "🔴";
-                lblConfidenceDisplay.Text = $"{confEmoji} Güven: %{conf:F1}";
+                lblConfidenceDisplay.Text = $"{confEmoji} Genel EKF: %{conf:F1}";
                 prgConfidence.Value = Math.Max(0, Math.Min(100, (int)conf));
+                prgConfidence.ForeColor = conf >= 80 ? Color.FromArgb(16, 185, 129) : conf >= 50 ? Color.FromArgb(250, 204, 21) : conf >= 20 ? Color.FromArgb(249, 115, 22) : Color.FromArgb(239, 68, 68);
 
-                // Güven bar rengini dinamik ayarla
-                if (conf >= 80.0)
-                    prgConfidence.ForeColor = Color.FromArgb(16, 185, 129); // Yeşil
-                else if (conf >= 50.0)
-                    prgConfidence.ForeColor = Color.FromArgb(250, 204, 21); // Sarı
-                else if (conf >= 20.0)
-                    prgConfidence.ForeColor = Color.FromArgb(249, 115, 22); // Turuncu
-                else
-                    prgConfidence.ForeColor = Color.FromArgb(239, 68, 68); // Kırmızı
+                // 2. Barometre + Sıcaklık Zinciri Güveni
+                double baroConf = frame.BaroConfidenceScore;
+                string baroEmoji = baroConf >= 80.0 ? "🔵" : baroConf >= 50.0 ? "🟡" : baroConf >= 20.0 ? "🟠" : "🔴";
+                lblBaroConfDisplay.Text = $"{baroEmoji} Baro+Sıcaklık: %{baroConf:F1}";
+                prgBaroConf.Value = Math.Max(0, Math.Min(100, (int)baroConf));
+                prgBaroConf.ForeColor = baroConf >= 80 ? Color.FromArgb(56, 189, 248) : baroConf >= 50 ? Color.FromArgb(250, 204, 21) : baroConf >= 20 ? Color.FromArgb(249, 115, 22) : Color.FromArgb(239, 68, 68);
+
+                // 3. İvmeölçer (IMU) Güveni
+                double accConf = frame.AccConfidenceScore;
+                string accEmoji = accConf >= 80.0 ? "⚡" : accConf >= 50.0 ? "🟡" : accConf >= 20.0 ? "🟠" : "🔴";
+                lblAccConfDisplay.Text = $"{accEmoji} İvmeölçer: %{accConf:F1}";
+                prgAccConf.Value = Math.Max(0, Math.Min(100, (int)accConf));
+                prgAccConf.ForeColor = accConf >= 80 ? Color.FromArgb(250, 204, 21) : accConf >= 50 ? Color.FromArgb(249, 115, 22) : Color.FromArgb(239, 68, 68);
 
                 UpdateLiveForceDiagram(frame);
             }

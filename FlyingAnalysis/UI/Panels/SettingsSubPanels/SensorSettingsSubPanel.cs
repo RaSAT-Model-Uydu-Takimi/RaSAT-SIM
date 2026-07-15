@@ -82,6 +82,7 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
 
             if (btnSaveSensorProfile != null) btnSaveSensorProfile.Click += BtnSaveSensorProfile_Click;
             if (btnLoadSensorProfile != null) btnLoadSensorProfile.Click += BtnLoadSensorProfile_Click;
+            if (btnMasterSaveCsv != null) btnMasterSaveCsv.Click += BtnMasterSaveCsv_Click;
             if (btnP2ChartLayers != null) btnP2ChartLayers.Click += BtnP2ChartLayers_Click;
 
             // Sayfa 2 - Analiz & Çizim
@@ -799,6 +800,34 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
                 }));
             }
 
+            // 4. Gelişmiş Kalman Kestirimi (EstimatedData)
+            if (!GlobalSimulationConfig.ChartLayers.TryGetValue("EstimatedData", out var lEst))
+                lEst = new ChartLayerInfo { DisplayName = "Gelişmiş Kalman Kestirimi", ColorHex = "#00FFFF", LineWidth = 2.5f, DrawOrder = 4, Visible = true };
+            if (lEst.Visible)
+            {
+                layerItems.Add((lEst.DrawOrder, () => {
+                    // Sayfa 2 üzerindeki ham/kalibre veriye basit 1D Kalman filtresi uygulayıp çizelim
+                    double[] ests = new double[n];
+                    double pState = 1.0;
+                    double qNoise = GlobalSimulationConfig.EstProcessNoiseQBase;
+                    double rNoise = GlobalSimulationConfig.EstBaroNoiseRBase;
+                    double xEst = cals.Length > 0 ? cals[0] : trueVal;
+                    for (int i = 0; i < n; i++)
+                    {
+                        pState += qNoise;
+                        double kGain = pState / (pState + rNoise);
+                        xEst += kGain * (cals[i] - xEst);
+                        pState *= (1.0 - kGain);
+                        ests[i] = xEst;
+                    }
+                    var sEst = plotTimeSeries.Plot.Add.Scatter(xs, ests);
+                    sEst.LegendText = $"Gelişmiş Kalman Kestirimi (Ort: {ests.Average():F2} m)";
+                    sEst.Color = ScottPlot.Color.FromHex(lEst.ColorHex);
+                    sEst.LineWidth = lEst.LineWidth;
+                    sEst.MarkerSize = 0f;
+                }));
+            }
+
             foreach (var item in layerItems.OrderBy(x => x.Order))
             {
                 item.DrawAction();
@@ -1002,6 +1031,84 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
 
         #region Profil Kaydetme/Yükleme & Grafik Katman Ayarları Modal
 
+        private void BtnMasterSaveCsv_Click(object? sender, EventArgs e)
+        {
+            try
+            {
+                SyncToGlobalSensorProfile();
+                int count = (int)numGenCount.Value;
+                if (count <= 0) count = 500;
+                double dt = 0.02; // 50 Hz
+
+                double trueAltBase = (double)numGenTrueVal.Value;
+                double trueAccBase = 15.0; // roket ivmesi örneği
+                double trueTempBase = 15.0;
+
+                using var sfd = new SaveFileDialog
+                {
+                    Filter = "CSV Dosyaları (*.csv)|*.csv|Metin Dosyaları (*.txt)|*.txt|Tüm Dosyalar (*.*)|*.*",
+                    FileName = $"Master_Flight_And_Sensor_Data_N{count}_{DateTime.Now:yyyyMMdd_HHmmss}.csv",
+                    Title = "Tüm Sistem & Sensör & Kestirim Verilerini Evrensel Formatla Kaydet"
+                };
+
+                if (sfd.ShowDialog() == DialogResult.OK)
+                {
+                    StringBuilder sb = new StringBuilder();
+                    sb.AppendLine("Time_s,True_Altitude_m,Raw_Baro_Altitude_m,Calibrated_Baro_Altitude_m,True_Acc_mps2,Raw_Acc_mps2,Calibrated_Acc_mps2,True_Temp_C,Raw_Temp_C,Calibrated_Temp_C,EKF_Estimated_Altitude_m,EKF_Estimated_Velocity_mps,EKF_Estimated_Acc_mps2,Confidence_General_Percent,Confidence_BaroTemp_Percent,Confidence_IMU_Percent");
+
+                    double ekfPos = trueAltBase;
+                    double ekfVel = 0.0;
+                    double ekfAcc = trueAccBase;
+                    double pState = 1.0;
+                    Random rnd = new Random();
+
+                    for (int i = 0; i < count; i++)
+                    {
+                        double t = i * dt;
+                        double trueAlt = trueAltBase + (0.5 * trueAccBase * t * t * 0.01);
+                        double trueAcc = trueAccBase;
+                        double trueTemp = trueTempBase - (trueAlt * 0.0065);
+
+                        // Barometre (İrtifa Eşdeğeri)
+                        double rawBaro = GlobalSimulationConfig.ApplySensorForwardError(trueAlt, true, rnd, i, count);
+                        double calBaro = GlobalSimulationConfig.ApplySensorReverseCalibration(rawBaro, true);
+
+                        // İvmeölçer
+                        double rawAcc = GlobalSimulationConfig.ApplySensorForwardError(trueAcc, false, rnd, i, count);
+                        double calAcc = GlobalSimulationConfig.ApplySensorReverseCalibration(rawAcc, false);
+
+                        // Sıcaklık (Hafif gürültü)
+                        double rawTemp = trueTemp + (rnd.NextDouble() - 0.5) * 0.2;
+                        double calTemp = rawTemp;
+
+                        // Basit EKF adım simülasyonu
+                        pState += GlobalSimulationConfig.EstProcessNoiseQBase;
+                        double kGain = pState / (pState + GlobalSimulationConfig.EstBaroNoiseRBase);
+                        ekfPos += kGain * (calBaro - ekfPos);
+                        ekfVel = (ekfPos - trueAltBase) / (t + dt);
+                        ekfAcc = calAcc;
+                        pState *= (1.0 - kGain);
+
+                        double confGen = Math.Clamp(100.0 - Math.Abs(calBaro - ekfPos) * 2.0, 0.0, 100.0);
+                        double confBaro = Math.Clamp(100.0 - Math.Abs(rawBaro - calBaro) * 5.0, 0.0, 100.0);
+                        double confAcc = Math.Clamp(100.0 - Math.Abs(rawAcc - calAcc) * 10.0, 0.0, 100.0);
+
+                        sb.AppendLine(string.Format(CultureInfo.InvariantCulture,
+                            "{0:F4},{1:F4},{2:F4},{3:F4},{4:F4},{5:F4},{6:F4},{7:F4},{8:F4},{9:F4},{10:F4},{11:F4},{12:F4},{13:F1},{14:F1},{15:F1}",
+                            t, trueAlt, rawBaro, calBaro, trueAcc, rawAcc, calAcc, trueTemp, rawTemp, calTemp, ekfPos, ekfVel, ekfAcc, confGen, confBaro, confAcc));
+                    }
+
+                    File.WriteAllText(sfd.FileName, sb.ToString(), Encoding.UTF8);
+                    LogToConsole($"MASTER CSV Kaydedildi -> {Path.GetFileName(sfd.FileName)} ({count} adım, 15 sütun)");
+                    MessageBox.Show($"Tüm sistem, sensör ve kestirim verileri başarıyla çok sütunlu evrensel CSV dosyasına kaydedildi!\n\nDosya: {sfd.FileName}\nSütun Sayısı: 16\nÖrneklem: {count}", "Master CSV Başarılı", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Master CSV kaydedilirken hata oluştu: {ex.Message}", "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
         private void BtnSaveSensorProfile_Click(object? sender, EventArgs e)
         {
             try
@@ -1088,11 +1195,11 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
                 table.Controls.Add(new Label { Text = "Kalınlık", Font = new Font("Segoe UI Semibold", 10F), AutoSize = true }, 3, 0);
                 table.Controls.Add(new Label { Text = "Çizim Sırası", Font = new Font("Segoe UI Semibold", 10F), AutoSize = true }, 4, 0);
 
-                string[] keys = { "RawData", "CalibratedData", "TrueData" };
-                string[] names = { "Ham Sensör Verisi", "Kalibre Edilmiş Veri", "Gerçek Referans Verisi" };
-                string[] defaultHex = { "#FF4500", "#32CD32", "#FFD700" };
-                float[] defaultWidth = { 2.5f, 2.8f, 3.2f };
-                int[] defaultOrder = { 1, 2, 3 };
+                string[] keys = { "RawData", "CalibratedData", "TrueData", "EstimatedData" };
+                string[] names = { "Ham Sensör Verisi", "Kalibre Edilmiş Veri", "Gerçek Referans Verisi", "Gelişmiş Kalman Kestirimi" };
+                string[] defaultHex = { "#FF4500", "#32CD32", "#FFD700", "#00FFFF" };
+                float[] defaultWidth = { 2.5f, 2.8f, 3.2f, 2.5f };
+                int[] defaultOrder = { 1, 2, 3, 4 };
 
                 var rowControls = new List<(string Key, CheckBox chk, Button btnColor, NumericUpDown numWidth, NumericUpDown numOrder)>();
 

@@ -18,6 +18,8 @@ namespace FlyingAnalysis.Services
 
         private double _lastValidTemp = 15.0;
         private double _currentConfidence = 100.0;
+        private double _baroConfidence = 100.0;
+        private double _accConfidence = 100.0;
         private bool _isInitialized = false;
 
         public void Reset(double initialAltitude, double initialTemperature = 15.0)
@@ -32,6 +34,8 @@ namespace FlyingAnalysis.Services
 
             _lastValidTemp = initialTemperature;
             _currentConfidence = 100.0;
+            _baroConfidence = 100.0;
+            _accConfidence = 100.0;
             _isInitialized = true;
         }
 
@@ -197,7 +201,33 @@ namespace FlyingAnalysis.Services
                 if (_a < 0.0) _a = 0.0;
             }
 
-            // 6. Dinamik Güven Katsayısı (Confidence % 0..100) Hesaplaması
+            // 6. Dinamik Güven Katsayıları (Confidence % 0..100) Hesaplaması
+            // A. Barometre + Sıcaklık Zinciri Güveni
+            double baroConf = 100.0;
+            if (baroCutoff)
+            {
+                baroConf = 0.0;
+            }
+            else
+            {
+                if (tempCutoff) baroConf -= GlobalSimulationConfig.EstTempCutoffPenalty;
+                if (extraNoise) baroConf -= 25.0;
+            }
+            _baroConfidence = Math.Max(0.0, Math.Min(100.0, baroConf));
+
+            // B. İvmeölçer Güveni
+            double accConf = 100.0;
+            if (accCutoff)
+            {
+                accConf = 0.0;
+            }
+            else
+            {
+                if (extraNoise) accConf -= 20.0;
+            }
+            _accConfidence = Math.Max(0.0, Math.Min(100.0, accConf));
+
+            // C. Genel Kestirim Çekirdeği Güveni
             double conf = 100.0;
 
             if (baroCutoff)
@@ -229,6 +259,8 @@ namespace FlyingAnalysis.Services
             frame.EstimatedVelocity = Math.Round(_v, 4);
             frame.EstimatedAcceleration = Math.Round(_a, 4);
             frame.ConfidenceScore = Math.Round(conf, 1);
+            frame.BaroConfidenceScore = Math.Round(_baroConfidence, 1);
+            frame.AccConfidenceScore = Math.Round(_accConfidence, 1);
         }
     }
 }

@@ -35,6 +35,8 @@ namespace FlyingAnalysis.Models.Timeline
         public double EstimatedPosition { get; set; }
         public double EstimatedVelocity { get; set; }
         public double EstimatedAcceleration { get; set; }
-        public double ConfidenceScore { get; set; } = 100.0; // Güven Katsayısı [%0..100]
+        public double ConfidenceScore { get; set; } = 100.0; // Genel Kestirim Güven Katsayısı [%0..100]
+        public double BaroConfidenceScore { get; set; } = 100.0; // Barometre + Sıcaklık Zinciri Güveni [%0..100]
+        public double AccConfidenceScore { get; set; } = 100.0; // İvmeölçer Güveni [%0..100]
     }
 }

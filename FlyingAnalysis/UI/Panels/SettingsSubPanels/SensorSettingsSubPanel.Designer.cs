@@ -27,6 +27,7 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             btnPage1_Settings = new Button();
             btnPage2_Chart = new Button();
             btnPage3_Estimation = new Button();
+            btnMasterSaveCsv = new Button();
             pnlPage3_Estimation = new Panel();
             grpRange = new GroupBox();
             lblFullScaleInfo = new Label();
@@ -155,11 +156,25 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             cmbSensorType.DropDownStyle = ComboBoxStyle.DropDownList;
             cmbSensorType.Font = new Font("Segoe UI", 10F, FontStyle.Regular, GraphicsUnit.Point, 0);
             cmbSensorType.FormattingEnabled = true;
-            cmbSensorType.Items.AddRange(new object[] { "Barometre (İrtifa - m)", "Sıcaklık Sensörü (°C)", "İvmeölçer / IMU (m/s²)" });
+            cmbSensorType.Items.AddRange(new object[] { "Barometre (İrtifa Eşdeğeri [m])", "Sıcaklık Sensörü (°C)", "İvmeölçer / IMU (m/s²)" });
             cmbSensorType.Location = new Point(790, 17);
             cmbSensorType.Name = "cmbSensorType";
             cmbSensorType.Size = new Size(260, 36);
             cmbSensorType.TabIndex = 2;
+            // 
+            // btnMasterSaveCsv
+            // 
+            btnMasterSaveCsv.BackColor = Color.FromArgb(22, 163, 74);
+            btnMasterSaveCsv.FlatAppearance.BorderSize = 0;
+            btnMasterSaveCsv.FlatStyle = FlatStyle.Flat;
+            btnMasterSaveCsv.Font = new Font("Segoe UI Semibold", 9.5F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            btnMasterSaveCsv.ForeColor = Color.White;
+            btnMasterSaveCsv.Location = new Point(380, 15);
+            btnMasterSaveCsv.Name = "btnMasterSaveCsv";
+            btnMasterSaveCsv.Size = new Size(245, 38);
+            btnMasterSaveCsv.TabIndex = 10;
+            btnMasterSaveCsv.Text = "💾 TÜM SİSTEMİ KAYDET (CSV)";
+            btnMasterSaveCsv.UseVisualStyleBackColor = false;
             // 
             // btnPage1_Settings
             // 
@@ -1113,6 +1128,7 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             Controls.Add(btnPage3_Estimation);
             Controls.Add(btnPage2_Chart);
             Controls.Add(btnPage1_Settings);
+            Controls.Add(btnMasterSaveCsv);
             Controls.Add(btnSaveSensorProfile);
             Controls.Add(btnLoadSensorProfile);
             Controls.Add(cmbSensorType);
@@ -1277,6 +1293,7 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
         private System.Windows.Forms.Button btnP2ChartLayers;
         private System.Windows.Forms.Button btnSaveSensorProfile;
         private System.Windows.Forms.Button btnLoadSensorProfile;
+        private System.Windows.Forms.Button btnMasterSaveCsv;
         private System.Windows.Forms.TextBox txtP2SummaryTable;
     }
 }

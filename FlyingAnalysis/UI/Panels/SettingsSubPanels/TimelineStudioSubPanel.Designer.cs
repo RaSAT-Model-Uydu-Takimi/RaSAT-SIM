@@ -56,6 +56,10 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
 
         private System.Windows.Forms.Label lblConfidenceDisplay;
         private System.Windows.Forms.ProgressBar prgConfidence;
+        private System.Windows.Forms.Label lblBaroConfDisplay;
+        private System.Windows.Forms.ProgressBar prgBaroConf;
+        private System.Windows.Forms.Label lblAccConfDisplay;
+        private System.Windows.Forms.ProgressBar prgAccConf;
 
         private System.Windows.Forms.Timer timerPlayback;
 
@@ -119,6 +123,10 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             this.lblLiveForceAscii = new System.Windows.Forms.Label();
             this.lblConfidenceDisplay = new System.Windows.Forms.Label();
             this.prgConfidence = new System.Windows.Forms.ProgressBar();
+            this.lblBaroConfDisplay = new System.Windows.Forms.Label();
+            this.prgBaroConf = new System.Windows.Forms.ProgressBar();
+            this.lblAccConfDisplay = new System.Windows.Forms.Label();
+            this.prgAccConf = new System.Windows.Forms.ProgressBar();
 
             this.pnlHeaderControls.SuspendLayout();
             this.grpAddEvent.SuspendLayout();
@@ -141,6 +149,10 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             // pnlHeaderControls
             // 
             this.pnlHeaderControls.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(15)))), ((int)(((byte)(23)))), ((int)(((byte)(42)))));
+            this.pnlHeaderControls.Controls.Add(this.prgAccConf);
+            this.pnlHeaderControls.Controls.Add(this.lblAccConfDisplay);
+            this.pnlHeaderControls.Controls.Add(this.prgBaroConf);
+            this.pnlHeaderControls.Controls.Add(this.lblBaroConfDisplay);
             this.pnlHeaderControls.Controls.Add(this.prgConfidence);
             this.pnlHeaderControls.Controls.Add(this.lblConfidenceDisplay);
             this.pnlHeaderControls.Controls.Add(this.btnRunSimulation);
@@ -155,7 +167,7 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             this.pnlHeaderControls.Dock = System.Windows.Forms.DockStyle.Top;
             this.pnlHeaderControls.Location = new System.Drawing.Point(0, 0);
             this.pnlHeaderControls.Name = "pnlHeaderControls";
-            this.pnlHeaderControls.Size = new System.Drawing.Size(1200, 56);
+            this.pnlHeaderControls.Size = new System.Drawing.Size(1200, 84);
             this.pnlHeaderControls.TabIndex = 0;
 
             // btnPlay
@@ -555,22 +567,58 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             this.lblLiveForceAscii.Text = "     ▲ F_d (Hava Sürtünmesi @ A=0.0450m²) = +0.00 N\r\n     ▲ F_dış (Timeline Aktör Kuvveti)        = +0.00 N\r\n┌────┴─────────────────────────────────────────────┐\r\n│  GÖREV YÜKÜ (FAZ 4): 1.25 kg (Açık Kanat)     │\r\n└────┬─────────────────────────────────────────────┘\r\n     ▼ F_g (Yerçekimi Kuvveti)                 = -12.26 N\r\n------------------------------------------------------\r\n  NET BİLEŞKE: -12.26 N | İVME: -9.81 m/s²";
 
             // lblConfidenceDisplay
-            this.lblConfidenceDisplay.Font = new System.Drawing.Font("Segoe UI Semibold", 10F, System.Drawing.FontStyle.Bold);
+            this.lblConfidenceDisplay.Font = new System.Drawing.Font("Segoe UI Semibold", 9.5F, System.Drawing.FontStyle.Bold);
             this.lblConfidenceDisplay.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(16)))), ((int)(((byte)(185)))), ((int)(((byte)(129)))));
-            this.lblConfidenceDisplay.Location = new System.Drawing.Point(835, 5);
+            this.lblConfidenceDisplay.Location = new System.Drawing.Point(12, 50);
             this.lblConfidenceDisplay.Name = "lblConfidenceDisplay";
-            this.lblConfidenceDisplay.Size = new System.Drawing.Size(180, 24);
-            this.lblConfidenceDisplay.Text = "🟢 Güven: %100.0";
+            this.lblConfidenceDisplay.Size = new System.Drawing.Size(165, 20);
+            this.lblConfidenceDisplay.Text = "🟢 Genel EKF: %100.0";
 
             // prgConfidence
-            this.prgConfidence.Location = new System.Drawing.Point(835, 32);
+            this.prgConfidence.Location = new System.Drawing.Point(180, 52);
             this.prgConfidence.Name = "prgConfidence";
-            this.prgConfidence.Size = new System.Drawing.Size(180, 14);
+            this.prgConfidence.Size = new System.Drawing.Size(160, 16);
             this.prgConfidence.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
             this.prgConfidence.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(16)))), ((int)(((byte)(185)))), ((int)(((byte)(129)))));
             this.prgConfidence.Minimum = 0;
             this.prgConfidence.Maximum = 100;
             this.prgConfidence.Value = 100;
+
+            // lblBaroConfDisplay
+            this.lblBaroConfDisplay.Font = new System.Drawing.Font("Segoe UI Semibold", 9.5F, System.Drawing.FontStyle.Bold);
+            this.lblBaroConfDisplay.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(56)))), ((int)(((byte)(189)))), ((int)(((byte)(248)))));
+            this.lblBaroConfDisplay.Location = new System.Drawing.Point(365, 50);
+            this.lblBaroConfDisplay.Name = "lblBaroConfDisplay";
+            this.lblBaroConfDisplay.Size = new System.Drawing.Size(185, 20);
+            this.lblBaroConfDisplay.Text = "🔵 Baro+Sıcaklık: %100.0";
+
+            // prgBaroConf
+            this.prgBaroConf.Location = new System.Drawing.Point(553, 52);
+            this.prgBaroConf.Name = "prgBaroConf";
+            this.prgBaroConf.Size = new System.Drawing.Size(160, 16);
+            this.prgBaroConf.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
+            this.prgBaroConf.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(56)))), ((int)(((byte)(189)))), ((int)(((byte)(248)))));
+            this.prgBaroConf.Minimum = 0;
+            this.prgBaroConf.Maximum = 100;
+            this.prgBaroConf.Value = 100;
+
+            // lblAccConfDisplay
+            this.lblAccConfDisplay.Font = new System.Drawing.Font("Segoe UI Semibold", 9.5F, System.Drawing.FontStyle.Bold);
+            this.lblAccConfDisplay.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(204)))), ((int)(((byte)(21)))));
+            this.lblAccConfDisplay.Location = new System.Drawing.Point(735, 50);
+            this.lblAccConfDisplay.Name = "lblAccConfDisplay";
+            this.lblAccConfDisplay.Size = new System.Drawing.Size(165, 20);
+            this.lblAccConfDisplay.Text = "⚡ İvmeölçer: %100.0";
+
+            // prgAccConf
+            this.prgAccConf.Location = new System.Drawing.Point(903, 52);
+            this.prgAccConf.Name = "prgAccConf";
+            this.prgAccConf.Size = new System.Drawing.Size(160, 16);
+            this.prgAccConf.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
+            this.prgAccConf.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(204)))), ((int)(((byte)(21)))));
+            this.prgAccConf.Minimum = 0;
+            this.prgAccConf.Maximum = 100;
+            this.prgAccConf.Value = 100;
 
             // 
             // TimelineStudioSubPanel

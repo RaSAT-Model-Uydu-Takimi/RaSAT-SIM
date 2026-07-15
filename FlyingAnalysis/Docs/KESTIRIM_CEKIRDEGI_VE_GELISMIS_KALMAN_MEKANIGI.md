@@ -110,4 +110,35 @@ Simülasyon tamamlandığında veya canlı akarken, `TimelineSimulationEngine` h
 1. `EstimatedPosition` (Kalman Tahmini İrtifa - Metre) $\to$ **Konum-Zaman Grafiğinde (`posCharts`) yeşil/altın renginde kalın bir katman olarak çizilir.**
 2. `EstimatedVelocity` (Kalman Tahmini Hız - m/s) $\to$ **Hız-Zaman Grafiğinde (`velCharts`) çizilir.**
 3. `EstimatedAcceleration` (Kalman Tahmini İvme - m/s²) $\to$ **İvme-Zaman Grafiğinde (`accCharts`) çizilir.**
-4. `ConfidenceScore` (Kestirim Güven Katsayısı - % 0..100) $\to$ **İstenirse alt barda veya ayrı bir analiz katmanında gösterilir.**
+4. `ConfidenceScore` (Genel Kestirim Güven Katsayısı - % 0..100) $\to$ **`TimelineStudioSubPanel` üstbilgisinde yeşil/sarı bar olarak çizilir.**
+5. `BaroConfidenceScore` (Barometre + Sıcaklık Zinciri Güveni - % 0..100) $\to$ **`TimelineStudioSubPanel` üstbilgisinde mavi bar olarak çizilir.**
+6. `AccConfidenceScore` (İvmeölçer Güveni - % 0..100) $\to$ **`TimelineStudioSubPanel` üstbilgisinde sarı/turuncu bar olarak çizilir.**
+
+---
+
+## 6. BAROMETRE FİZİKSEL DÖNÜŞÜMÜ, BMP580 DATASHEET ANALİZİ VE 3'LÜ GÜVEN BARLARI
+
+### 6.1. Barometrik Basınç ve İrtifa Eşdeğeri (`[m]`) İlişkisi
+Barometrik sensörler doğrudan metre ölçmez; ortam basıncını ($P$, Pascal veya hPa) ve iç termal zemin sıcaklığını ($T$) ölçer. 
+Uluslararası Standart Atmosfer (ISA) hidrostatik denge bağıntısına göre deniz seviyesine yakın konumlarda:
+$$\Delta P \approx -\rho \cdot g \cdot \Delta h \implies 1 \text{ metre irtifa artışı } \approx 11.77 - 12.0 \text{ Pa basınç düşüşü}$$
+
+Bu nedenle RaSAT SIM & FlyingAnalysis arayüzünde (`Sayfa 1 - Hata Enjeksiyonu ve Kalibrasyon`) kullanıcı dostu olması amacıyla girdiğiniz tüm Barometre sapma ve gürültü değerleri **İrtifa Eşdeğeri Metre (`[m]`)** birimindedir. Arka planda simülasyon motoru bu metre gürültüsünü önce ortam basıncına ($Pa$) çevirip, sıcaklık sensöründen gelen verille birlikte tekrar hidrostatik dönüşümden geçirerek gerçekçi sensör davranışı üretir (`Barometre (İrtifa Eşdeğeri [m])`).
+
+### 6.2. Modern MEMS Barometre (Örn. BMP580) Datasheet Değerlerinin Eşdeğeri
+* **Mutlak Doğruluk (Absolute Accuracy / Statik Offset):** Geniş aralıkta tipik $\pm 30 - 50 \text{ Pa}$.
+  * İrtifa Eşdeğeri: $\frac{30..50 \text{ Pa}}{11.77 \text{ Pa/m}} \approx \mathbf{2.5 \text{ m} - 4.2 \text{ m}}$
+* **Lehimleme Kayması (Solder Drift):** $\pm 0.3 \text{ hPa} = \pm 30 \text{ Pa}$.
+  * İrtifa Eşdeğeri: $\approx \mathbf{2.5 \text{ m}}$
+  * *Tavsiye Edilen `Sabit Sapma (Bias)`:* Eğer uçuş öncesi yerde sıfırlama kalibrasyonu yapılmazsa, mutlak hata + lehimleme kayması toplamı için **`BaroBiasMeter = 3.0 m - 4.0 m`** verilmesi fiziksel olarak tam doğru olacaktır (Sistem varsayılanımız: `3.5 m`).
+* **Bağıl Doğruluk (Relative Accuracy / RMS Noise):** Kısa mesafeli yükseklik değişimlerinde $\pm 6 \text{ Pa}$.
+  * İrtifa Eşdeğeri: $\approx \mathbf{0.5 \text{ m}}$
+  * *Tavsiye Edilen `Standart Sapma (\sigma)`:* Uçuş anındaki rüzgar dinamik basıncı ve türbülansla birlikte **`BaroSigmaMeter = 0.5 m - 0.8 m`** aralığı en gerçekçi sonucu verir (Sistem varsayılanımız: `0.8 m`).
+* **Sıcaklık Kayması (Temperature-Induced Offset):** $\pm 0.5 \text{ Pa/K}$.
+  * $30^\circ\text{C}$'lik bir termal şokta dahi $\pm 15 \text{ Pa} (\approx 1.25 \text{ m})$ kayma oluşturur. Bu da dahili kompanzasyon ve `BaroScaleError = 0.005 (%0.5)` parametresi ile mükemmel simüle edilir.
+
+### 6.3. Üçlü Dinamik Güven Katsayısı (3-Bar Confidence UI)
+Kestirim çekirdeğinin o an hangi sensör beslemesine güvendiğini izlemek için `TimelineStudioSubPanel` üst menüsüne 3 ayrı canlı gösterge yerleştirilmiştir:
+1. **Genel Kestirim (EKF) Güveni (`🟢/🟡/🔴`):** İki sensör zincirinin kovaryans ağırlıklı toplamı ve kör uçuş (`Dead Reckoning`) sürüklenme performansı.
+2. **Baro + Sıcaklık (İrtifa) Güveni (`🔵/🟡/🔴`):** Doğrudan basınç ve sıcaklık sensörünün sağlığı. Sıcaklık sensörü kesildiğinde (`Cutoff`), barometrenin hidrostatik basınç-irtifa dönüşümü etkileneceğinden bu bar otomatik olarak ceza yer (`EstTempCutoffPenalty`).
+3. **İvmeölçer (IMU) Güveni (`⚡/🟡/🔴`):** İvmeölçerin kesinti veya aşırı titreşim/şok gürültüsü durumu. Barometre kesikken ivmeölçer %100 sağlamsa, roket çift integrasyonla ataletsel tahmine devam eder.

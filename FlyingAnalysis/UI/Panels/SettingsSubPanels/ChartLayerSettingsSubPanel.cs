@@ -131,14 +131,27 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             AddLayerRow("Gerçek Referans Konum (True)", p.PosTrue);
             AddLayerRow("Ham Barometre Konumu (Raw)", p.PosRaw);
             AddLayerRow("Kalibre Barometre Konumu (Cal)", p.PosCal);
+            AddLayerRow("Kalman Kestirim Konumu (Est EKF)", p.PosEst);
 
-            AddHeader("⚡ Hız Zaman Grafiği Katmanı");
+            AddHeader("⚡ Hız Zaman Grafiği Katmanları");
             AddLayerRow("Gerçek Hız (True)", p.VelTrue);
+            AddLayerRow("Kalman Kestirim Hızı (Est EKF)", p.VelEst);
 
             AddHeader("🚀 İvme Zaman Grafiği Katmanları");
             AddLayerRow("Gerçek İvme (True)", p.AccTrue);
             AddLayerRow("Ham İvmeölçer Verisi (Raw)", p.AccRaw);
             AddLayerRow("Kalibre İvmeölçer Verisi (Cal)", p.AccCal);
+            AddLayerRow("Kalman Kestirim İvmesi (Est EKF)", p.AccEst);
+
+            AddHeader("📊 Sensör Analiz & Zaman Serisi (Sayfa 2) Katmanları");
+            AddLayerRow("Sensör Referans Verisi (True)", p.SensorTsTrue);
+            AddLayerRow("Sensör Ham Ölçümü (Raw)", p.SensorTsRaw);
+            AddLayerRow("Sensör Kalibre Ölçümü (Cal)", p.SensorTsCal);
+
+            AddHeader("📈 Sensör Dağılım & Çan Eğrisi (Sayfa 2) Katmanları");
+            AddLayerRow("Dağılım Referans Hattı (True)", p.SensorDistTrueLine);
+            AddLayerRow("Dağılım Ham Histogram / Eğri (Raw)", p.SensorDistRaw);
+            AddLayerRow("Dağılım Kalibre Histogram / Eğri (Cal)", p.SensorDistCal);
 
             this.Controls.Add(_mainLayout);
         }
