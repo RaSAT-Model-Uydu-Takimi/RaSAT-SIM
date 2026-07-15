@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RaSAT SIM - İleri Düzey Kalman & Sensör Kesintisi (Outage) Laboratuvarı</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #0b0f19;
+            --bg-card: rgba(18, 25, 40, 0.75);
+            --bg-card-border: rgba(255, 255, 255, 0.08);
+            --bg-card-hover: rgba(28, 38, 60, 0.85);
+            --accent-cyan: #06b6d4;
+            --accent-emerald: #10b981;
+            --accent-gold: #f59e0b;
+            --accent-rose: #f43f5e;
+            --accent-purple: #a855f7;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --font-main: 'Inter', sans-serif;
+            --font-heading: 'Outfit', sans-serif;
+            --font-mono: 'Fira Code', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            font-family: var(--font-main);
+            line-height: 1.6;
+            padding: 20px;
+            background-image: 
+                radial-gradient(circle at 15% 20%, rgba(6, 182, 212, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 85% 80%, rgba(168, 85, 247, 0.08) 0%, transparent 40%);
+            min-height: 100vh;
+        }
+
+        header {
+            max-width: 1400px;
+            margin: 0 auto 25px auto;
+            text-align: center;
+            padding: 25px;
+            background: linear-gradient(135deg, rgba(18, 25, 40, 0.9) 0%, rgba(11, 15, 25, 0.95) 100%);
+            border: 1px solid var(--bg-card-border);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        header h1 {
+            font-family: var(--font-heading);
+            font-size: 2.4rem;
+            font-weight: 700;
+            background: linear-gradient(to right, #67e8f9, #34d399, #fde047);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 1.05rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 25px;
+        }
+
+        @media (max-width: 1100px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--bg-card-border);
+            border-radius: 16px;
+            padding: 22px;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.35);
+            margin-bottom: 25px;
+        }
+
+        .card-title {
+            font-family: var(--font-heading);
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid var(--bg-card-border);
+            padding-bottom: 10px;
+        }
+
+        /* Kontrol Elemanları */
+        .control-group {
+            margin-bottom: 18px;
+        }
+
+        .control-group label {
+            display: block;
+            font-size: 0.88rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .control-group .val-display {
+            float: right;
+            font-family: var(--font-mono);
+            color: var(--accent-cyan);
+            font-weight: 600;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--accent-cyan);
+            cursor: pointer;
+            transition: transform 0.15s, background 0.15s;
+            box-shadow: 0 0 10px rgba(6, 182, 212, 0.5);
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            background: #67e8f9;
+        }
+
+        /* Butonlar */
+        .btn-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn {
+            padding: 12px 16px;
+            border-radius: 10px;
+            border: none;
+            font-family: var(--font-main);
+            font-size: 0.92rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #0284c7, #0369a1);
+            color: white;
+            box-shadow: 0 4px 15px rgba(2, 132, 199, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #0369a1, #075985);
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #059669, #047857);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: linear-gradient(135deg, #10b981, #059669);
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #e11d48, #be123c);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #f43f5e, #e11d48);
+            transform: translateY(-2px);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #d97706, #b45309);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            transform: translateY(-2px);
+        }
+
+        .btn-full {
+            grid-column: span 2;
+        }
+
+        /* Kesinti & Olay Butonları (Timeline Actions) */
+        .outage-box {
+            background: rgba(244, 63, 94, 0.12);
+            border: 1px solid rgba(244, 63, 94, 0.35);
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .outage-box.active {
+            background: rgba(244, 63, 94, 0.28);
+            border-color: var(--accent-rose);
+            box-shadow: 0 0 20px rgba(244, 63, 94, 0.4);
+        }
+
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+
+        .switch-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .switch-box {
+            position: relative;
+            width: 48px;
+            height: 26px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 13px;
+            transition: background 0.3s;
+        }
+
+        .switch-box::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+        }
+
+        input[type="checkbox"]:checked + .switch-box {
+            background: var(--accent-rose);
+        }
+
+        input[type="checkbox"]:checked + .switch-box::after {
+            transform: translateX(22px);
+        }
+
+        /* Grafik Konteynerleri */
+        .chart-wrapper {
+            background: rgba(11, 15, 25, 0.85);
+            border: 1px solid var(--bg-card-border);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .chart-title {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        canvas {
+            width: 100%;
+            height: 240px;
+            display: block;
+            border-radius: 8px;
+            background: #070a12;
+        }
+
+        /* Durum Kartları ve Göstergeler */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .metric-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--bg-card-border);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .metric-title {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .metric-val {
+            font-family: var(--font-mono);
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+
+        .val-gold { color: var(--accent-gold); }
+        .val-cyan { color: var(--accent-cyan); }
+        .val-emerald { color: var(--accent-emerald); }
+        .val-rose { color: var(--accent-rose); }
+
+        /* Mühendislik Açıklama Paneli */
+        .deep-dive-panel {
+            background: rgba(16, 185, 129, 0.06);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            border-radius: 14px;
+            padding: 20px;
+            margin-top: 25px;
+        }
+
+        .deep-dive-panel h3 {
+            font-family: var(--font-heading);
+            color: var(--accent-emerald);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .formula-box {
+            background: #070a12;
+            border-left: 4px solid var(--accent-cyan);
+            padding: 12px 18px;
+            margin: 12px 0;
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            color: #67e8f9;
+            border-radius: 0 8px 8px 0;
+            overflow-x: auto;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-left: 8px;
+        }
+
+        .badge-rose { background: rgba(244, 63, 94, 0.2); color: var(--accent-rose); border: 1px solid var(--accent-rose); }
+        .badge-emerald { background: rgba(16, 185, 129, 0.2); color: var(--accent-emerald); border: 1px solid var(--accent-emerald); }
+
+        /* Adım Adım Denklemler İzleyicisi (Inspector) */
+        .inspector-box {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--bg-card-border);
+            border-radius: 10px;
+            padding: 14px;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: #e2e8f0;
+            max-height: 280px;
+            overflow-y: auto;
+        }
+
+        .log-step { color: var(--accent-gold); font-weight: 600; }
+        .log-predict { color: #93c5fd; }
+        .log-update { color: #86efac; }
+        .log-outage { color: #fda4af; font-weight: 700; }
+        .log-gating { color: #fde047; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🛰️ RaSAT İleri Düzey Kalman & Sensör Kesintisi (Outage) Laboratuvarı</h1>
+        <p>
+            Barometre ve IMU verilerinin zaman çizgisindeki kesintilerini (Packet Drop / Blackout), Güven Katsayısının (Kovaryans P Matrisi) kör uçuşta nasıl tırmandığını ve geri bağlandığında nasıl toparladığını canlı simüle edin.
+        </p>
+    </header>
+
+    <div class="container">
+        <!-- SOL PANEL: KONTROLLER VE SENARYO EMİRLERİ -->
+        <div>
+            <div class="card">
+                <div class="card-title">🎛️ Zaman Çizgisi ve Uçuş Kontrolü</div>
+                
+                <div class="control-group">
+                    <label>Simülasyon Hızı: <span class="val-display" id="valSpeed">1x</span></label>
+                    <input type="range" id="rngSpeed" min="1" max="5" value="1" step="1">
+                </div>
+
+                <div class="control-group">
+                    <label>Barometre Gürültüsü (R_baro): <span class="val-display" id="valR">4.0 m²</span></label>
+                    <input type="range" id="rngR" min="0.5" max="25" value="4.0" step="0.5">
+                </div>
+
+                <div class="control-group">
+                    <label>IMU Sürükleme / Süreç Gürültüsü (Q): <span class="val-display" id="valQ">0.05</span></label>
+                    <input type="range" id="rngQ" min="0.005" max="0.5" value="0.05" step="0.005">
+                </div>
+
+                <div class="btn-grid">
+                    <button class="btn btn-success" id="btnPlayPause">▶️ Başlat / Devam Et</button>
+                    <button class="btn btn-primary" id="btnStep">⏭️ 1 Adım İlerle</button>
+                    <button class="btn btn-warning btn-full" id="btnReset">🔄 Sıfırla ve Baştan Başla</button>
+                </div>
+            </div>
+
+            <!-- YER İSTASYONU EMİRLERİ VE KESİNTİ (OUTAGE) KUTUSU -->
+            <div class="card outage-box" id="outageCard">
+                <div class="card-title" style="color: var(--accent-rose); border-color: rgba(244, 63, 94, 0.3);">
+                    ⚠️ Sensör Kesintisi & Olay Yönetimi
+                </div>
+                <p style="font-size: 0.85rem; color: #fecdd3; margin-bottom: 12px;">
+                    Uçuş akarken aşağıdaki anahtarı kapatarak <b>Barometre Veri Kesintisi (Blackout)</b> oluşturun ve sağdaki grafiklerde <b>Güven Katsayısının ($P_{zz}$)</b> nasıl tırmandığını izleyin!
+                </p>
+
+                <label class="toggle-switch">
+                    <span class="switch-label">📡 Barometre Veri Akışı:</span>
+                    <input type="checkbox" id="chkBaroActive" checked style="display: none;">
+                    <div class="switch-box"></div>
+                </label>
+
+                <label class="toggle-switch" style="margin-top: 16px;">
+                    <span class="switch-label">🛡️ Mahalanobis Yenilik Kapısı (Outlier Gating):</span>
+                    <input type="checkbox" id="chkGating" checked style="display: none;">
+                    <div class="switch-box"></div>
+                </label>
+
+                <div class="btn-grid" style="margin-top: 16px;">
+                    <button class="btn btn-danger btn-full" id="btnInjectShock">💥 Anlık Baro Şok / Darbe Ekle (30m)</button>
+                </div>
+            </div>
+
+            <!-- ADIM ADIM DENKLEM İZLEYİCİSİ -->
+            <div class="card">
+                <div class="card-title">🔬 Anlık Denklem & Matematik Logu</div>
+                <div class="inspector-box" id="inspectorLog">
+                    <div class="log-step">⏱️ t = 0.0s [Hazır]</div>
+                    Sistem başlatılmayı bekliyor...
+                </div>
+            </div>
+        </div>
+
+        <!-- SAĞ PANEL: CANLI GRAFİKLER VE MÜHENDİSLİK ANALİZİ -->
+        <div>
+            <!-- ANLIK METRİKLER -->
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-title">Gerçek Yükseklik (X_true)</div>
+                    <div class="metric-val val-gold" id="lblTrue">0.0 m</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-title">Barometre Ölçümü (z_baro)</div>
+                    <div class="metric-val val-cyan" id="lblBaro">0.0 m</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-title">Kalman Kestirimi (X_est)</div>
+                    <div class="metric-val val-emerald" id="lblEst">0.0 m</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-title">Güven Katsayısı (Belirsizlik P)</div>
+                    <div class="metric-val val-rose" id="lblP">1.000</div>
+                </div>
+            </div>
+
+            <!-- GRAFİK 1: YÜKSEKLİK VE KESTİRİM KARŞILAŞTIRMASI -->
+            <div class="chart-wrapper">
+                <div class="chart-header">
+                    <div class="chart-title">
+                        📈 Yükseklik Kestirimi ve Sensör Füzyonu ($Z - \text{Konum}$)
+                        <span id="baroStatusBadge" class="badge badge-emerald">BAROMETRE AKTİF</span>
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">
+                        🟡 Gerçek | 🔵 Baro Ölçüm | 🟢 Adaptif Kalman (EKF) | 🟣 Basit LKF
+                    </div>
+                </div>
+                <canvas id="chartTrajectory"></canvas>
+            </div>
+
+            <!-- GRAFİK 2: KOVARYANS (GÜVEN KATSAYISI P) DEĞİŞİMİ -->
+            <div class="chart-wrapper">
+                <div class="chart-header">
+                    <div class="chart-title" style="color: var(--accent-rose);">
+                        🛡️ Güven Katsayısı ve Belirsizlik Grafiği ($P_{zz}$ Kovaryansı)
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">
+                        Kesinti anında belirsizliğin tırmanışını ve veriler gelince çöküşünü izleyin
+                    </div>
+                </div>
+                <canvas id="chartCovariance"></canvas>
+            </div>
+
+            <!-- GRAFİK 3: KALMAN KAZANCI K VE YENİLİK SKORU -->
+            <div class="chart-wrapper">
+                <div class="chart-header">
+                    <div class="chart-title" style="color: var(--accent-gold);">
+                        ⚙️ Kalman Kazancı ($K_{zz}$) ve Mahalanobis Yenilik Eşiği ($\gamma$)
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">
+                        Sarı: Kalman Kazancı K | Kırmızı Kesikli: Şok Eşiği
+                    </div>
+                </div>
+                <canvas id="chartGain"></canvas>
+            </div>
+
+            <!-- MÜHENDİSLİK AÇIKLAMALARI VE DERİN BİLGİ -->
+            <div class="deep-dive-panel">
+                <h3>💡 Mühendislik Özeti: "Kalman Neden Daha Karmaşık Deniliyor?"</h3>
+                <p style="font-size: 0.95rem; color: #d1fae5; margin-bottom: 12px;">
+                    Önceki basit HTML örneklerinde <b>1-Boyutlu Doğrusal Kalman (LKF)</b> kullanmıştık. Ancak uçuş mekaniği ve atmosferik denklemler <b>doğrusal değildir (non-linear)</b>. Gerçek projelerde şu ileri algoritmalar kullanılır:
+                </p>
+                <div class="formula-box">
+                    <b>1. EKF (Extended Kalman Filter - Genişletilmiş Kalman):</b> Doğrusal olmayan denklemleri ($f(x), h(x)$) her adımda Jakobiyen türev matrisleriyle ($F_k = \frac{\partial f}{\partial x}, H_k = \frac{\partial h}{\partial x}$) teğet doğrusuna indirger.<br>
+                    <b>2. UKF (Unscented Kalman Filter - Sigma Noktalı):</b> Sese yakın hızlarda veya sert manevralarda türev almak yerine özel seçilen deterministik Sigma Noktalarını ($ \mathcal{X}_i $) eğrilerden geçirerek belirsizliği tam hesaplar.<br>
+                    <b>3. AKF (Adaptif & Yenilik Kapılı Kalman):</b> Sensör kesildiğinde veya şok darbesi geldiğinde Mahalanobis mesafesini ($\gamma = y^T S^{-1} y$) ölçerek hatalı veriyi reddeder (Sızdıran kova koruması).
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // SİMÜLASYON PARAMETRELERİ VE DURUM DEĞİŞKENLERİ
+        let isRunning = false;
+        let simStep = 0;
+        let time = 0.0;
+        let dt = 0.1; // 10 Hz simülasyon döngüsü
+        let timer = null;
+
+        // Gerçek Fizik (True State)
+        let trueZ = 0.0;
+        let trueV = 0.0;
+        let trueA = 12.0; // Roket/Uydu dikine fırlatma ivmesi
+
+        // Basit 1D LKF Durumu
+        let lkf_Z = 0.0;
+        let lkf_P = 1.0;
+
+        // İleri Düzey 2-Durumlu Adaptif Kalman (Z ve V)
+        let ekf_Z = 0.0;
+        let ekf_V = 0.0;
+        let ekf_P = [[1.0, 0.0], [0.0, 1.0]];
+
+        // Tarihçe Verileri (Grafikler için son 200 nokta)
+        const maxHistory = 200;
+        let historyTime = [];
+        let historyTrue = [];
+        let historyBaro = [];
+        let historyBaroActive = [];
+        let historyLkf = [];
+        let historyEkf = [];
+        let historyP = [];
+        let historyGain = [];
+        let historyGamma = [];
+
+        // DOM Elementleri
+        const btnPlayPause = document.getElementById('btnPlayPause');
+        const btnStep = document.getElementById('btnStep');
+        const btnReset = document.getElementById('btnReset');
+        const btnInjectShock = document.getElementById('btnInjectShock');
+        const rngSpeed = document.getElementById('rngSpeed');
+        const valSpeed = document.getElementById('valSpeed');
+        const rngR = document.getElementById('rngR');
+        const valR = document.getElementById('valR');
+        const rngQ = document.getElementById('rngQ');
+        const valQ = document.getElementById('valQ');
+        const chkBaroActive = document.getElementById('chkBaroActive');
+        const chkGating = document.getElementById('chkGating');
+        const outageCard = document.getElementById('outageCard');
+        const baroStatusBadge = document.getElementById('baroStatusBadge');
+        const inspectorLog = document.getElementById('inspectorLog');
+
+        const lblTrue = document.getElementById('lblTrue');
+        const lblBaro = document.getElementById('lblBaro');
+        const lblEst = document.getElementById('lblEst');
+        const lblP = document.getElementById('lblP');
+
+        const canvasTraj = document.getElementById('chartTrajectory');
+        const canvasCov = document.getElementById('chartCovariance');
+        const canvasGain = document.getElementById('chartGain');
+        const ctxTraj = canvasTraj.getContext('2d');
+        const ctxCov = canvasCov.getContext('2d');
+        const ctxGain = canvasGain.getContext('2d');
+
+        // Tuval Boyutlarını Ayarla
+        function resizeCanvases() {
+            [canvasTraj, canvasCov, canvasGain].forEach(canvas => {
+                const rect = canvas.parentElement.getBoundingClientRect();
+                canvas.width = rect.width - 30;
+                canvas.height = 240;
+            });
+            drawAllCharts();
+        }
+        window.addEventListener('resize', resizeCanvases);
+
+        // UI Olay Dinleyicileri
+        rngSpeed.addEventListener('input', () => {
+            valSpeed.textContent = rngSpeed.value + 'x';
+            if (isRunning) {
+                clearInterval(timer);
+                startLoop();
+            }
+        });
+
+        rngR.addEventListener('input', () => valR.textContent = parseFloat(rngR.value).toFixed(1) + ' m²');
+        rngQ.addEventListener('input', () => valQ.textContent = parseFloat(rngQ.value).toFixed(3));
+
+        chkBaroActive.addEventListener('change', () => {
+            if (chkBaroActive.checked) {
+                outageCard.classList.remove('active');
+                baroStatusBadge.textContent = "BAROMETRE AKTİF";
+                baroStatusBadge.className = "badge badge-emerald";
+                logToInspector(`[VERİ BAĞLANDI] Barometre iletişimi geri geldi. Güven tazeleniyor!`, 'log-update');
+            } else {
+                outageCard.classList.add('active');
+                baroStatusBadge.textContent = "BAROMETRE KESİLDİ (OUTAGE)";
+                baroStatusBadge.className = "badge badge-rose";
+                logToInspector(`[⚠️ KESİNTİ - OUTAGE] Barometre veri akışı koptu! Sadece IMU ile kör uçuş yapılıyor, P belirsizliği artıyor!`, 'log-outage');
+            }
+        });
+
+        btnInjectShock.addEventListener('click', () => {
+            if (!chkBaroActive.checked) {
+                alert("Barometre şu anda kapalı/kesik durumda. Önce barometre anahtarını açın!");
+                return;
+            }
+            injectShock = true;
+            logToInspector(`[💥 ŞOK DARBESİ] Sensör hattına 30 metrelik ani basınç/yükseklik darbesi enjekte edildi!`, 'log-gating');
+        });
+        let injectShock = false;
+
+        btnPlayPause.addEventListener('click', () => {
+            if (isRunning) {
+                isRunning = false;
+                clearInterval(timer);
+                btnPlayPause.textContent = "▶️ Devam Et";
+                btnPlayPause.className = "btn btn-success";
+            } else {
+                isRunning = true;
+                startLoop();
+                btnPlayPause.textContent = "⏸️ Duraklat";
+                btnPlayPause.className = "btn btn-warning";
+            }
+        });
+
+        btnStep.addEventListener('click', () => {
+            if (isRunning) btnPlayPause.click();
+            stepSimulation();
+        });
+
+        btnReset.addEventListener('click', () => {
+            if (isRunning) btnPlayPause.click();
+            resetSimulation();
+        });
+
+        function startLoop() {
+            const interval = 100 / parseInt(rngSpeed.value);
+            timer = setInterval(stepSimulation, interval);
+        }
+
+        function logToInspector(text, className = '') {
+            const div = document.createElement('div');
+            div.className = className;
+            div.style.marginBottom = '6px';
+            div.innerHTML = `<b>[t=${time.toFixed(1)}s]</b> ${text}`;
+            inspectorLog.appendChild(div);
+            inspectorLog.scrollTop = inspectorLog.scrollHeight;
+        }
+
+        // SİMÜLASYON SIFIRLAMA
+        function resetSimulation() {
+            simStep = 0;
+            time = 0.0;
+            trueZ = 0.0;
+            trueV = 0.0;
+            lkf_Z = 0.0;
+            lkf_P = 1.0;
+            ekf_Z = 0.0;
+            ekf_V = 0.0;
+            ekf_P = [[1.0, 0.0], [0.0, 1.0]];
+
+            historyTime = [];
+            historyTrue = [];
+            historyBaro = [];
+            historyBaroActive = [];
+            historyLkf = [];
+            historyEkf = [];
+            historyP = [];
+            historyGain = [];
+            historyGamma = [];
+
+            inspectorLog.innerHTML = `<div class="log-step">⏱️ t = 0.0s [Sıfırlandı]</div>Sistem baştan başlatıldı...`;
+            updateUI(0.0, 0.0, 0.0, 1.0);
+            drawAllCharts();
+        }
+
+        // BOX-MULLER GAUSS GÜRÜLTÜ ÜRETİCİSİ
+        function randGauss(mu = 0, sigma = 1) {
+            let u1 = Math.random();
+            let u2 = Math.random();
+            while (u1 === 0) u1 = Math.random();
+            let z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
+            return z0 * sigma + mu;
+        }
+
+        // ANA SİMÜLASYON ADIMI (HER DÖNGÜ)
+        function stepSimulation() {
+            simStep++;
+            time += dt;
+
+            // 1. GERÇEK FİZİK (TRUE TRAJECTORY)
+            // t = 10s'ye kadar sabit ivme, sonra süzülme
+            let currentTrueA = (time <= 10.0) ? trueA : -9.81;
+            trueV += currentTrueA * dt;
+            trueZ += trueV * dt + 0.5 * currentTrueA * dt * dt;
+            if (trueZ < 0) { trueZ = 0; trueV = 0; }
+
+            // 2. SENSÖR ÖLÇÜMLERİ
+            let R_val = parseFloat(rngR.value);
+            let Q_val = parseFloat(rngQ.value);
+            let baroNoise = randGauss(0, Math.sqrt(R_val));
+            if (injectShock) {
+                baroNoise += 30.0; // 30 metre şok
+                injectShock = false;
+            }
+            let z_baro = trueZ + baroNoise;
+            let imu_acc = currentTrueA + randGauss(0, Math.sqrt(Q_val)); // İvmeölçer gürültüsü
+
+            // ==========================================
+            // BASİT 1D LKF (Kıyaslama İçin)
+            // ==========================================
+            // Predict
+            lkf_Z += lkf_Z * 0 + trueV * dt; // Basit model
+            lkf_P += Q_val * 5.0;
+            if (chkBaroActive.checked) {
+                let K_lkf = lkf_P / (lkf_P + R_val);
+                lkf_Z += K_lkf * (z_baro - lkf_Z);
+                lkf_P = (1.0 - K_lkf) * lkf_P;
+            }
+
+            // ==========================================
+            // 2-DURUMLU İLERİ ADAPTİF KALMAN (Z ve V)
+            // ==========================================
+            // Durum Geçiş Matrisi F = [[1, dt], [0, 1]]
+            // Kontrol Girdisi B = [0.5*dt^2, dt]^T * imu_acc
+            // Predict (Zaman Güncellemesi)
+            let pred_Z = ekf_Z + ekf_V * dt + 0.5 * imu_acc * dt * dt;
+            let pred_V = ekf_V + imu_acc * dt;
+
+            // Kovaryans Tahmini P = F * P * F^T + Q_mat
+            let P00 = ekf_P[0][0] + dt * (ekf_P[1][0] + ekf_P[0][1] + dt * ekf_P[1][1]) + Q_val * Math.pow(dt, 4) / 4;
+            let P01 = ekf_P[0][1] + dt * ekf_P[1][1] + Q_val * Math.pow(dt, 3) / 2;
+            let P10 = ekf_P[1][0] + dt * ekf_P[1][1] + Q_val * Math.pow(dt, 3) / 2;
+            let P11 = ekf_P[1][1] + Q_val * dt * dt;
+
+            let K_gain = 0.0;
+            let gamma = 0.0;
+
+            // Update (Ölçüm Güncellemesi - Sadece Baro Aktifse!)
+            if (chkBaroActive.checked) {
+                // Ölçüm Matrisi H = [1, 0]
+                // Yenilik (Innovation) y = z_baro - pred_Z
+                let y = z_baro - pred_Z;
+                let S = P00 + R_val; // Yenilik Kovaryansı
+                K_gain = P00 / S; // Kalman Kazancı K_0 (Yükseklik için)
+                let K1 = P10 / S; // Hız için kazanç
+
+                // Mahalanobis Yenilik Eşiği Testi (Outlier Rejection / Gating)
+                gamma = (y * y) / S;
+                let gatingThreshold = 9.0; // 3-sigma eşiği
+
+                if (chkGating.checked && gamma > gatingThreshold) {
+                    // Şok Darbesi Algılandı! Ölçümü Reddet veya R'yi çok büyüt (Sızdıran Kova Koruması)
+                    if (simStep % 10 === 0) {
+                        logToInspector(`[🛡️ YENİLİK KAPISI DEVREDE] Şok/Aykırı veri engellendi! (γ=${gamma.toFixed(1)} > ${gatingThreshold}). Ölçüm reddedildi, sadece tahmin kullanılıyor!`, 'log-gating');
+                    }
+                    ekf_Z = pred_Z;
+                    ekf_V = pred_V;
+                    ekf_P = [[P00, P01], [P10, P11]];
+                    K_gain = 0.0;
+                } else {
+                    // Normal Güncelleme
+                    ekf_Z = pred_Z + K_gain * y;
+                    ekf_V = pred_V + K1 * y;
+                    // P = (I - K*H) * P
+                    ekf_P = [
+                        [(1.0 - K_gain) * P00, (1.0 - K_gain) * P01],
+                        [-K1 * P00 + P10, -K1 * P01 + P11]
+                    ];
+                }
+            } else {
+                // KESİNTİ (OUTAGE) DURUMU: Ölçüm Güncellemesi Yok, Sadece Tahmin ve Artan Belirsizlik P!
+                ekf_Z = pred_Z;
+                ekf_V = pred_V;
+                ekf_P = [[P00, P01], [P10, P11]];
+                K_gain = 0.0;
+                if (simStep % 15 === 0) {
+                    logToInspector(`[⚠️ KÖR UÇUŞ] Baro kesik. P_zz belirsizliği tırmandı: ${P00.toFixed(2)} m²`, 'log-outage');
+                }
+            }
+
+            // TARİHÇEYE KAYDET
+            historyTime.push(time);
+            historyTrue.push(trueZ);
+            historyBaro.push(z_baro);
+            historyBaroActive.push(chkBaroActive.checked);
+            historyLkf.push(lkf_Z);
+            historyEkf.push(ekf_Z);
+            historyP.push(ekf_P[0][0]);
+            historyGain.push(K_gain);
+            historyGamma.push(gamma);
+
+            if (historyTime.length > maxHistory) {
+                historyTime.shift();
+                historyTrue.shift();
+                historyBaro.shift();
+                historyBaroActive.shift();
+                historyLkf.shift();
+                historyEkf.shift();
+                historyP.shift();
+                historyGain.shift();
+                historyGamma.shift();
+            }
+
+            updateUI(trueZ, chkBaroActive.checked ? z_baro : null, ekf_Z, ekf_P[0][0]);
+            drawAllCharts();
+        }
+
+        function updateUI(tZ, bZ, eZ, pVal) {
+            lblTrue.textContent = tZ.toFixed(1) + ' m';
+            lblBaro.textContent = (bZ !== null) ? bZ.toFixed(1) + ' m' : '[KESİK]';
+            lblBaro.style.color = (bZ !== null) ? 'var(--accent-cyan)' : 'var(--accent-rose)';
+            lblEst.textContent = eZ.toFixed(1) + ' m';
+            lblP.textContent = pVal.toFixed(3);
+        }
+
+        // TÜM GRAFİKLERİ ÇİZ (CANVAS ENGINE)
+        function drawAllCharts() {
+            if (historyTime.length === 0) return;
+            drawTrajectoryChart();
+            drawCovarianceChart();
+            drawGainChart();
+        }
+
+        function drawTrajectoryChart() {
+            let ctx = ctxTraj;
+            let width = canvasTraj.width;
+            let height = canvasTraj.height;
+            ctx.clearRect(0, 0, width, height);
+
+            // Izgara çizgileri
+            ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+            ctx.lineWidth = 1;
+            for (let y = 30; y < height; y += 40) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(width, y);
+                ctx.stroke();
+            }
+
+            // Ölçekleme
+            let minZ = Math.min(...historyTrue, ...historyEkf) * 0.95;
+            let maxZ = Math.max(...historyTrue, ...historyEkf, ...(historyBaroActive.map((act, i) => act ? historyBaro[i] : 0))) * 1.05;
+            if (maxZ - minZ < 10) maxZ = minZ + 10;
+
+            function getX(i) { return (i / (historyTime.length - 1 || 1)) * (width - 40) + 20; }
+            function getY(val) { return height - 20 - ((val - minZ) / (maxZ - minZ)) * (height - 40); }
+
+            // 1. Barometre Ölçüm Noktaları (Sadece aktifse)
+            ctx.fillStyle = 'rgba(6, 182, 212, 0.65)';
+            for (let i = 0; i < historyTime.length; i++) {
+                if (historyBaroActive[i]) {
+                    ctx.beginPath();
+                    ctx.arc(getX(i), getY(historyBaro[i]), 3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            // 2. Gerçek Yükseklik (Sarı)
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            for (let i = 0; i < historyTime.length; i++) {
+                if (i === 0) ctx.moveTo(getX(i), getY(historyTrue[i]));
+                else ctx.lineTo(getX(i), getY(historyTrue[i]));
+            }
+            ctx.stroke();
+
+            // 3. Basit LKF (Mor Kesikli)
+            ctx.strokeStyle = '#a855f7';
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([4, 4]);
+            ctx.beginPath();
+            for (let i = 0; i < historyTime.length; i++) {
+                if (i === 0) ctx.moveTo(getX(i), getY(historyLkf[i]));
+                else ctx.lineTo(getX(i), getY(historyLkf[i]));
+            }
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // 4. Adaptif EKF Kestirimi (Zümrüt Yeşili)
+            ctx.strokeStyle = '#10b981';
+            ctx.lineWidth = 3.5;
+            ctx.beginPath();
+            for (let i = 0; i < historyTime.length; i++) {
+                if (i === 0) ctx.moveTo(getX(i), getY(historyEkf[i]));
+                else ctx.lineTo(getX(i), getY(historyEkf[i]));
+            }
+            ctx.stroke();
+        }
+
+        function drawCovarianceChart() {
+            let ctx = ctxCov;
+            let width = canvasCov.width;
+            let height = canvasCov.height;
+            ctx.clearRect(0, 0, width, height);
+
+            ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+            for (let y = 30; y < height; y += 40) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke();
+            }
+
+            let maxP = Math.max(...historyP, 5.0) * 1.1;
+            function getX(i) { return (i / (historyTime.length - 1 || 1)) * (width - 40) + 20; }
+            function getY(val) { return height - 20 - (val / maxP) * (height - 40); }
+
+            // Kesinti (Outage) Bölgelerini Kırmızı Gölge İle Boya
+            for (let i = 0; i < historyTime.length - 1; i++) {
+                if (!historyBaroActive[i]) {
+                    ctx.fillStyle = 'rgba(244, 63, 94, 0.15)';
+                    let x1 = getX(i);
+                    let x2 = getX(i + 1);
+                    ctx.fillRect(x1, 0, x2 - x1, height);
+                }
+            }
+
+            // P Kovaryans Eğrisi (Kırmızı/Pembe)
+            ctx.strokeStyle = '#f43f5e';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            for (let i = 0; i < historyTime.length; i++) {
+                if (i === 0) ctx.moveTo(getX(i), getY(historyP[i]));
+                else ctx.lineTo(getX(i), getY(historyP[i]));
+            }
+            ctx.stroke();
+
+            // Alanı doldur
+            ctx.fillStyle = 'rgba(244, 63, 94, 0.18)';
+            ctx.lineTo(getX(historyTime.length - 1), height - 20);
+            ctx.lineTo(getX(0), height - 20);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        function drawGainChart() {
+            let ctx = ctxGain;
+            let width = canvasGain.width;
+            let height = canvasGain.height;
+            ctx.clearRect(0, 0, width, height);
+
+            ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+            for (let y = 30; y < height; y += 40) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke();
+            }
+
+            function getX(i) { return (i / (historyTime.length - 1 || 1)) * (width - 40) + 20; }
+            function getY(val) { return height - 20 - Math.min(1.0, Math.max(0, val)) * (height - 40); }
+
+            // Kalman Kazancı K (Sarı)
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            for (let i = 0; i < historyTime.length; i++) {
+                if (i === 0) ctx.moveTo(getX(i), getY(historyGain[i]));
+                else ctx.lineTo(getX(i), getY(historyGain[i]));
+            }
+            ctx.stroke();
+        }
+
+        // Başlangıç Kurulumu
+        resizeCanvases();
+        resetSimulation();
+    </script>
+</body>
+</html>

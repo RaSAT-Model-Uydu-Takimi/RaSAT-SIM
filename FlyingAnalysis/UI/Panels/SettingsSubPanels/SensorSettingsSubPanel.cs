@@ -66,7 +66,9 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             btnP2UseLastGenerated.Click += BtnP2UseLastGenerated_Click;
             btnP2PlotAll.Click += BtnP2PlotAll_Click;
 
-            picDistributionGraph.Paint += PicDistributionGraph_Paint;
+            btnP2ViewSplit.Click += (s, e) => SetP2ViewMode(0);
+            btnP2ViewTimeSeries.Click += (s, e) => SetP2ViewMode(1);
+            btnP2ViewDistribution.Click += (s, e) => SetP2ViewMode(2);
             if (trkBinCount != null) trkBinCount.ValueChanged += TrkBinCount_ValueChanged;
         }
 
@@ -76,9 +78,9 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             {
                 lblBinCount.Text = $"Histogram Dilim: {trkBinCount.Value}";
             }
-            if (picDistributionGraph != null)
+            if (p2RawSamples != null && p2RawSamples.Count > 0)
             {
-                picDistributionGraph.Invalidate();
+                BtnP2PlotAll_Click(this, EventArgs.Empty);
             }
         }
 
@@ -107,6 +109,51 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
                 btnPage1_Settings.BackColor = Color.FromArgb(((int)(((byte)(51)))), ((int)(((byte)(65)))), ((int)(((byte)(85)))));
                 btnPage2_Chart.BackColor = Color.FromArgb(((int)(((byte)(15)))), ((int)(((byte)(118)))), ((int)(((byte)(110)))));
                 LogToConsole("Sayfa 2: ScottPlot Zaman Serisi ve Çift Çan Eğrisi (PDF) Analiz ekranına geçildi.");
+            }
+        }
+
+        private void SetP2ViewMode(int mode)
+        {
+            if (mode == 0) // 📊 İkili Görünüm
+            {
+                plotTimeSeries.Visible = true;
+                plotTimeSeries.Location = new Point(15, 115);
+                plotTimeSeries.Size = new Size(1330, 290);
+
+                plotDistributionGraph.Visible = true;
+                plotDistributionGraph.Location = new Point(15, 415);
+                plotDistributionGraph.Size = new Size(1330, 290);
+
+                btnP2ViewSplit.BackColor = Color.FromArgb(15, 118, 110);
+                btnP2ViewTimeSeries.BackColor = Color.FromArgb(51, 65, 85);
+                btnP2ViewDistribution.BackColor = Color.FromArgb(51, 65, 85);
+                LogToConsole("Sayfa 2: İkili görünüm (Zaman Serisi + Olasılık Dağılımı) aktifleştirildi.");
+            }
+            else if (mode == 1) // 📈 Zaman Serisi Tam Ekran
+            {
+                plotTimeSeries.Visible = true;
+                plotTimeSeries.Location = new Point(15, 115);
+                plotTimeSeries.Size = new Size(1330, 590);
+
+                plotDistributionGraph.Visible = false;
+
+                btnP2ViewSplit.BackColor = Color.FromArgb(51, 65, 85);
+                btnP2ViewTimeSeries.BackColor = Color.FromArgb(15, 118, 110);
+                btnP2ViewDistribution.BackColor = Color.FromArgb(51, 65, 85);
+                LogToConsole("Sayfa 2: Zaman Serisi tam ekran moduna geçildi.");
+            }
+            else if (mode == 2) // 🔔 Olasılık Dağılımı Tam Ekran (DEV)
+            {
+                plotTimeSeries.Visible = false;
+
+                plotDistributionGraph.Visible = true;
+                plotDistributionGraph.Location = new Point(15, 115);
+                plotDistributionGraph.Size = new Size(1330, 590);
+
+                btnP2ViewSplit.BackColor = Color.FromArgb(51, 65, 85);
+                btnP2ViewTimeSeries.BackColor = Color.FromArgb(51, 65, 85);
+                btnP2ViewDistribution.BackColor = Color.FromArgb(15, 118, 110);
+                LogToConsole("Sayfa 2: Olasılık Dağılımı tam ekran (DEV Histogram & Çift Çan Eğrisi) moduna geçildi.");
             }
         }
 
@@ -252,13 +299,18 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
                     try
                     {
                         StringBuilder sb = new StringBuilder();
-                        sb.AppendLine(string.Format(CultureInfo.InvariantCulture, "{0} 1", n));
-
-                        List<string> strVals = lastGeneratedRawSamples.Select(v => v.ToString("F4", CultureInfo.InvariantCulture)).ToList();
-                        sb.AppendLine(string.Join(" ", strVals));
+                        // 1. Satır: Gerçek / Referans Değer (True Value - X_true)
+                        sb.AppendLine(trueVal.ToString("F4", CultureInfo.InvariantCulture));
+                        // 2. Satır: Kaç Adet Örneklem Üretildiği (Sample Count - N)
+                        sb.AppendLine(n.ToString(CultureInfo.InvariantCulture));
+                        // 3. Satır ve Sonrası: Satır Satır Örneklem Değerleri
+                        foreach (var val in lastGeneratedRawSamples)
+                        {
+                            sb.AppendLine(val.ToString("F4", CultureInfo.InvariantCulture));
+                        }
 
                         File.WriteAllText(sfd.FileName, sb.ToString(), Encoding.UTF8);
-                        LogToConsole($"Başarılı: {n} adet veri oluşturuldu ve dosyaya yazıldı -> {Path.GetFileName(sfd.FileName)}");
+                        LogToConsole($"Başarılı: {n} adet veri (Ref: {trueVal:F1}m) dikey formatta oluşturuldu ve dosyaya yazıldı -> {Path.GetFileName(sfd.FileName)}");
                     }
                     catch (Exception ex)
                     {
@@ -326,19 +378,30 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath)) return list;
 
             string[] lines = File.ReadAllLines(filePath);
-            for (int i = 0; i < lines.Length; i++)
+            if (lines.Length == 0) return list;
+
+            int startLineIndex = 0;
+            string firstLine = lines[0].Trim();
+            string[] firstTokens = firstLine.Split(new char[] { ' ', '\t', ';', ',' }, StringSplitOptions.RemoveEmptyEntries);
+
+            // Eski format ("500 1" gibi 2 adet tamsayı varsa)
+            if (firstTokens.Length == 2 && int.TryParse(firstTokens[0], out int countOld) && int.TryParse(firstTokens[1], out int colsOld))
+            {
+                startLineIndex = 1;
+            }
+            // Yeni Dikey Standart Format: 1. Satır -> Referans Değer (double), 2. Satır -> Örneklem Adedi (int)
+            else if (lines.Length >= 2 && double.TryParse(firstLine, NumberStyles.Any, CultureInfo.InvariantCulture, out _) &&
+                     int.TryParse(lines[1].Trim(), out _) && firstTokens.Length == 1)
+            {
+                startLineIndex = 2; // 3. satırdan (indeks 2) itibaren veriler başlıyor
+            }
+
+            for (int i = startLineIndex; i < lines.Length; i++)
             {
                 string line = lines[i].Trim();
                 if (string.IsNullOrEmpty(line)) continue;
 
                 string[] tokens = line.Split(new char[] { ' ', '\t', ';', ',' }, StringSplitOptions.RemoveEmptyEntries);
-                
-                // İlk satır "N M" formatındaysa (Örn: 500 1) atlayabilir veya parse edebiliriz
-                if (i == 0 && tokens.Length == 2 && int.TryParse(tokens[0], out int count) && int.TryParse(tokens[1], out int cols))
-                {
-                    continue;
-                }
-
                 foreach (var tok in tokens)
                 {
                     if (double.TryParse(tok, NumberStyles.Any, CultureInfo.InvariantCulture, out double val))
@@ -450,13 +513,19 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
                     try
                     {
                         StringBuilder sb = new StringBuilder();
-                        sb.AppendLine(string.Format(CultureInfo.InvariantCulture, "{0} 1", lastExportedCalSamples.Count));
-
-                        List<string> strVals = lastExportedCalSamples.Select(v => v.ToString("F4", CultureInfo.InvariantCulture)).ToList();
-                        sb.AppendLine(string.Join(" ", strVals));
+                        double currentRef = (double)numP2TrueVal.Value;
+                        // 1. Satır: Gerçek / Referans Değer
+                        sb.AppendLine(currentRef.ToString("F4", CultureInfo.InvariantCulture));
+                        // 2. Satır: Kaç Adet Üretildiği
+                        sb.AppendLine(lastExportedCalSamples.Count.ToString(CultureInfo.InvariantCulture));
+                        // 3. Satır ve Sonrası: Satır Satır Kalibre Edilmiş Değerler
+                        foreach (var val in lastExportedCalSamples)
+                        {
+                            sb.AppendLine(val.ToString("F4", CultureInfo.InvariantCulture));
+                        }
 
                         File.WriteAllText(sfd.FileName, sb.ToString(), Encoding.UTF8);
-                        LogToConsole($"Başarılı: {lastExportedCalSamples.Count} adet veri kalibre edildi ve dosyaya kaydedildi -> {Path.GetFileName(sfd.FileName)}");
+                        LogToConsole($"Başarılı: {lastExportedCalSamples.Count} adet veri dikey formatta kalibre edildi ve kaydedildi -> {Path.GetFileName(sfd.FileName)}");
                     }
                     catch (Exception ex)
                     {
@@ -608,8 +677,8 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             plotTimeSeries.Plot.ShowLegend();
             plotTimeSeries.Refresh();
 
-            // 2. Alt Grafik: Çift Çan Eğrisi Tuvalini Yenile
-            picDistributionGraph.Invalidate();
+            // 2. Alt Grafik: ScottPlot Çift Çan Eğrisi ve Histogram Grafiğini Çiz
+            DrawDistributionGraphScottPlot(trueVal);
 
             // 3. İstatistik ve Metrik Özet Tablosunu Yaz
             double rawMean = p2RawSamples.Average();
@@ -633,39 +702,14 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             LogToConsole("ScottPlot zaman serisi grafiği ve PDF dağılım eğrileri çizildi.");
         }
 
-        private void PicDistributionGraph_Paint(object? sender, PaintEventArgs e)
+        private void DrawDistributionGraphScottPlot(double trueVal)
         {
-            if (p2RawSamples == null || p2RawSamples.Count == 0) return;
+            if (p2RawSamples == null || p2RawSamples.Count < 5) return;
 
-            DrawDistributionGraph(e.Graphics, picDistributionGraph.Width, picDistributionGraph.Height, (double)numP2TrueVal.Value, p2RawSamples, p2CalSamples);
-        }
+            plotDistributionGraph.Plot.Clear();
 
-        private void DrawDistributionGraph(Graphics g, int width, int height, double trueVal, List<double> rawData, List<double> calData)
-        {
-            g.SmoothingMode = SmoothingMode.AntiAlias;
-            g.Clear(Color.FromArgb(((int)(((byte)(15)))), ((int)(((byte)(23)))), ((int)(((byte)(42))))));
-
-            if (rawData == null || rawData.Count < 5) return;
-
-            int padLeft = 55, padRight = 30, padTop = 30, padBottom = 45;
-            int plotW = width - padLeft - padRight;
-            int plotH = height - padTop - padBottom;
-
-            using (Pen penGrid = new Pen(Color.FromArgb(((int)(((byte)(51)))), ((int)(((byte)(65)))), ((int)(((byte)(85))))), 1f) { DashStyle = DashStyle.Dash })
-            using (Pen penAxis = new Pen(Color.FromArgb(((int)(((byte)(148)))), ((int)(((byte)(163)))), ((int)(((byte)(184))))), 1.5f))
-            {
-                g.DrawLine(penAxis, padLeft, padTop, padLeft, height - padBottom);
-                g.DrawLine(penAxis, padLeft, height - padBottom, width - padRight, height - padBottom);
-
-                for (int i = 1; i <= 4; i++)
-                {
-                    int y = height - padBottom - (i * plotH / 4);
-                    g.DrawLine(penGrid, padLeft, y, width - padRight, y);
-                }
-            }
-
-            double minVal = Math.Min(trueVal, Math.Min(rawData.Min(), calData != null && calData.Count > 0 ? calData.Min() : rawData.Min()));
-            double maxVal = Math.Max(trueVal, Math.Max(rawData.Max(), calData != null && calData.Count > 0 ? calData.Max() : rawData.Max()));
+            double minVal = Math.Min(trueVal, Math.Min(p2RawSamples.Min(), p2CalSamples != null && p2CalSamples.Count > 0 ? p2CalSamples.Min() : p2RawSamples.Min()));
+            double maxVal = Math.Max(trueVal, Math.Max(p2RawSamples.Max(), p2CalSamples != null && p2CalSamples.Count > 0 ? p2CalSamples.Max() : p2RawSamples.Max()));
 
             double span = maxVal - minVal;
             if (span < 1.0) span = 10.0;
@@ -678,7 +722,7 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             int[] binsRaw = new int[numBins];
             int[] binsCal = new int[numBins];
 
-            foreach (var v in rawData)
+            foreach (var v in p2RawSamples)
             {
                 int idx = (int)((v - minVal) / binWidth);
                 if (idx < 0) idx = 0;
@@ -686,9 +730,9 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
                 binsRaw[idx]++;
             }
 
-            if (calData != null && calData.Count > 0)
+            if (p2CalSamples != null && p2CalSamples.Count > 0)
             {
-                foreach (var v in calData)
+                foreach (var v in p2CalSamples)
                 {
                     int idx = (int)((v - minVal) / binWidth);
                     if (idx < 0) idx = 0;
@@ -700,96 +744,105 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             int maxCount = Math.Max(binsRaw.Max(), binsCal.Max());
             if (maxCount < 1) maxCount = 1;
 
-            // Kırmızı ve Yeşil histogram çubukları
-            using (SolidBrush brushRawBin = new SolidBrush(Color.FromArgb(((int)(((byte)(80)))), ((int)(((byte)(239)))), ((int)(((byte)(68)))), ((int)(((byte)(68)))))))
-            using (Pen penRawBin = new Pen(Color.FromArgb(((int)(((byte)(180)))), ((int)(((byte)(239)))), ((int)(((byte)(68)))), ((int)(((byte)(68))))), 1f))
-            using (SolidBrush brushCalBin = new SolidBrush(Color.FromArgb(((int)(((byte)(80)))), ((int)(((byte)(16)))), ((int)(((byte)(185)))), ((int)(((byte)(129)))))))
-            using (Pen penCalBin = new Pen(Color.FromArgb(((int)(((byte)(180)))), ((int)(((byte)(16)))), ((int)(((byte)(185)))), ((int)(((byte)(129))))), 1f))
+            int n = p2RawSamples.Count;
+
+            // 1. Kırmızı & Yeşil Histogram Çubukları (Birbirini örtmeyecek şekilde hafif kaydırılmış ve yarı şeffaf)
+            List<ScottPlot.Bar> rawBars = new List<ScottPlot.Bar>();
+            List<ScottPlot.Bar> calBars = new List<ScottPlot.Bar>();
+
+            for (int i = 0; i < numBins; i++)
             {
-                for (int i = 0; i < numBins; i++)
+                double center = minVal + (i + 0.5) * binWidth;
+                if (binsRaw[i] > 0)
                 {
-                    float xBin = padLeft + (float)(i * binWidth * plotW / span);
-                    float wBin = (float)(binWidth * plotW / span);
-
-                    if (binsRaw[i] > 0)
+                    rawBars.Add(new ScottPlot.Bar()
                     {
-                        float hRaw = (float)binsRaw[i] / maxCount * plotH;
-                        float yRaw = height - padBottom - hRaw;
-                        g.FillRectangle(brushRawBin, xBin, yRaw, wBin, hRaw);
-                        g.DrawRectangle(penRawBin, xBin, yRaw, wBin, hRaw);
-                    }
-
-                    if (calData != null && calData.Count > 0 && binsCal[i] > 0)
+                        Position = center - binWidth * 0.18,
+                        Value = binsRaw[i],
+                        FillColor = ScottPlot.Colors.OrangeRed.WithAlpha(0.6),
+                        Size = binWidth * 0.45
+                    });
+                }
+                if (p2CalSamples != null && p2CalSamples.Count > 0 && binsCal[i] > 0)
+                {
+                    calBars.Add(new ScottPlot.Bar()
                     {
-                        float hCal = (float)binsCal[i] / maxCount * plotH;
-                        float yCal = height - padBottom - hCal;
-                        g.FillRectangle(brushCalBin, xBin + wBin * 0.2f, yCal, wBin * 0.6f, hCal);
-                        g.DrawRectangle(penCalBin, xBin + wBin * 0.2f, yCal, wBin * 0.6f, hCal);
-                    }
+                        Position = center + binWidth * 0.18,
+                        Value = binsCal[i],
+                        FillColor = ScottPlot.Colors.LimeGreen.WithAlpha(0.65),
+                        Size = binWidth * 0.45
+                    });
                 }
             }
 
-            // Teori/Dağılım Gauss Çift Çan Eğrisi (Kırmızı vs Yeşil)
-            double rawMean = rawData.Average();
-            double rawStd = Math.Sqrt(rawData.Select(v => Math.Pow(v - rawMean, 2)).Sum() / rawData.Count);
+            if (rawBars.Count > 0)
+            {
+                var bRaw = plotDistributionGraph.Plot.Add.Bars(rawBars);
+                bRaw.LegendText = "Ham Olasılık Histogramı";
+            }
+            if (calBars.Count > 0)
+            {
+                var bCal = plotDistributionGraph.Plot.Add.Bars(calBars);
+                bCal.LegendText = "Kalibre Olasılık Histogramı";
+            }
+
+            // 2. Teori / Dağılım Gauss Çift Çan Eğrisi (Kırmızı vs Yeşil)
+            double rawMean = p2RawSamples.Average();
+            double rawStd = Math.Sqrt(p2RawSamples.Select(v => Math.Pow(v - rawMean, 2)).Sum() / n);
             if (rawStd < 1e-4) rawStd = 1.0;
 
-            DrawBellCurve(g, padLeft, padBottom, plotW, plotH, minVal, maxVal, rawMean, rawStd, maxCount, binWidth, rawData.Count, Color.FromArgb(((int)(((byte)(239)))), ((int)(((byte)(68)))), ((int)(((byte)(68))))), 2.5f);
+            int curveSteps = 200;
+            double[] curveXs = new double[curveSteps];
+            double[] rawPdfYs = new double[curveSteps];
 
-            if (calData != null && calData.Count > 0)
+            for (int i = 0; i < curveSteps; i++)
             {
-                double calMean = calData.Average();
-                double calStd = Math.Sqrt(calData.Select(v => Math.Pow(v - calMean, 2)).Sum() / calData.Count);
+                double x = minVal + (span * i / (curveSteps - 1));
+                curveXs[i] = x;
+                double expRaw = -0.5 * Math.Pow((x - rawMean) / rawStd, 2);
+                double pdfRaw = (1.0 / (rawStd * Math.Sqrt(2.0 * Math.PI))) * Math.Exp(expRaw);
+                rawPdfYs[i] = pdfRaw * n * binWidth; // Histogram frekans ölçeğinde çan eğrisi
+            }
+
+            var sRawCurve = plotDistributionGraph.Plot.Add.Scatter(curveXs, rawPdfYs);
+            sRawCurve.Color = ScottPlot.Colors.Red;
+            sRawCurve.LineWidth = 2.5f;
+            sRawCurve.MarkerSize = 0f;
+            sRawCurve.LegendText = $"Ham Dağılım Eğrisi (μ={rawMean:F2}, σ={rawStd:F2})";
+
+            if (p2CalSamples != null && p2CalSamples.Count > 0)
+            {
+                double calMean = p2CalSamples.Average();
+                double calStd = Math.Sqrt(p2CalSamples.Select(v => Math.Pow(v - calMean, 2)).Sum() / p2CalSamples.Count);
                 if (calStd < 1e-4) calStd = 1.0;
-                DrawBellCurve(g, padLeft, padBottom, plotW, plotH, minVal, maxVal, calMean, calStd, maxCount, binWidth, calData.Count, Color.FromArgb(((int)(((byte)(16)))), ((int)(((byte)(185)))), ((int)(((byte)(129))))), 2.5f);
+
+                double[] calPdfYs = new double[curveSteps];
+                for (int i = 0; i < curveSteps; i++)
+                {
+                    double x = curveXs[i];
+                    double expCal = -0.5 * Math.Pow((x - calMean) / calStd, 2);
+                    double pdfCal = (1.0 / (calStd * Math.Sqrt(2.0 * Math.PI))) * Math.Exp(expCal);
+                    calPdfYs[i] = pdfCal * p2CalSamples.Count * binWidth;
+                }
+
+                var sCalCurve = plotDistributionGraph.Plot.Add.Scatter(curveXs, calPdfYs);
+                sCalCurve.Color = ScottPlot.Colors.LimeGreen;
+                sCalCurve.LineWidth = 2.8f;
+                sCalCurve.MarkerSize = 0f;
+                sCalCurve.LegendText = $"Kalibre Dağılım Eğrisi (μ={calMean:F2}, σ={calStd:F2})";
             }
 
-            // Referans Dikey Çizgisi (Sarı / Gold) - En üst katmanda, gölgeli ve belirgin
-            float xTrue = padLeft + (float)((trueVal - minVal) / span * plotW);
-            using (Pen penTrueShadow = new Pen(Color.FromArgb(((int)(((byte)(15)))), ((int)(((byte)(23)))), ((int)(((byte)(42))))), 4f))
-            using (Pen penTrue = new Pen(Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(215)))), ((int)(((byte)(0))))), 2.8f) { DashStyle = DashStyle.Dash })
-            {
-                g.DrawLine(penTrueShadow, xTrue, padTop, xTrue, height - padBottom);
-                g.DrawLine(penTrue, xTrue, padTop, xTrue, height - padBottom);
-            }
+            // 3. Referans Dikey Çizgisi (Sarı / Gold) - En net ve kalın vurgu
+            var vTrue = plotDistributionGraph.Plot.Add.VerticalLine(trueVal);
+            vTrue.Color = ScottPlot.Colors.Gold;
+            vTrue.LineWidth = 3.2f;
+            vTrue.LegendText = $"Gerçek Değer ({trueVal:F2} m)";
 
-            // Metinler ve Eksen Etiketleri
-            using (Font fontLabel = new Font("Segoe UI", 8.5F, FontStyle.Bold))
-            using (Font fontInfo = new Font("Segoe UI", 9F, FontStyle.Bold))
-            using (SolidBrush brushText = new SolidBrush(Color.FromArgb(((int)(((byte)(226)))), ((int)(((byte)(232)))), ((int)(((byte)(240)))))))
-            using (SolidBrush brushTrueText = new SolidBrush(Color.FromArgb(((int)(((byte)(234)))), ((int)(((byte)(179)))), ((int)(((byte)(8)))))))
-            {
-                g.DrawString($"Min: {minVal:F1}", fontLabel, brushText, padLeft, height - padBottom + 8);
-                g.DrawString($"Max: {maxVal:F1}", fontLabel, brushText, width - padRight - 55, height - padBottom + 8);
-                g.DrawString($"Gerçek Değer: {trueVal:F1} m", fontLabel, brushTrueText, xTrue + 5, padTop + 5);
-
-                g.DrawString("Olasılık Yoğunluk Histogramı ve Çift Çan Eğrisi (Kırmızı: Ham vs Yeşil: Kalibre Edilmiş)", fontInfo, brushText, padLeft + 10, 8);
-            }
-        }
-
-        private void DrawBellCurve(Graphics g, int padLeft, int padBottom, int plotW, int plotH, double minVal, double maxVal, double mean, double stdDev, int maxCount, double binWidth, int n, Color color, float penWidth)
-        {
-            double span = maxVal - minVal;
-            int steps = 150;
-            PointF[] points = new PointF[steps];
-
-            for (int i = 0; i < steps; i++)
-            {
-                double x = minVal + (span * i / (steps - 1));
-                double exponent = -0.5 * Math.Pow((x - mean) / stdDev, 2);
-                double pdf = (1.0 / (stdDev * Math.Sqrt(2.0 * Math.PI))) * Math.Exp(exponent);
-
-                double expectedCount = pdf * n * binWidth;
-                float yPx = picDistributionGraph.Height - padBottom - (float)(expectedCount / maxCount * plotH);
-                float xPx = padLeft + (float)((x - minVal) / span * plotW);
-
-                points[i] = new PointF(xPx, yPx);
-            }
-
-            using (Pen penCurve = new Pen(color, penWidth))
-            {
-                g.DrawLines(penCurve, points);
-            }
+            plotDistributionGraph.Plot.Title($"Olasılık Yoğunluk ve Örneklem Histogramı (Dilim Sayısı: {numBins})");
+            plotDistributionGraph.Plot.XLabel("Ölçüm Değeri / Genlik (m)");
+            plotDistributionGraph.Plot.YLabel("Örneklem Frekansı (Adet) / Dağılım Yoğunluğu");
+            plotDistributionGraph.Plot.ShowLegend();
+            plotDistributionGraph.Refresh();
         }
 
         #endregion

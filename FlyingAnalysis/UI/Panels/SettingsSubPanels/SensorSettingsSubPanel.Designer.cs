@@ -91,7 +91,10 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             lblBinCount = new Label();
             trkBinCount = new TrackBar();
             plotTimeSeries = new ScottPlot.WinForms.FormsPlot();
-            picDistributionGraph = new PictureBox();
+            plotDistributionGraph = new ScottPlot.WinForms.FormsPlot();
+            btnP2ViewSplit = new Button();
+            btnP2ViewTimeSeries = new Button();
+            btnP2ViewDistribution = new Button();
             txtP2SummaryTable = new TextBox();
             grpRange.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)numRangeMax).BeginInit();
@@ -120,7 +123,6 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             grpConsoleLog.SuspendLayout();
             grpPage2_AnalysisAndPlots.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)numP2TrueVal).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)picDistributionGraph).BeginInit();
             ((System.ComponentModel.ISupportInitialize)trkBinCount).BeginInit();
             SuspendLayout();
             // 
@@ -876,11 +878,15 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             grpPage2_AnalysisAndPlots.Controls.Add(lblBinCount);
             grpPage2_AnalysisAndPlots.Controls.Add(trkBinCount);
             grpPage2_AnalysisAndPlots.Controls.Add(plotTimeSeries);
-            grpPage2_AnalysisAndPlots.Controls.Add(picDistributionGraph);
+            grpPage2_AnalysisAndPlots.Controls.Add(plotDistributionGraph);
+            grpPage2_AnalysisAndPlots.Controls.Add(btnP2ViewSplit);
+            grpPage2_AnalysisAndPlots.Controls.Add(btnP2ViewTimeSeries);
+            grpPage2_AnalysisAndPlots.Controls.Add(btnP2ViewDistribution);
+            grpPage2_AnalysisAndPlots.Controls.Add(txtP2SummaryTable);
             grpPage2_AnalysisAndPlots.Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold, GraphicsUnit.Point, 0);
             grpPage2_AnalysisAndPlots.Location = new Point(25, 115);
             grpPage2_AnalysisAndPlots.Name = "grpPage2_AnalysisAndPlots";
-            grpPage2_AnalysisAndPlots.Size = new Size(1340, 735);
+            grpPage2_AnalysisAndPlots.Size = new Size(1360, 845);
             grpPage2_AnalysisAndPlots.TabIndex = 9;
             grpPage2_AnalysisAndPlots.TabStop = false;
             grpPage2_AnalysisAndPlots.Text = "Sayfa 2: Zaman Serisi Titreşim Grafiği (ScottPlot) & Doğruluk/Kesinlik Çift Çan Eğrisi (PDF)";
@@ -999,44 +1005,85 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             // 
             trkBinCount.AutoSize = false;
             trkBinCount.Location = new Point(1135, 46);
-            trkBinCount.Maximum = 150;
+            trkBinCount.Maximum = 1000;
             trkBinCount.Minimum = 10;
             trkBinCount.Name = "trkBinCount";
             trkBinCount.Size = new Size(190, 25);
             trkBinCount.TabIndex = 11;
-            trkBinCount.TickFrequency = 10;
+            trkBinCount.TickFrequency = 25;
             trkBinCount.Value = 50;
             trkBinCount.ValueChanged += TrkBinCount_ValueChanged;
+            // 
+            // 
+            // btnP2ViewSplit
+            // 
+            btnP2ViewSplit.BackColor = Color.FromArgb(15, 118, 110);
+            btnP2ViewSplit.FlatAppearance.BorderSize = 0;
+            btnP2ViewSplit.FlatStyle = FlatStyle.Flat;
+            btnP2ViewSplit.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
+            btnP2ViewSplit.ForeColor = Color.White;
+            btnP2ViewSplit.Location = new Point(15, 73);
+            btnP2ViewSplit.Name = "btnP2ViewSplit";
+            btnP2ViewSplit.Size = new Size(185, 33);
+            btnP2ViewSplit.TabIndex = 12;
+            btnP2ViewSplit.Text = "📊 İkili Görünüm (50/50)";
+            btnP2ViewSplit.UseVisualStyleBackColor = false;
+            // 
+            // btnP2ViewTimeSeries
+            // 
+            btnP2ViewTimeSeries.BackColor = Color.FromArgb(51, 65, 85);
+            btnP2ViewTimeSeries.FlatAppearance.BorderSize = 0;
+            btnP2ViewTimeSeries.FlatStyle = FlatStyle.Flat;
+            btnP2ViewTimeSeries.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
+            btnP2ViewTimeSeries.ForeColor = Color.White;
+            btnP2ViewTimeSeries.Location = new Point(210, 73);
+            btnP2ViewTimeSeries.Name = "btnP2ViewTimeSeries";
+            btnP2ViewTimeSeries.Size = new Size(230, 33);
+            btnP2ViewTimeSeries.TabIndex = 13;
+            btnP2ViewTimeSeries.Text = "📈 Zaman Serisi Tam Ekran";
+            btnP2ViewTimeSeries.UseVisualStyleBackColor = false;
+            // 
+            // btnP2ViewDistribution
+            // 
+            btnP2ViewDistribution.BackColor = Color.FromArgb(51, 65, 85);
+            btnP2ViewDistribution.FlatAppearance.BorderSize = 0;
+            btnP2ViewDistribution.FlatStyle = FlatStyle.Flat;
+            btnP2ViewDistribution.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
+            btnP2ViewDistribution.ForeColor = Color.White;
+            btnP2ViewDistribution.Location = new Point(450, 73);
+            btnP2ViewDistribution.Name = "btnP2ViewDistribution";
+            btnP2ViewDistribution.Size = new Size(280, 33);
+            btnP2ViewDistribution.TabIndex = 14;
+            btnP2ViewDistribution.Text = "🔔 Olasılık Dağılımı Tam Ekran (DEV)";
+            btnP2ViewDistribution.UseVisualStyleBackColor = false;
             // 
             // plotTimeSeries
             // 
             plotTimeSeries.DisplayScale = 1.5F;
-            plotTimeSeries.Location = new Point(15, 75);
+            plotTimeSeries.Location = new Point(15, 115);
             plotTimeSeries.Name = "plotTimeSeries";
-            plotTimeSeries.Size = new Size(1235, 310);
+            plotTimeSeries.Size = new Size(1330, 290);
             plotTimeSeries.TabIndex = 8;
             // 
-            // picDistributionGraph
+            // plotDistributionGraph
             // 
-            picDistributionGraph.BackColor = Color.FromArgb(15, 23, 42);
-            picDistributionGraph.BorderStyle = BorderStyle.FixedSingle;
-            picDistributionGraph.Location = new Point(15, 412);
-            picDistributionGraph.Name = "picDistributionGraph";
-            picDistributionGraph.Size = new Size(1235, 308);
-            picDistributionGraph.TabIndex = 9;
-            picDistributionGraph.TabStop = false;
+            plotDistributionGraph.DisplayScale = 1.5F;
+            plotDistributionGraph.Location = new Point(15, 415);
+            plotDistributionGraph.Name = "plotDistributionGraph";
+            plotDistributionGraph.Size = new Size(1330, 290);
+            plotDistributionGraph.TabIndex = 9;
             // 
             // txtP2SummaryTable
             // 
             txtP2SummaryTable.BackColor = Color.FromArgb(15, 23, 42);
             txtP2SummaryTable.Font = new Font("Consolas", 9F, FontStyle.Regular, GraphicsUnit.Point, 0);
             txtP2SummaryTable.ForeColor = Color.FromArgb(226, 232, 240);
-            txtP2SummaryTable.Location = new Point(40, 856);
+            txtP2SummaryTable.Location = new Point(15, 715);
             txtP2SummaryTable.Multiline = true;
             txtP2SummaryTable.Name = "txtP2SummaryTable";
             txtP2SummaryTable.ReadOnly = true;
             txtP2SummaryTable.ScrollBars = ScrollBars.Vertical;
-            txtP2SummaryTable.Size = new Size(1235, 95);
+            txtP2SummaryTable.Size = new Size(1330, 115);
             txtP2SummaryTable.TabIndex = 10;
             // 
             // SensorSettingsSubPanel
@@ -1055,7 +1102,6 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             Controls.Add(cmbSensorType);
             Controls.Add(lblSensorSelect);
             Controls.Add(lblPanelTitle);
-            Controls.Add(txtP2SummaryTable);
             Font = new Font("Segoe UI", 9F, FontStyle.Regular, GraphicsUnit.Point, 0);
             Name = "SensorSettingsSubPanel";
             Size = new Size(1428, 988);
@@ -1095,7 +1141,6 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             grpPage2_AnalysisAndPlots.ResumeLayout(false);
             grpPage2_AnalysisAndPlots.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)numP2TrueVal).EndInit();
-            ((System.ComponentModel.ISupportInitialize)picDistributionGraph).EndInit();
             ((System.ComponentModel.ISupportInitialize)trkBinCount).EndInit();
             ResumeLayout(false);
             PerformLayout();
@@ -1182,7 +1227,10 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
         private System.Windows.Forms.Label lblBinCount;
         private System.Windows.Forms.TrackBar trkBinCount;
         private ScottPlot.WinForms.FormsPlot plotTimeSeries;
-        private System.Windows.Forms.PictureBox picDistributionGraph;
+        private ScottPlot.WinForms.FormsPlot plotDistributionGraph;
+        private System.Windows.Forms.Button btnP2ViewSplit;
+        private System.Windows.Forms.Button btnP2ViewTimeSeries;
+        private System.Windows.Forms.Button btnP2ViewDistribution;
         private System.Windows.Forms.TextBox txtP2SummaryTable;
     }
 }

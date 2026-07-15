@@ -119,19 +119,26 @@ Sensör kalibrasyonu sırasında alınacak ortalama değerler ($\bar{X}_1$ ve $\
    $$\bar{X}_{\text{trimmed}} = \frac{1}{N - 2k} \sum_{i = k + 1}^{N - k} X_{(i)}$$
 *Not: Bu budama **sadece kalibrasyon parametrelerinin ($m, b, S$) doğru hesaplanması için geçici bir işlemdir.** Ham veri dosyası asla eksiltilmez veya kalıcı olarak silinmez ($N$ adet veri korunur).*
 
-### 6.2. Klasik Dosya Formatı (RaSAT Standart Girdi/Çıktı Formatı)
-Modüller arası veri transferinde standart, sade ve parse edilebilir **Klasik Veri Formatı** kullanılır:
-* **1. Satır:** `N M` (Burada `N`: Toplam örneklem sayısı, `M`: Ölçüm sütunu sayısı = 1)
-* **2. Satır:** `X1 X2 X3 ... XN` (Her bir ölçüm değeri boşluklarla ayrılarak tek satırda veya alt alta yazılır)
+### 6.2. Yeni Standart Dikey Veri Kümesi Formatı (RaSAT Standart Girdi/Çıktı Formatı)
+Modüller arası veri transferinde standart, şık ve parse edilebilir **Yeni Dikey Veri Formatı** kullanılır:
+* **1. Satır (`True / Reference Value - X_true`):** Bu veri kümesinin üretilirken baz alındığı veya kalibrasyonda referans alınan gerçek değer (Örn: `10.0000`).
+* **2. Satır (`Sample Count - N`):** Dosyadaki toplam örneklem adedi (Örn: `500`).
+* **3. Satır ve Sonrası (`Satır Satır Değerler`):** Her satırda tek bir örneklem/ölçüm değeri olacak şekilde alt alta toplam $N$ satır.
 
-Örnek çıktı (`SensorOlcum_N500_Gercek1000.txt`):
+Örnek çıktı (`SensorOlcum_N500_Gercek10.0.txt`):
 ```text
-500 1
-1001.2341 998.4512 1015.6710 1000.0123 ...
+10.0000
+500
+10.1245
+9.8942
+10.0512
+10.0123
+...
 ```
+*Not: Okuyucu (`ParseClassicalFile`), hem bu yeni dikey formatı hem de eski format (`500 1` ve alt satırda boşluklu veriler) dosyalarını otomatik algılayarak geriye dönük tam uyumlulukla çalışır.*
 
-### 6.3. Zaman Serisi ile Dağılım Karşılaştırmasının Birlikte Analizi (ScottPlot + GDI+)
+### 6.3. Zaman Serisi ile Dağılım Karşılaştırmasının Birlikte Analizi (ScottPlot 5 Tam Entegrasyonu)
 Sayfa 2 analiz tuvalinde, girilen veya anlık çekilen veri dosyalarının **iki boyutlu çift analizi** yapılır:
-1. **ScottPlot Zaman Serisi (`plotTimeSeries`):** Her bir indeks adımı ($i \in [0, N-1]$) karşısında sensörün anlık titreşim grafiğini çizer. Sarı çizgi gerçek referansı gösterirken, Kırmızı ham verinin yukarı/aşağı kaymasını ve yeşil kalibre edilmiş verinin referans etrafındaki sıfır-bias oturmasını görselleştirir.
-2. **GDI+ Çift Çan Eğrisi (`picDistributionGraph`):** Aynı verinin frekans histogramını ve Olasılık Yoğunluk Fonksiyonunu (PDF) eş zamanlı hesaplayarak, kalibrasyonun doğruluk (accuracy/trueness) üzerindeki \%99.9+ iyileştirme gücünü matematiksel olarak ispatlar.
+1. **ScottPlot Zaman Serisi (`plotTimeSeries`):** Her bir indeks adımı ($i \in [0, N-1]$) karşısında sensörün anlık titreşim grafiğini çizer. Sarı çizgi gerçek referansı (`sTrue.LineWidth = 3.2f`) gösterirken, Kırmızı ham verinin yukarı/aşağı kaymasını ve yeşil kalibre edilmiş verinin referans etrafındaki sıfır-bias oturmasını görselleştirir.
+2. **ScottPlot Olasılık Dağılımı (`plotDistributionGraph`):** Aynı verilerin frekans histogramını (`ScottPlot.Bar`) birbirini kapatmayacak şekilde (`±0.18 * binWidth`) kaydırarak ve yarı şeffaf (`WithAlpha`) çizerek gösterir. Gauss Olasılık Yoğunluk Fonksiyonunu (PDF) eş zamanlı çan eğrisi (`Scatter`) olarak çizer. Sürgü (`trkBinCount`) ile maksimum **1000** dilime kadar mikrometrik histogram çözünürlüğü ayarlanarak 3 Görünüm Modunda (İkili, Zaman Serisi Dev, Dağılım Dev) incelenir.
 
