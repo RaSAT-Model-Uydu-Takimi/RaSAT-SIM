@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalman Filtresi Adım Adım İterasyon Laboratuvarı</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #070a12;
+            --panel-bg: rgba(16, 23, 38, 0.85);
+            --panel-border: rgba(255, 255, 255, 0.08);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-blue: #38bdf8;
+            --accent-purple: #a855f7;
+            --accent-green: #10b981;
+            --accent-yellow: #facc15;
+            --accent-red: #ef4444;
+            --font-main: 'Inter', sans-serif;
+            --font-code: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: var(--font-main);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 24px;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(56, 189, 248, 0.06) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(168, 85, 247, 0.06) 0%, transparent 40%);
+        }
+
+        header {
+            max-width: 1350px;
+            margin: 0 auto 24px auto;
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title h1 {
+            font-size: 1.6rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ffffff 0%, var(--accent-blue) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-title p {
+            color: var(--text-muted);
+            font-size: 0.92rem;
+            margin-top: 4px;
+        }
+
+        .badge {
+            background: rgba(56, 189, 248, 0.15);
+            color: var(--accent-blue);
+            padding: 8px 16px;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+        }
+
+        .main-layout {
+            max-width: 1350px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 1050px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 16px;
+            padding: 20px;
+            backdrop-filter: blur(12px);
+            margin-bottom: 20px;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 1.05rem;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            color: #fff;
+        }
+
+        .card-header span {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            background: rgba(56, 189, 248, 0.15);
+            color: var(--accent-blue);
+            font-size: 0.85rem;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border: none;
+            margin-bottom: 10px;
+        }
+
+        .btn-step {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+        }
+
+        .btn-step:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(16, 185, 129, 0.5);
+        }
+
+        .btn-auto {
+            background: rgba(56, 189, 248, 0.15);
+            color: var(--accent-blue);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+        }
+
+        .btn-auto:hover {
+            background: rgba(56, 189, 248, 0.25);
+        }
+
+        .btn-reset {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.85rem;
+        }
+
+        .btn-reset:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .param-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            font-size: 0.85rem;
+        }
+
+        .param-row .label {
+            color: var(--text-muted);
+        }
+
+        .param-row .value {
+            font-family: var(--font-code);
+            font-weight: 700;
+            color: var(--accent-yellow);
+            background: rgba(0, 0, 0, 0.4);
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .step-boxes {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        @media (max-width: 850px) {
+            .step-boxes {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .step-box {
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid var(--panel-border);
+            border-radius: 14px;
+            padding: 16px;
+            position: relative;
+        }
+
+        .step-box.active-box {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.15);
+        }
+
+        .step-box-header {
+            font-size: 0.82rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .step-num {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+        }
+
+        .formula-block {
+            font-family: var(--font-code);
+            font-size: 0.8rem;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+            color: #e2e8f0;
+            border-left: 3px solid var(--accent-blue);
+        }
+
+        .calc-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            margin: 6px 0;
+        }
+
+        .calc-row span:last-child {
+            font-family: var(--font-code);
+            font-weight: 600;
+        }
+
+        .story-box {
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            border-radius: 14px;
+            padding: 18px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+
+        .story-title {
+            font-weight: 800;
+            color: var(--accent-yellow);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+
+        .balance-bar-container {
+            margin: 16px 0;
+        }
+
+        .balance-bar-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .balance-bar {
+            height: 24px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .bar-imu {
+            background: linear-gradient(90deg, #818cf8, #a855f7);
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #fff;
+            transition: width 0.4s ease;
+        }
+
+        .bar-baro {
+            background: linear-gradient(90deg, #f87171, #ef4444);
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #fff;
+            transition: width 0.4s ease;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            margin-top: 14px;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-family: var(--font-code);
+        }
+
+        th {
+            color: var(--text-muted);
+            font-family: var(--font-main);
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .highlight-val {
+            color: var(--accent-green);
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-title">
+            <h1>RaSAT SIM — İterasyon İterasyon Kalman Filtresi Laboratuvarı</h1>
+            <p>Hiçbir Karmaşık Matris Yok: Sadece Toplama, Çıkarma, Çarpma ile Adım Adım Nasıl Hesaplandığını Görün!</p>
+        </div>
+        <div class="badge" id="iterBadge">İterasyon: 0 (Başlangıç)</div>
+    </header>
+
+    <div class="main-layout">
+        <!-- SOL PANEL: KONTROLLER VE PARAMETRELER -->
+        <aside>
+            <div class="card">
+                <div class="card-header">
+                    <span>🎮</span>
+                    <div>Adım Adım İlerleme</div>
+                </div>
+                
+                <button class="btn btn-step" id="btnStep">
+                    ➡️ SONRAKİ İTERASYONA GEÇ (ADIM ADIM)
+                </button>
+                <button class="btn btn-auto" id="btnAuto">
+                    ⏩ Yavaşça Otomatik İlerle (1 sn/adım)
+                </button>
+                <button class="btn btn-reset" id="btnReset">
+                    🔄 Başa Dön (İterasyon 0)
+                </button>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span>⚙️</span>
+                    <div>Geri Plan Katsayıları</div>
+                </div>
+                <div class="param-row">
+                    <span class="label">Süreç Belirsizliği (Q)</span>
+                    <span class="value">2.0 puan</span>
+                </div>
+                <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 14px;">
+                    * İvmeölçer ve modelimizin her adımda ürettiği şüphe artışı.
+                </div>
+
+                <div class="param-row">
+                    <span class="label">Baro Gürültü Varyansı (R)</span>
+                    <span class="value">4.0 puan</span>
+                </div>
+                <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 14px;">
+                    * Barometrenin sapma payı. R ne kadar küçükse filtre baroya o kadar güvenir.
+                </div>
+
+                <div class="param-row" style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 10px;">
+                    <span class="label">Başlangıç İrtifası (z_0)</span>
+                    <span class="value">0.0 m</span>
+                </div>
+                <div class="param-row">
+                    <span class="label">Başlangıç Belirsizliği (P_0)</span>
+                    <span class="value">10.0 puan</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span>💡</span>
+                    <div>İşin Altın Kuralı</div>
+                </div>
+                <div style="font-size: 0.82rem; color: #cbd5e1; line-height: 1.5;">
+                    Her iterasyon (döngü) tam olarak iki adımdan oluşur:<br><br>
+                    1️⃣ <strong>Tahmin (Predict):</strong> İvmeölçere bakıp "şurada olmalıyız" deriz ama şüphemiz (<strong style="color:var(--accent-purple)">P</strong>) artar.<br><br>
+                    2️⃣ <strong>Düzeltme (Update):</strong> Barometre ölçüm yapar. Terazi (<strong style="color:var(--accent-yellow)">Kalman Kazancı K</strong>) kimin daha güvenilir olduğuna bakar, ara noktayı bulur ve şüphemiz (<strong style="color:var(--accent-green)">P</strong>) düşer!
+                </div>
+            </div>
+        </aside>
+
+        <!-- SAĞ PANEL: ADIM ADIM HESAPLAMALAR VE ÖZET -->
+        <main>
+            <!-- İNSANCA ANLATIM KUTUSU -->
+            <div class="story-box">
+                <div class="story-title" id="storyTitle">💬 İterasyon 0: Roket Rampa Üzerinde Bekliyor</div>
+                <div id="storyText">
+                    Simülasyon henüz başlamadı. Şu an uydumuz <strong>0.0 metre</strong> irtifada kabul ediliyor. Başlangıçta kendimize olan güven belirsizliğimiz <strong>P = 10.0</strong> puan. Yukarıdaki <strong>"➡️ SONRAKİ İTERASYONA GEÇ"</strong> butonuna basarak ilk saniyede neler olacağını adım adım izleyin!
+                </div>
+            </div>
+
+            <!-- TERAZİ ÇUBUĞU (KALMAN GAIN BALANCE) -->
+            <div class="card" style="padding: 16px;">
+                <div class="balance-bar-title">
+                    <span id="labelImuWeight">🧲 Model/İvmeölçer Ağırlığı: %50</span>
+                    <span style="color: var(--accent-yellow); font-weight: 800;" id="labelGainK">Kalman Kazancı (K) = 0.50</span>
+                    <span id="labelBaroWeight">📡 Barometre Ağırlığı: %50</span>
+                </div>
+                <div class="balance-bar">
+                    <div class="bar-imu" id="barImu" style="width: 50%;">Model / İvme (%50)</div>
+                    <div class="bar-baro" id="barBaro" style="width: 50%;">Barometre (%50)</div>
+                </div>
+            </div>
+
+            <!-- 3 ADIM KUTUSU (PREDICT -> GAIN -> UPDATE) -->
+            <div class="step-boxes">
+                <!-- KUTU 1 -->
+                <div class="step-box" id="box1">
+                    <div class="step-box-header" style="color: var(--accent-purple);">
+                        <span>1. TAHMİN ET (PREDICT)</span>
+                        <span class="step-num">İvme ile İlerle</span>
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">
+                        İvmeölçerden gelen hızlanma ile yeni konumu tahmin et ve şüpheyi (Q) ekle:
+                    </div>
+                    <div class="formula-block">
+                        z_tahmin = z_eski + Δz_ivme<br>
+                        P_tahmin = P_eski + Q
+                    </div>
+                    <div class="calc-row"><span>Önceki İrtifa:</span> <span id="valOldZ">0.00 m</span></div>
+                    <div class="calc-row"><span>İvmeden Gelen Artış:</span> <span id="valDeltaZ" style="color:var(--accent-purple)">+0.00 m</span></div>
+                    <div class="calc-row" style="border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 6px;">
+                        <span>👉 Tahmini İrtifa (z_tahmin):</span> <span id="valPredZ" style="color:#fff; font-weight:700;">0.00 m</span>
+                    </div>
+                    <div class="calc-row"><span>👉 Tahmin Belirsizliği (P):</span> <span id="valPredP" style="color:var(--accent-red)">10.00</span></div>
+                </div>
+
+                <!-- KUTU 2 -->
+                <div class="step-box" id="box2">
+                    <div class="step-box-header" style="color: var(--accent-yellow);">
+                        <span>2. TERAZİ (GAIN K)</span>
+                        <span class="step-num">Kime Güveneceğiz?</span>
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">
+                        Tahmin belirsizliği (P) ile Baro gürültüsünü (R) kafa kafaya çarptır:
+                    </div>
+                    <div class="formula-block">
+                        K = P_tahmin / (P_tahmin + R)<br>
+                        (R = 4.0 Sabit Gürültü)
+                    </div>
+                    <div class="calc-row"><span>Tahmin Şüphesi (P):</span> <span id="valBox2P">10.00</span></div>
+                    <div class="calc-row"><span>Baro Gürültüsü (R):</span> <span>4.00</span></div>
+                    <div class="calc-row" style="border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 6px;">
+                        <span>👉 Kalman Kazancı (K):</span> <span id="valGainKBox" style="color:var(--accent-yellow); font-size:1.05rem;">0.00</span>
+                    </div>
+                    <div style="font-size:0.75rem; color:#cbd5e1; margin-top:6px;" id="textGainMeaning">
+                        Barometreye %0, Modele %100 güven.
+                    </div>
+                </div>
+
+                <!-- KUTU 3 -->
+                <div class="step-box" id="box3">
+                    <div class="step-box-header" style="color: var(--accent-green);">
+                        <span>3. GÜNCELLE & DÜZELT</span>
+                        <span class="step-num">Final Kestirim</span>
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">
+                        Baro ölçümünü (z_baro) al ve K oranında tahmininle harmanla:
+                    </div>
+                    <div class="formula-block">
+                        z_yeni = z_tahmin + K * (z_baro - z_tahmin)<br>
+                        P_yeni = (1 - K) * P_tahmin
+                    </div>
+                    <div class="calc-row"><span>Barometre Okuması:</span> <span id="valBaroRead" style="color:var(--accent-blue)">0.00 m</span></div>
+                    <div class="calc-row"><span>İnovasyon (Fark):</span> <span id="valDiff">0.00 m</span></div>
+                    <div class="calc-row" style="border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 6px;">
+                        <span>🚀 FİNAL İRTİFA (z_yeni):</span> <span id="valFinalZ" class="highlight-val" style="font-size:1.1rem;">0.00 m</span>
+                    </div>
+                    <div class="calc-row"><span>👉 Yeni Belirsizlik (P):</span> <span id="valFinalP" style="color:var(--accent-green)">10.00</span></div>
+                </div>
+            </div>
+
+            <!-- GEÇMİŞ İTERASYONLAR TABLOSU -->
+            <div class="card">
+                <div class="card-header">
+                    <span>📊</span>
+                    <div>Geçmiş İterasyon Kayıtları (Adım Adım Gelişim)</div>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Adım (k)</th>
+                            <th>İvmeden Tahmin (z_tahmin)</th>
+                            <th>Tahmin Şüphesi (P)</th>
+                            <th>Barometre (z_baro)</th>
+                            <th>Kalman Kazancı (K)</th>
+                            <th>🚀 Final Kestirim (z_yeni)</th>
+                            <th>Yeni Şüphe (P_yeni)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <tr>
+                            <td>0</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td class="highlight-val">0.00 m</td>
+                            <td>10.00</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        let k = 0;
+        let z = 0.0;
+        let P = 10.0;
+        const Q = 2.0;
+        const R = 4.0;
+        let autoInterval = null;
+
+        // Gerçek simülasyon senaryosu (Roket yukarı hızlanıyor)
+        // Gerçek irtifalar sırasıyla: 5, 12, 21, 32, 45, 60, 77, 96, 117, 140 ...
+        const trueAlts = [0, 5, 12, 21, 32, 45, 60, 77, 96, 117, 140, 165, 192, 221, 252, 285];
+        // Barometre ölçümleri (gerçek irtifaya hafif gürültülü)
+        const baroReads = [0, 6.8, 10.5, 23.4, 30.1, 47.8, 58.2, 79.5, 93.1, 121.0, 138.4, 169.2, 188.5, 225.1, 248.9, 289.0];
+        // İvmeden gelen tahmini artış (Δz)
+        const deltaZs   = [0, 5.0, 7.0, 9.0, 11.0, 13.0, 15.0, 17.0, 19.0, 21.0, 23.0, 25.0, 27.0, 29.0, 31.0, 33.0];
+
+        function nextStep() {
+            k++;
+            if (k >= trueAlts.length) {
+                alert('Tebrikler! 15 iterasyonluk tüm roket yükseliş senaryosunu tamamladınız. Başa dönüp tekrar inceleyebilirsiniz.');
+                stopAuto();
+                return;
+            }
+
+            let oldZ = z;
+            let oldP = P;
+            let deltaZ = deltaZs[k];
+
+            // 1. TAHMİN ADIMI
+            let predZ = oldZ + deltaZ;
+            let predP = oldP + Q;
+
+            // 2. KAZANÇ ADIMI (TERAZİ)
+            let K = predP / (predP + R);
+
+            // 3. GÜNCELLEME ADIMI
+            let baroRead = baroReads[k];
+            let diff = baroRead - predZ;
+            let finalZ = predZ + K * diff;
+            let finalP = (1.0 - K) * predP;
+
+            // EKRANA YAZDIR
+            document.getElementById('iterBadge').textContent = `İterasyon: ${k} (Uçuş Süresi: ${k} sn)`;
+            
+            // Kutu 1
+            document.getElementById('valOldZ').textContent = `${oldZ.toFixed(2)} m`;
+            document.getElementById('valDeltaZ').textContent = `+${deltaZ.toFixed(2)} m`;
+            document.getElementById('valPredZ').textContent = `${predZ.toFixed(2)} m`;
+            document.getElementById('valPredP').textContent = `${predP.toFixed(2)}`;
+
+            // Kutu 2
+            document.getElementById('valBox2P').textContent = `${predP.toFixed(2)}`;
+            document.getElementById('valGainKBox').textContent = `${K.toFixed(2)}`;
+            
+            let baroPct = Math.round(K * 100);
+            let imuPct = 100 - baroPct;
+            document.getElementById('barBaro').style.width = `${baroPct}%`;
+            document.getElementById('barBaro').textContent = `Baro (%${baroPct})`;
+            document.getElementById('barImu').style.width = `${imuPct}%`;
+            document.getElementById('barImu').textContent = `İvme (%${imuPct})`;
+            document.getElementById('labelImuWeight').textContent = `🧲 Model/İvme: %${imuPct}`;
+            document.getElementById('labelBaroWeight').textContent = `📡 Barometre: %${baroPct}`;
+            document.getElementById('labelGainK').textContent = `Kalman Kazancı (K) = ${K.toFixed(2)}`;
+            document.getElementById('textGainMeaning').textContent = `Barometreye %${baroPct}, Modele %${imuPct} ağırlık verildi.`;
+
+            // Kutu 3
+            document.getElementById('valBaroRead').textContent = `${baroRead.toFixed(2)} m`;
+            document.getElementById('valDiff').textContent = `${diff >= 0 ? '+' : ''}${diff.toFixed(2)} m`;
+            document.getElementById('valFinalZ').textContent = `${finalZ.toFixed(2)} m`;
+            document.getElementById('valFinalP').textContent = `${finalP.toFixed(2)}`;
+
+            // Hikaye Kutusu
+            document.getElementById('storyTitle').textContent = `💬 İterasyon ${k}: Roket ${k}. Saniyesinde Yükseliyor`;
+            document.getElementById('storyText').innerHTML = `
+                Önceki irtifamız <strong>${oldZ.toFixed(2)} m</strong> idi. İvmeölçere göre bu adımda <strong>+${deltaZ.toFixed(2)} m</strong> yükselmiş olmalıydık, yani tahmini irtifamızı <strong>${predZ.toFixed(2)} m</strong> bulduk. Ancak bu tahmindeki şüphemiz Q eklendiği için <strong>${predP.toFixed(2)}</strong> puana çıktı.<br><br>
+                Tam bu sırada Barometre ölçüm yaptı ve <strong>${baroRead.toFixed(2)} m</strong> dedi! Teraziye baktığımızda (K = ${K.toFixed(2)}) Barometreye <strong>%${baroPct}</strong>, kendi tahminimize <strong>%${imuPct}</strong> güvendik. İkisinin ağırlıklı ortalaması alınarak final irtifamız mükemmel bir hassasiyetle <strong style="color:#10b981; font-size:1.1rem;">${finalZ.toFixed(2)} metre</strong> olarak hesaplandı! Yeni şüphemiz ise Barometreden veri aldığımız için <strong>${finalP.toFixed(2)}</strong> puana düştü.
+            `;
+
+            // Tabloya Ekle
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${k}</td>
+                <td>${predZ.toFixed(2)} m</td>
+                <td>${predP.toFixed(2)}</td>
+                <td style="color:var(--accent-blue)">${baroRead.toFixed(2)} m</td>
+                <td style="color:var(--accent-yellow)">${K.toFixed(2)} (%${baroPct})</td>
+                <td class="highlight-val">${finalZ.toFixed(2)} m</td>
+                <td style="color:var(--accent-green)">${finalP.toFixed(2)}</td>
+            `;
+            document.getElementById('tableBody').appendChild(tr);
+
+            // Değişkenleri güncelle
+            z = finalZ;
+            P = finalP;
+
+            // Görsel parlama efekti
+            document.querySelectorAll('.step-box').forEach(b => {
+                b.classList.add('active-box');
+                setTimeout(() => b.classList.remove('active-box'), 400);
+            });
+        }
+
+        function stopAuto() {
+            if (autoInterval) {
+                clearInterval(autoInterval);
+                autoInterval = null;
+                document.getElementById('btnAuto').innerHTML = '⏩ Yavaşça Otomatik İlerle (1 sn/adım)';
+            }
+        }
+
+        document.getElementById('btnStep').addEventListener('click', () => {
+            stopAuto();
+            nextStep();
+        });
+
+        document.getElementById('btnAuto').addEventListener('click', () => {
+            if (autoInterval) {
+                stopAuto();
+            } else {
+                document.getElementById('btnAuto').innerHTML = '⏸️ Otomatik İlerlemeyi Durdur';
+                nextStep();
+                autoInterval = setInterval(nextStep, 1500);
+            }
+        });
+
+        document.getElementById('btnReset').addEventListener('click', () => {
+            stopAuto();
+            k = 0;
+            z = 0.0;
+            P = 10.0;
+            document.getElementById('iterBadge').textContent = `İterasyon: 0 (Başlangıç)`;
+            document.getElementById('valOldZ').textContent = `0.00 m`;
+            document.getElementById('valDeltaZ').textContent = `+0.00 m`;
+            document.getElementById('valPredZ').textContent = `0.00 m`;
+            document.getElementById('valPredP').textContent = `10.00`;
+            document.getElementById('valBox2P').textContent = `10.00`;
+            document.getElementById('valGainKBox').textContent = `0.00`;
+            document.getElementById('valBaroRead').textContent = `0.00 m`;
+            document.getElementById('valDiff').textContent = `0.00 m`;
+            document.getElementById('valFinalZ').textContent = `0.00 m`;
+            document.getElementById('valFinalP').textContent = `10.00`;
+            document.getElementById('barBaro').style.width = `50%`;
+            document.getElementById('barBaro').textContent = `Barometre (%50)`;
+            document.getElementById('barImu').style.width = `50%`;
+            document.getElementById('barImu').textContent = `Model / İvme (%50)`;
+            document.getElementById('storyTitle').textContent = `💬 İterasyon 0: Roket Rampa Üzerinde Bekliyor`;
+            document.getElementById('storyText').innerHTML = `Simülasyon henüz başlamadı. Şu an uydumuz <strong>0.0 metre</strong> irtifada kabul ediliyor. Başlangıçta kendimize olan güven belirsizliğimiz <strong>P = 10.0</strong> puan. Yukarıdaki <strong>"➡️ SONRAKİ İTERASYONA GEÇ"</strong> butonuna basarak ilk saniyede neler olacağını adım adım izleyin!`;
+            document.getElementById('tableBody').innerHTML = `
+                <tr>
+                    <td>0</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td class="highlight-val">0.00 m</td>
+                    <td>10.00</td>
+                </tr>
+            `;
+        });
+    </script>
+</body>
+</html>
