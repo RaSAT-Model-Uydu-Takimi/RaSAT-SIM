@@ -35,6 +35,8 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
         private System.Windows.Forms.Label lblEndVal;
         private System.Windows.Forms.Button btnAddEvent;
         private System.Windows.Forms.Button btnClearEvents;
+        private System.Windows.Forms.Button btnDeleteSelectedEvent;
+        private System.Windows.Forms.Button btnOpenChartSettings;
 
         private Controls.AfterEffectsTimelineControl timelineControl;
 
@@ -94,6 +96,8 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             this.numEndVal = new System.Windows.Forms.NumericUpDown();
             this.btnAddEvent = new System.Windows.Forms.Button();
             this.btnClearEvents = new System.Windows.Forms.Button();
+            this.btnDeleteSelectedEvent = new System.Windows.Forms.Button();
+            this.btnOpenChartSettings = new System.Windows.Forms.Button();
 
             this.timelineControl = new FlyingAnalysis.UI.Controls.AfterEffectsTimelineControl();
 
@@ -242,6 +246,7 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             // 
             this.grpAddEvent.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(41)))), ((int)(((byte)(59)))));
             this.grpAddEvent.Controls.Add(this.btnClearEvents);
+            this.grpAddEvent.Controls.Add(this.btnDeleteSelectedEvent);
             this.grpAddEvent.Controls.Add(this.btnAddEvent);
             this.grpAddEvent.Controls.Add(this.numEndVal);
             this.grpAddEvent.Controls.Add(this.lblEndVal);
@@ -370,11 +375,20 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             // btnClearEvents
             this.btnClearEvents.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(239)))), ((int)(((byte)(68)))), ((int)(((byte)(68)))));
             this.btnClearEvents.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnClearEvents.Location = new System.Drawing.Point(1062, 21);
+            this.btnClearEvents.Location = new System.Drawing.Point(1095, 21);
             this.btnClearEvents.Name = "btnClearEvents";
-            this.btnClearEvents.Size = new System.Drawing.Size(125, 27);
-            this.btnClearEvents.Text = "🗑️ Temizle";
+            this.btnClearEvents.Size = new System.Drawing.Size(95, 27);
+            this.btnClearEvents.Text = "🗑️ Tümü";
             this.btnClearEvents.UseVisualStyleBackColor = false;
+
+            // btnDeleteSelectedEvent
+            this.btnDeleteSelectedEvent.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(220)))), ((int)(((byte)(38)))), ((int)(((byte)(38)))));
+            this.btnDeleteSelectedEvent.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnDeleteSelectedEvent.Location = new System.Drawing.Point(985, 21);
+            this.btnDeleteSelectedEvent.Name = "btnDeleteSelectedEvent";
+            this.btnDeleteSelectedEvent.Size = new System.Drawing.Size(105, 27);
+            this.btnDeleteSelectedEvent.Text = "🗑️ Seçiliyi Sil";
+            this.btnDeleteSelectedEvent.UseVisualStyleBackColor = false;
 
             // 
             // timelineControl
@@ -391,6 +405,7 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             // pnlViewModeButtons
             // 
             this.pnlViewModeButtons.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(51)))), ((int)(((byte)(65)))), ((int)(((byte)(85)))));
+            this.pnlViewModeButtons.Controls.Add(this.btnOpenChartSettings);
             this.pnlViewModeButtons.Controls.Add(this.btnViewAccOnly);
             this.pnlViewModeButtons.Controls.Add(this.btnViewVelOnly);
             this.pnlViewModeButtons.Controls.Add(this.btnViewPosOnly);
@@ -444,6 +459,17 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             this.btnViewAccOnly.Size = new System.Drawing.Size(180, 28);
             this.btnViewAccOnly.Text = "🚀 İvme Tam Ekran";
             this.btnViewAccOnly.UseVisualStyleBackColor = false;
+
+            // btnOpenChartSettings
+            this.btnOpenChartSettings.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(168)))), ((int)(((byte)(85)))), ((int)(((byte)(247)))));
+            this.btnOpenChartSettings.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnOpenChartSettings.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
+            this.btnOpenChartSettings.ForeColor = System.Drawing.Color.White;
+            this.btnOpenChartSettings.Location = new System.Drawing.Point(836, 4);
+            this.btnOpenChartSettings.Name = "btnOpenChartSettings";
+            this.btnOpenChartSettings.Size = new System.Drawing.Size(250, 28);
+            this.btnOpenChartSettings.Text = "🎨 Grafik Katman & Sıralama Ayarları";
+            this.btnOpenChartSettings.UseVisualStyleBackColor = false;
 
             // 
             // tlpMainCharts
@@ -519,7 +545,7 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             this.lblLiveForceAscii.Name = "lblLiveForceAscii";
             this.lblLiveForceAscii.Padding = new System.Windows.Forms.Padding(4);
             this.lblLiveForceAscii.Size = new System.Drawing.Size(388, 134);
-            this.lblLiveForceAscii.Text = "     ▲ F_d (Hava Sürtünmesi) = +0.00 N\r\n     ▲ F_dış (Timeline)      = +0.00 N\r\n┌────┴─────────────────────────────┐\r\n│  UYDU KÜTLESİ: 1.80 kg       │\r\n└────┬─────────────────────────────┘\r\n     ▼ F_g (Yerçekimi)       = -17.65 N\r\n--------------------------------------\r\n     NET: -17.65 N | İVME: -9.81 m/s²";
+            this.lblLiveForceAscii.Text = "     ▲ F_d (Hava Sürtünmesi @ A=0.0450m²) = +0.00 N\r\n     ▲ F_dış (Timeline Aktör Kuvveti)        = +0.00 N\r\n┌────┴─────────────────────────────────────────────┐\r\n│  GÖREV YÜKÜ (FAZ 4): 1.25 kg (Açık Kanat)     │\r\n└────┬─────────────────────────────────────────────┘\r\n     ▼ F_g (Yerçekimi Kuvveti)                 = -12.26 N\r\n------------------------------------------------------\r\n  NET BİLEŞKE: -12.26 N | İVME: -9.81 m/s²";
 
             // 
             // TimelineStudioSubPanel

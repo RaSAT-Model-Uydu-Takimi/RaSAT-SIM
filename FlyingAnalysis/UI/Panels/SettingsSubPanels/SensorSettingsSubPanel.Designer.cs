@@ -47,8 +47,6 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             numSpikeProbPercent = new NumericUpDown();
             lblSpikeAmp = new Label();
             numSpikeAmplitude = new NumericUpDown();
-            chkEnablePhaseBurst = new CheckBox();
-            numPhaseNoiseStdDev = new NumericUpDown();
             grpCalculatedErrors = new GroupBox();
             lblCalcBiasTitle = new Label();
             numProcessedBias = new NumericUpDown();
@@ -95,6 +93,9 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             btnP2ViewSplit = new Button();
             btnP2ViewTimeSeries = new Button();
             btnP2ViewDistribution = new Button();
+            btnP2ChartLayers = new Button();
+            btnSaveSensorProfile = new Button();
+            btnLoadSensorProfile = new Button();
             txtP2SummaryTable = new TextBox();
             grpRange.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)numRangeMax).BeginInit();
@@ -108,7 +109,6 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             ((System.ComponentModel.ISupportInitialize)numRelativeNoisePercent).BeginInit();
             ((System.ComponentModel.ISupportInitialize)numSpikeProbPercent).BeginInit();
             ((System.ComponentModel.ISupportInitialize)numSpikeAmplitude).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)numPhaseNoiseStdDev).BeginInit();
             grpCalculatedErrors.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)numProcessedBias).BeginInit();
             ((System.ComponentModel.ISupportInitialize)numProcessedScale).BeginInit();
@@ -345,8 +345,6 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             grpSensorNoise.Controls.Add(numSpikeProbPercent);
             grpSensorNoise.Controls.Add(lblSpikeAmp);
             grpSensorNoise.Controls.Add(numSpikeAmplitude);
-            grpSensorNoise.Controls.Add(chkEnablePhaseBurst);
-            grpSensorNoise.Controls.Add(numPhaseNoiseStdDev);
             grpSensorNoise.Font = new Font("Segoe UI Semibold", 9.5F, FontStyle.Bold, GraphicsUnit.Point, 0);
             grpSensorNoise.ForeColor = Color.FromArgb(180, 83, 9);
             grpSensorNoise.Location = new Point(390, 30);
@@ -450,31 +448,6 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             numSpikeAmplitude.Size = new Size(110, 33);
             numSpikeAmplitude.TabIndex = 7;
             numSpikeAmplitude.Value = new decimal(new int[] { 150, 0, 0, 65536 });
-            // 
-            // chkEnablePhaseBurst
-            // 
-            chkEnablePhaseBurst.AutoSize = true;
-            chkEnablePhaseBurst.Checked = true;
-            chkEnablePhaseBurst.CheckState = CheckState.Checked;
-            chkEnablePhaseBurst.Font = new Font("Segoe UI", 9F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            chkEnablePhaseBurst.ForeColor = Color.FromArgb(15, 23, 42);
-            chkEnablePhaseBurst.Location = new Point(12, 176);
-            chkEnablePhaseBurst.Name = "chkEnablePhaseBurst";
-            chkEnablePhaseBurst.Size = new Size(200, 29);
-            chkEnablePhaseBurst.TabIndex = 8;
-            chkEnablePhaseBurst.Text = "Ayrılma/Faz σ:";
-            chkEnablePhaseBurst.UseVisualStyleBackColor = true;
-            // 
-            // numPhaseNoiseStdDev
-            // 
-            numPhaseNoiseStdDev.DecimalPlaces = 1;
-            numPhaseNoiseStdDev.Font = new Font("Segoe UI", 9.5F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            numPhaseNoiseStdDev.Location = new Point(235, 173);
-            numPhaseNoiseStdDev.Maximum = new decimal(new int[] { 10000, 0, 0, 0 });
-            numPhaseNoiseStdDev.Name = "numPhaseNoiseStdDev";
-            numPhaseNoiseStdDev.Size = new Size(110, 33);
-            numPhaseNoiseStdDev.TabIndex = 9;
-            numPhaseNoiseStdDev.Value = new decimal(new int[] { 100, 0, 0, 0 });
             // 
             // grpCalculatedErrors
             // 
@@ -882,6 +855,7 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             grpPage2_AnalysisAndPlots.Controls.Add(btnP2ViewSplit);
             grpPage2_AnalysisAndPlots.Controls.Add(btnP2ViewTimeSeries);
             grpPage2_AnalysisAndPlots.Controls.Add(btnP2ViewDistribution);
+            grpPage2_AnalysisAndPlots.Controls.Add(btnP2ChartLayers);
             grpPage2_AnalysisAndPlots.Controls.Add(txtP2SummaryTable);
             grpPage2_AnalysisAndPlots.Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold, GraphicsUnit.Point, 0);
             grpPage2_AnalysisAndPlots.Location = new Point(25, 115);
@@ -1057,6 +1031,20 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             btnP2ViewDistribution.Text = "🔔 Olasılık Dağılımı Tam Ekran (DEV)";
             btnP2ViewDistribution.UseVisualStyleBackColor = false;
             // 
+            // btnP2ChartLayers
+            // 
+            btnP2ChartLayers.BackColor = Color.FromArgb(124, 58, 237);
+            btnP2ChartLayers.FlatAppearance.BorderSize = 0;
+            btnP2ChartLayers.FlatStyle = FlatStyle.Flat;
+            btnP2ChartLayers.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
+            btnP2ChartLayers.ForeColor = Color.White;
+            btnP2ChartLayers.Location = new Point(740, 73);
+            btnP2ChartLayers.Name = "btnP2ChartLayers";
+            btnP2ChartLayers.Size = new Size(260, 33);
+            btnP2ChartLayers.TabIndex = 15;
+            btnP2ChartLayers.Text = "🎨 Grafik Katman & Çizim Ayarları";
+            btnP2ChartLayers.UseVisualStyleBackColor = false;
+            // 
             // plotTimeSeries
             // 
             plotTimeSeries.DisplayScale = 1.5F;
@@ -1099,9 +1087,39 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             Controls.Add(grpRange);
             Controls.Add(btnPage2_Chart);
             Controls.Add(btnPage1_Settings);
+            Controls.Add(btnSaveSensorProfile);
+            Controls.Add(btnLoadSensorProfile);
             Controls.Add(cmbSensorType);
             Controls.Add(lblSensorSelect);
             Controls.Add(lblPanelTitle);
+            // 
+            // btnSaveSensorProfile
+            // 
+            btnSaveSensorProfile.BackColor = Color.FromArgb(15, 118, 110);
+            btnSaveSensorProfile.FlatAppearance.BorderSize = 0;
+            btnSaveSensorProfile.FlatStyle = FlatStyle.Flat;
+            btnSaveSensorProfile.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
+            btnSaveSensorProfile.ForeColor = Color.White;
+            btnSaveSensorProfile.Location = new Point(1065, 17);
+            btnSaveSensorProfile.Name = "btnSaveSensorProfile";
+            btnSaveSensorProfile.Size = new Size(160, 36);
+            btnSaveSensorProfile.TabIndex = 16;
+            btnSaveSensorProfile.Text = "💾 Sensörü Kaydet";
+            btnSaveSensorProfile.UseVisualStyleBackColor = false;
+            // 
+            // btnLoadSensorProfile
+            // 
+            btnLoadSensorProfile.BackColor = Color.FromArgb(51, 65, 85);
+            btnLoadSensorProfile.FlatAppearance.BorderSize = 0;
+            btnLoadSensorProfile.FlatStyle = FlatStyle.Flat;
+            btnLoadSensorProfile.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
+            btnLoadSensorProfile.ForeColor = Color.White;
+            btnLoadSensorProfile.Location = new Point(1235, 17);
+            btnLoadSensorProfile.Name = "btnLoadSensorProfile";
+            btnLoadSensorProfile.Size = new Size(160, 36);
+            btnLoadSensorProfile.TabIndex = 17;
+            btnLoadSensorProfile.Text = "📂 Sensörü Yükle";
+            btnLoadSensorProfile.UseVisualStyleBackColor = false;
             Font = new Font("Segoe UI", 9F, FontStyle.Regular, GraphicsUnit.Point, 0);
             Name = "SensorSettingsSubPanel";
             Size = new Size(1428, 988);
@@ -1120,7 +1138,6 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             ((System.ComponentModel.ISupportInitialize)numRelativeNoisePercent).EndInit();
             ((System.ComponentModel.ISupportInitialize)numSpikeProbPercent).EndInit();
             ((System.ComponentModel.ISupportInitialize)numSpikeAmplitude).EndInit();
-            ((System.ComponentModel.ISupportInitialize)numPhaseNoiseStdDev).EndInit();
             grpCalculatedErrors.ResumeLayout(false);
             grpCalculatedErrors.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)numProcessedBias).EndInit();
@@ -1177,8 +1194,6 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
         private System.Windows.Forms.NumericUpDown numSpikeProbPercent;
         private System.Windows.Forms.Label lblSpikeAmp;
         private System.Windows.Forms.NumericUpDown numSpikeAmplitude;
-        private System.Windows.Forms.CheckBox chkEnablePhaseBurst;
-        private System.Windows.Forms.NumericUpDown numPhaseNoiseStdDev;
 
         private System.Windows.Forms.GroupBox grpCalculatedErrors;
         private System.Windows.Forms.Label lblCalcBiasTitle;
@@ -1231,6 +1246,9 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
         private System.Windows.Forms.Button btnP2ViewSplit;
         private System.Windows.Forms.Button btnP2ViewTimeSeries;
         private System.Windows.Forms.Button btnP2ViewDistribution;
+        private System.Windows.Forms.Button btnP2ChartLayers;
+        private System.Windows.Forms.Button btnSaveSensorProfile;
+        private System.Windows.Forms.Button btnLoadSensorProfile;
         private System.Windows.Forms.TextBox txtP2SummaryTable;
     }
 }

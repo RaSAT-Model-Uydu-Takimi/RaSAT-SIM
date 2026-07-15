@@ -13,9 +13,18 @@ namespace FlyingAnalysis.UI.Controls
         private double _currentPlayheadTime = 0.0;
         private bool _isScrubbing = false;
 
+        // Olay Sürükleme ve Seçim Durumları
+        public TimelineEventItem? SelectedEvent { get; private set; }
+        private bool _isDraggingEvent = false;
+        private int _dragStartX = 0;
+        private double _dragEventStartTime = 0.0;
+        private double _dragEventEndTime = 0.0;
+
         public List<TimelineEventItem> TimelineEvents { get; private set; } = new List<TimelineEventItem>();
 
         public event EventHandler<double>? PlayheadTimeChanged;
+        public event EventHandler<TimelineEventItem?>? EventSelected;
+        public event EventHandler? EventsModified;
 
         public double TotalDurationSeconds
         {
@@ -55,7 +64,20 @@ namespace FlyingAnalysis.UI.Controls
         public void SetEvents(List<TimelineEventItem> events)
         {
             TimelineEvents = events ?? new List<TimelineEventItem>();
+            SelectedEvent = null;
             Invalidate();
+        }
+
+        public void DeleteSelectedEvent()
+        {
+            if (SelectedEvent != null && TimelineEvents.Contains(SelectedEvent))
+            {
+                TimelineEvents.Remove(SelectedEvent);
+                SelectedEvent = null;
+                EventSelected?.Invoke(this, null);
+                EventsModified?.Invoke(this, EventArgs.Empty);
+                Invalidate();
+            }
         }
 
         protected override void OnMouseDown(MouseEventArgs e)
@@ -63,6 +85,41 @@ namespace FlyingAnalysis.UI.Controls
             base.OnMouseDown(e);
             if (e.Button == MouseButtons.Left)
             {
+                float trackWidth = this.Width - LeftMargin - RightMargin;
+                if (trackWidth > 10f && e.Y > TopRulerHeight)
+                {
+                    float pixelsPerSec = (float)(trackWidth / _totalDurationSeconds);
+                    float rowTop = TopRulerHeight + 8f;
+                    float rowHeight = 22f;
+                    float rowGap = 4f;
+
+                    // Tıklanan olayı kontrol et
+                    for (int i = TimelineEvents.Count - 1; i >= 0; i--)
+                    {
+                        var ev = TimelineEvents[i];
+                        float blockY = rowTop + i * (rowHeight + rowGap);
+                        float startX = LeftMargin + (float)(ev.StartTime * pixelsPerSec);
+                        float endX = LeftMargin + (float)(ev.EndTime * pixelsPerSec);
+                        float blockW = Math.Max(4f, endX - startX);
+
+                        var rect = new RectangleF(startX, blockY, blockW, rowHeight);
+                        if (rect.Contains(e.Location))
+                        {
+                            SelectedEvent = ev;
+                            EventSelected?.Invoke(this, SelectedEvent);
+                            _isDraggingEvent = true;
+                            _dragStartX = e.X;
+                            _dragEventStartTime = ev.StartTime;
+                            _dragEventEndTime = ev.EndTime;
+                            Invalidate();
+                            return;
+                        }
+                    }
+                }
+
+                // Bir olaya tıklanmadıysa veya cetvele tıklandıysa: playhead sar / seçimi iptal et
+                SelectedEvent = null;
+                EventSelected?.Invoke(this, null);
                 _isScrubbing = true;
                 UpdatePlayheadFromMouse(e.X);
             }
@@ -71,7 +128,25 @@ namespace FlyingAnalysis.UI.Controls
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
-            if (_isScrubbing)
+            if (_isDraggingEvent && SelectedEvent != null)
+            {
+                float trackWidth = this.Width - LeftMargin - RightMargin;
+                if (trackWidth > 10f)
+                {
+                    float pixelsPerSec = (float)(trackWidth / _totalDurationSeconds);
+                    double deltaSec = (e.X - _dragStartX) / (double)pixelsPerSec;
+                    double duration = _dragEventEndTime - _dragEventStartTime;
+
+                    double newStart = Math.Max(0.0, _dragEventStartTime + deltaSec);
+                    if (newStart + duration > _totalDurationSeconds)
+                        newStart = _totalDurationSeconds - duration;
+
+                    SelectedEvent.StartTime = Math.Round(newStart, 2);
+                    SelectedEvent.EndTime = Math.Round(newStart + duration, 2);
+                    Invalidate();
+                }
+            }
+            else if (_isScrubbing)
             {
                 UpdatePlayheadFromMouse(e.X);
             }
@@ -82,8 +157,26 @@ namespace FlyingAnalysis.UI.Controls
             base.OnMouseUp(e);
             if (e.Button == MouseButtons.Left)
             {
+                if (_isDraggingEvent)
+                {
+                    _isDraggingEvent = false;
+                    EventsModified?.Invoke(this, EventArgs.Empty);
+                }
                 _isScrubbing = false;
             }
+        }
+
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            if (keyData == Keys.Delete || keyData == Keys.Back)
+            {
+                if (SelectedEvent != null)
+                {
+                    DeleteSelectedEvent();
+                    return true;
+                }
+            }
+            return base.ProcessCmdKey(ref msg, keyData);
         }
 
         private void UpdatePlayheadFromMouse(int mouseX)
@@ -185,12 +278,23 @@ namespace FlyingAnalysis.UI.Controls
                     using (var blockBrush = new SolidBrush(Color.FromArgb(200, ev.BlockColor)))
                     {
                         g.FillRectangle(blockBrush, startX, blockY, blockW, rowHeight);
-                        g.DrawRectangle(borderPen, startX, blockY, blockW, rowHeight);
+                        if (ev == SelectedEvent)
+                        {
+                            using (var selectedPen = new Pen(Color.FromArgb(250, 204, 21), 2.5f))
+                            {
+                                g.DrawRectangle(selectedPen, startX, blockY, blockW, rowHeight);
+                            }
+                        }
+                        else
+                        {
+                            g.DrawRectangle(borderPen, startX, blockY, blockW, rowHeight);
+                        }
                     }
 
                     string infoStr = ev.EventType == TimelineEventType.Force ? $"{ev.StartValue:+0.0;-0.0;0}N -> {ev.EndValue:+0.0;-0.0;0}N" :
                                      ev.EventType == TimelineEventType.SensorCutoff ? "SENSÖR KAPALI (NaN)" :
                                      $"±{ev.StartValue:F1}σ Şok";
+                    if (ev == SelectedEvent) infoStr = "⚡ [SEÇİLİ] " + infoStr;
                     g.DrawString(infoStr, fontBlock, brushText, startX + 6f, blockY + 3f);
                 }
             }

@@ -29,8 +29,8 @@ namespace FlyingAnalysis.Services
             if (frequencyHz > 1000.0) frequencyHz = 1000.0;
             double dt = 1.0 / frequencyHz;
 
-            double massKg = GlobalSimulationConfig.TotalMassKg;
-            if (massKg <= 0) massKg = 1.8; // Güvenli varsayılan (1800g)
+            double massKg = GlobalSimulationConfig.PayloadMassKg;
+            if (massKg <= 0) massKg = 1.25; // Güvenli varsayılan (1250g - Sadece Görev Yükü)
 
             double areaM2 = GlobalSimulationConfig.WingOpenedArea;
             if (areaM2 <= 0) areaM2 = 0.0450;
@@ -122,19 +122,15 @@ namespace FlyingAnalysis.Services
 
                 if (!isCutoff)
                 {
-                    double totalBaroSigma = baroSigma + (isSpecialNoise ? extraNoiseSigma * 1.5 : 0.0);
-                    double totalAccSigma = accSigma + (isSpecialNoise ? extraNoiseSigma * 0.4 : 0.0);
-
-                    double baroNoiseMeter = NextGaussian(0.0, totalBaroSigma);
-                    double accNoise = NextGaussian(0.0, totalAccSigma);
-
-                    // Barometre, basınç ölçümü ve ters hidrostatik denklemi üzerinden irtifa üretir
-                    double measuredPressurePa = GlobalSimulationConfig.CalculatePressurePa(Math.Max(0.0, currentPos + baroBias + baroNoiseMeter));
+                    // Barometre: İrtifa -> Basınç -> Forward Error Model -> İrtifa -> Ters Kalibrasyon
+                    double noisyAltitude = GlobalSimulationConfig.ApplySensorForwardError(currentPos, true, _rand, step, totalSteps, isSpecialNoise, extraNoiseSigma * 1.5);
+                    double measuredPressurePa = GlobalSimulationConfig.CalculatePressurePa(Math.Max(0.0, noisyAltitude));
                     rawBaro = GlobalSimulationConfig.CalculateAltitudeFromPressure(measuredPressurePa);
-                    calBaro = rawBaro - baroBias;
+                    calBaro = GlobalSimulationConfig.ApplySensorReverseCalibration(rawBaro, true);
 
-                    rawAcc = currentAcc + accBias + accNoise;
-                    calAcc = rawAcc - accBias;
+                    // İvmeölçer: Doğrudan İvme -> Forward Error Model -> Ters Kalibrasyon
+                    rawAcc = GlobalSimulationConfig.ApplySensorForwardError(currentAcc, false, _rand, step, totalSteps, isSpecialNoise, extraNoiseSigma * 0.4);
+                    calAcc = GlobalSimulationConfig.ApplySensorReverseCalibration(rawAcc, false);
                 }
 
                 var frame = new TimelineSimulationFrame

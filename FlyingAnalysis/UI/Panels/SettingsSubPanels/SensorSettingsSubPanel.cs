@@ -37,6 +37,7 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             InitializeComponent();
             SetupEventHandlers();
             cmbSensorType.SelectedIndex = 0;
+            LoadUIFromGlobalSensorProfile();
             SyncToGlobalSensorProfile();
             LogToConsole("Sensör Hata ve Kalibrasyon Modülü (Faz 5) başarıyla başlatıldı.", Color.FromArgb(((int)(((byte)(16)))), ((int)(((byte)(185)))), ((int)(((byte)(129))))));
         }
@@ -61,11 +62,26 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
 
             // Sayfa 1 - Rezidüel güncelleme ve uygulama
             btnApplyToSim.Click += (s, e) => UpdateComparisonAndResiduals();
-            numProcessedBias.ValueChanged += (s, e) => SyncToGlobalSensorProfile();
+            numBias.ValueChanged += (s, e) => SyncToGlobalSensorProfile();
+            numScaleErrorPercent.ValueChanged += (s, e) => SyncToGlobalSensorProfile();
             numThermalStdDev.ValueChanged += (s, e) => SyncToGlobalSensorProfile();
+            numRelativeNoisePercent.ValueChanged += (s, e) => SyncToGlobalSensorProfile();
+            numSpikeProbPercent.ValueChanged += (s, e) => SyncToGlobalSensorProfile();
+            numSpikeAmplitude.ValueChanged += (s, e) => SyncToGlobalSensorProfile();
+            numProcessedBias.ValueChanged += (s, e) => SyncToGlobalSensorProfile();
+            numProcessedScale.ValueChanged += (s, e) => SyncToGlobalSensorProfile();
+
             chkEnableBias.CheckedChanged += (s, e) => SyncToGlobalSensorProfile();
+            chkEnableScale.CheckedChanged += (s, e) => SyncToGlobalSensorProfile();
             chkEnableThermal.CheckedChanged += (s, e) => SyncToGlobalSensorProfile();
-            cmbSensorType.SelectedIndexChanged += (s, e) => SyncToGlobalSensorProfile();
+            chkEnableRelativeNoise.CheckedChanged += (s, e) => SyncToGlobalSensorProfile();
+            chkEnableSpike.CheckedChanged += (s, e) => SyncToGlobalSensorProfile();
+
+            cmbSensorType.SelectedIndexChanged += (s, e) => { LoadUIFromGlobalSensorProfile(); SyncToGlobalSensorProfile(); };
+
+            if (btnSaveSensorProfile != null) btnSaveSensorProfile.Click += BtnSaveSensorProfile_Click;
+            if (btnLoadSensorProfile != null) btnLoadSensorProfile.Click += BtnLoadSensorProfile_Click;
+            if (btnP2ChartLayers != null) btnP2ChartLayers.Click += BtnP2ChartLayers_Click;
 
             // Sayfa 2 - Analiz & Çizim
             btnP2SelectRawFile.Click += BtnP2SelectRawFile_Click;
@@ -222,28 +238,6 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
                     val += sign * (double)numSpikeAmplitude.Value;
                 }
             }
-
-            // 6. Ayrılma / Faz Gürültüsü (Separation Burst Noise - örneğin uçuşun %25-%35 aralığında ekstra titreşim)
-            if (chkEnablePhaseBurst != null && chkEnablePhaseBurst.Checked && numPhaseNoiseStdDev != null && numPhaseNoiseStdDev.Value > 0)
-            {
-                if (sampleIndex >= 0 && totalCount > 0)
-                {
-                    double frac = (double)sampleIndex / totalCount;
-                    if (frac >= 0.25 && frac <= 0.35)
-                    {
-                        val += GetNextGaussian(0.0, (double)numPhaseNoiseStdDev.Value);
-                    }
-                }
-                else
-                {
-                    // Eğer tekil anlık çekim veya indeks belirtilmemişse %10 olasılıkla sarsıntı ekle
-                    if (random.NextDouble() < 0.10)
-                    {
-                        val += GetNextGaussian(0.0, (double)numPhaseNoiseStdDev.Value);
-                    }
-                }
-            }
-
             return val;
         }
 
@@ -558,27 +552,82 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             LogToConsole($"Rezidüeller güncellendi (Fark: b={resBias:F4}, S=%{resScale:F4}).");
         }
 
-        private void SyncToGlobalSensorProfile()
+        private bool isSyncingUI = false;
+        private void LoadUIFromGlobalSensorProfile()
         {
             try
             {
-                double biasVal = (double)numProcessedBias.Value;
-                if (Math.Abs(biasVal) < 1e-6 && chkEnableBias.Checked)
+                isSyncingUI = true;
+                bool isBaro = (cmbSensorType.SelectedIndex == 0 || cmbSensorType.SelectedItem?.ToString()?.Contains("Barometre") == true);
+                if (isBaro)
                 {
-                    biasVal = (double)numBias.Value;
+                    numBias.Value = (decimal)Math.Clamp(GlobalSimulationConfig.BaroBiasMeter, (double)numBias.Minimum, (double)numBias.Maximum);
+                    numScaleErrorPercent.Value = (decimal)Math.Clamp(GlobalSimulationConfig.BaroScaleErrorPercent, (double)numScaleErrorPercent.Minimum, (double)numScaleErrorPercent.Maximum);
+                    numThermalStdDev.Value = (decimal)Math.Clamp(GlobalSimulationConfig.BaroNoiseStdMeter, (double)numThermalStdDev.Minimum, (double)numThermalStdDev.Maximum);
+                    numRelativeNoisePercent.Value = (decimal)Math.Clamp(GlobalSimulationConfig.BaroRelativeNoisePercent, (double)numRelativeNoisePercent.Minimum, (double)numRelativeNoisePercent.Maximum);
+                    numSpikeProbPercent.Value = (decimal)Math.Clamp(GlobalSimulationConfig.BaroSpikeProbPercent, (double)numSpikeProbPercent.Minimum, (double)numSpikeProbPercent.Maximum);
+                    numSpikeAmplitude.Value = (decimal)Math.Clamp(GlobalSimulationConfig.BaroSpikeAmplitudeMeter, (double)numSpikeAmplitude.Minimum, (double)numSpikeAmplitude.Maximum);
+                    numProcessedBias.Value = (decimal)Math.Clamp(GlobalSimulationConfig.BaroProcessedBias, (double)numProcessedBias.Minimum, (double)numProcessedBias.Maximum);
+                    numProcessedScale.Value = (decimal)Math.Clamp(GlobalSimulationConfig.BaroProcessedScalePercent, (double)numProcessedScale.Minimum, (double)numProcessedScale.Maximum);
                 }
-                double noiseVal = chkEnableThermal.Checked ? (double)numThermalStdDev.Value : 0.0;
-                if (Math.Abs(noiseVal) < 1e-6) noiseVal = 0.5;
+                else
+                {
+                    numBias.Value = (decimal)Math.Clamp(GlobalSimulationConfig.AccBiasMps2, (double)numBias.Minimum, (double)numBias.Maximum);
+                    numScaleErrorPercent.Value = (decimal)Math.Clamp(GlobalSimulationConfig.AccScaleErrorPercent, (double)numScaleErrorPercent.Minimum, (double)numScaleErrorPercent.Maximum);
+                    numThermalStdDev.Value = (decimal)Math.Clamp(GlobalSimulationConfig.AccNoiseStdMps2, (double)numThermalStdDev.Minimum, (double)numThermalStdDev.Maximum);
+                    numRelativeNoisePercent.Value = (decimal)Math.Clamp(GlobalSimulationConfig.AccRelativeNoisePercent, (double)numRelativeNoisePercent.Minimum, (double)numRelativeNoisePercent.Maximum);
+                    numSpikeProbPercent.Value = (decimal)Math.Clamp(GlobalSimulationConfig.AccSpikeProbPercent, (double)numSpikeProbPercent.Minimum, (double)numSpikeProbPercent.Maximum);
+                    numSpikeAmplitude.Value = (decimal)Math.Clamp(GlobalSimulationConfig.AccSpikeAmplitudeMps2, (double)numSpikeAmplitude.Minimum, (double)numSpikeAmplitude.Maximum);
+                    numProcessedBias.Value = (decimal)Math.Clamp(GlobalSimulationConfig.AccProcessedBias, (double)numProcessedBias.Minimum, (double)numProcessedBias.Maximum);
+                    numProcessedScale.Value = (decimal)Math.Clamp(GlobalSimulationConfig.AccProcessedScalePercent, (double)numProcessedScale.Minimum, (double)numProcessedScale.Maximum);
+                }
+            }
+            catch (Exception ex)
+            {
+                LogToConsole($"Profil yükleme hatası: {ex.Message}");
+            }
+            finally
+            {
+                isSyncingUI = false;
+            }
+        }
+
+        private void SyncToGlobalSensorProfile()
+        {
+            if (isSyncingUI) return;
+            try
+            {
+                double biasVal = chkEnableBias.Checked ? (double)numBias.Value : 0.0;
+                double scaleVal = chkEnableScale.Checked ? (double)numScaleErrorPercent.Value : 0.0;
+                double thermalVal = chkEnableThermal.Checked ? (double)numThermalStdDev.Value : 0.0;
+                double relVal = chkEnableRelativeNoise.Checked ? (double)numRelativeNoisePercent.Value : 0.0;
+                double spikeProbVal = chkEnableSpike.Checked ? (double)numSpikeProbPercent.Value : 0.0;
+                double spikeAmpVal = chkEnableSpike.Checked ? (double)numSpikeAmplitude.Value : 0.0;
+
+                double procBias = (double)numProcessedBias.Value;
+                double procScale = (double)numProcessedScale.Value;
 
                 if (cmbSensorType.SelectedIndex == 0 || cmbSensorType.SelectedItem?.ToString()?.Contains("Barometre") == true)
                 {
                     GlobalSimulationConfig.BaroBiasMeter = biasVal;
-                    GlobalSimulationConfig.BaroNoiseStdMeter = noiseVal;
+                    GlobalSimulationConfig.BaroScaleErrorPercent = scaleVal;
+                    GlobalSimulationConfig.BaroNoiseStdMeter = thermalVal;
+                    GlobalSimulationConfig.BaroRelativeNoisePercent = relVal;
+                    GlobalSimulationConfig.BaroSpikeProbPercent = spikeProbVal;
+                    GlobalSimulationConfig.BaroSpikeAmplitudeMeter = spikeAmpVal;
+                    GlobalSimulationConfig.BaroProcessedBias = procBias;
+                    GlobalSimulationConfig.BaroProcessedScalePercent = procScale;
                 }
                 else
                 {
                     GlobalSimulationConfig.AccBiasMps2 = biasVal;
-                    GlobalSimulationConfig.AccNoiseStdMps2 = noiseVal;
+                    GlobalSimulationConfig.AccScaleErrorPercent = scaleVal;
+                    GlobalSimulationConfig.AccNoiseStdMps2 = thermalVal;
+                    GlobalSimulationConfig.AccRelativeNoisePercent = relVal;
+                    GlobalSimulationConfig.AccSpikeProbPercent = spikeProbVal;
+                    GlobalSimulationConfig.AccSpikeAmplitudeMps2 = spikeAmpVal;
+                    GlobalSimulationConfig.AccProcessedBias = procBias;
+                    GlobalSimulationConfig.AccProcessedScalePercent = procScale;
                 }
             }
             catch
@@ -687,26 +736,55 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
                 trues[i] = trueVal;
             }
 
-            // Ham Sensör Verisi (Kırmızı)
-            var sRaw = plotTimeSeries.Plot.Add.Scatter(xs, raws);
-            sRaw.LegendText = $"Ham Sensör Verisi (Ort: {raws.Average():F2} m)";
-            sRaw.Color = ScottPlot.Colors.OrangeRed;
-            sRaw.LineWidth = 1.0f;
-            sRaw.MarkerSize = 2.0f;
+            // Katman ve Sıralama (Z-Order) Ayarlarına Göre Çizim (ScottPlot)
+            var layerItems = new List<(int Order, Action DrawAction)>();
 
-            // Kalibre Edilmiş Veri (Yeşil)
-            var sCal = plotTimeSeries.Plot.Add.Scatter(xs, cals);
-            sCal.LegendText = $"Kalibre Edilmiş Veri (Ort: {cals.Average():F2} m)";
-            sCal.Color = ScottPlot.Colors.LimeGreen;
-            sCal.LineWidth = 1.5f;
-            sCal.MarkerSize = 3.0f;
+            // 1. Ham Sensör Verisi
+            if (!GlobalSimulationConfig.ChartLayers.TryGetValue("RawData", out var lRaw))
+                lRaw = new ChartLayerInfo { DisplayName = "Ham Sensör Verisi", ColorHex = "#FF4500", LineWidth = 1.0f, DrawOrder = 1, Visible = true };
+            if (lRaw.Visible)
+            {
+                layerItems.Add((lRaw.DrawOrder, () => {
+                    var sRaw = plotTimeSeries.Plot.Add.Scatter(xs, raws);
+                    sRaw.LegendText = $"Ham Sensör Verisi (Ort: {raws.Average():F2} m)";
+                    sRaw.Color = ScottPlot.Color.FromHex(lRaw.ColorHex);
+                    sRaw.LineWidth = lRaw.LineWidth;
+                    sRaw.MarkerSize = lRaw.LineWidth > 0 ? 2.0f : 0f;
+                }));
+            }
 
-            // Gerçek Veri Referans Çizgisi (Sarı / Gold) - En üst katmanda, kalın ve markersız net çizgi
-            var sTrue = plotTimeSeries.Plot.Add.Scatter(xs, trues);
-            sTrue.LegendText = $"Gerçek Referans ({trueVal:F1} m)";
-            sTrue.Color = ScottPlot.Colors.Gold;
-            sTrue.LineWidth = 3.2f;
-            sTrue.MarkerSize = 0f;
+            // 2. Kalibre Edilmiş Veri
+            if (!GlobalSimulationConfig.ChartLayers.TryGetValue("CalibratedData", out var lCal))
+                lCal = new ChartLayerInfo { DisplayName = "Kalibre Edilmiş Veri", ColorHex = "#32CD32", LineWidth = 1.5f, DrawOrder = 2, Visible = true };
+            if (lCal.Visible)
+            {
+                layerItems.Add((lCal.DrawOrder, () => {
+                    var sCal = plotTimeSeries.Plot.Add.Scatter(xs, cals);
+                    sCal.LegendText = $"Kalibre Edilmiş Veri (Ort: {cals.Average():F2} m)";
+                    sCal.Color = ScottPlot.Color.FromHex(lCal.ColorHex);
+                    sCal.LineWidth = lCal.LineWidth;
+                    sCal.MarkerSize = lCal.LineWidth > 0 ? 3.0f : 0f;
+                }));
+            }
+
+            // 3. Gerçek Veri Referans Çizgisi
+            if (!GlobalSimulationConfig.ChartLayers.TryGetValue("TrueData", out var lTrue))
+                lTrue = new ChartLayerInfo { DisplayName = "Gerçek Referans Verisi", ColorHex = "#FFD700", LineWidth = 3.2f, DrawOrder = 3, Visible = true };
+            if (lTrue.Visible)
+            {
+                layerItems.Add((lTrue.DrawOrder, () => {
+                    var sTrue = plotTimeSeries.Plot.Add.Scatter(xs, trues);
+                    sTrue.LegendText = $"Gerçek Referans ({trueVal:F1} m)";
+                    sTrue.Color = ScottPlot.Color.FromHex(lTrue.ColorHex);
+                    sTrue.LineWidth = lTrue.LineWidth;
+                    sTrue.MarkerSize = 0f;
+                }));
+            }
+
+            foreach (var item in layerItems.OrderBy(x => x.Order))
+            {
+                item.DrawAction();
+            }
 
             plotTimeSeries.Plot.Title("Örneklem Bazlı Zaman Serisi & Titreşim Karşılaştırması");
             plotTimeSeries.Plot.XLabel("Örneklem İndeksi / Zaman Adımı (i)");
@@ -778,10 +856,23 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
                 }
             }
 
-            int maxCount = Math.Max(binsRaw.Max(), binsCal.Max());
-            if (maxCount < 1) maxCount = 1;
-
             int n = p2RawSamples.Count;
+
+            double rawMean = p2RawSamples.Average();
+            double rawStd = Math.Sqrt(p2RawSamples.Select(v => Math.Pow(v - rawMean, 2)).Sum() / n);
+            if (rawStd < 1e-4) rawStd = 1.0;
+
+            int curveSteps = 200;
+            double[] curveXs = new double[curveSteps];
+            double[] rawPdfYs = new double[curveSteps];
+            for (int i = 0; i < curveSteps; i++)
+            {
+                double x = minVal + i * (span / (curveSteps - 1));
+                curveXs[i] = x;
+                double expRaw = -0.5 * Math.Pow((x - rawMean) / rawStd, 2);
+                double pdfRaw = (1.0 / (rawStd * Math.Sqrt(2.0 * Math.PI))) * Math.Exp(expRaw);
+                rawPdfYs[i] = pdfRaw * n * binWidth;
+            }
 
             // 1. Kırmızı & Yeşil Histogram Çubukları (Birbirini örtmeyecek şekilde hafif kaydırılmış ve yarı şeffaf)
             List<ScottPlot.Bar> rawBars = new List<ScottPlot.Bar>();
@@ -812,42 +903,33 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
                 }
             }
 
-            if (rawBars.Count > 0)
-            {
-                var bRaw = plotDistributionGraph.Plot.Add.Bars(rawBars);
-                bRaw.LegendText = "Ham Olasılık Histogramı";
-            }
-            if (calBars.Count > 0)
-            {
-                var bCal = plotDistributionGraph.Plot.Add.Bars(calBars);
-                bCal.LegendText = "Kalibre Olasılık Histogramı";
-            }
+            // Dağılım Grafiği (Olasılık Histogramı ve Çan Eğrileri) - Katman ve Renk Ayarlarına Göre Çizim
+            if (!GlobalSimulationConfig.ChartLayers.TryGetValue("RawData", out var lRaw))
+                lRaw = new ChartLayerInfo { DisplayName = "Ham Sensör Verisi", ColorHex = "#FF4500", LineWidth = 2.5f, DrawOrder = 1, Visible = true };
+            if (!GlobalSimulationConfig.ChartLayers.TryGetValue("CalibratedData", out var lCal))
+                lCal = new ChartLayerInfo { DisplayName = "Kalibre Edilmiş Veri", ColorHex = "#32CD32", LineWidth = 2.8f, DrawOrder = 2, Visible = true };
+            if (!GlobalSimulationConfig.ChartLayers.TryGetValue("TrueData", out var lTrue))
+                lTrue = new ChartLayerInfo { DisplayName = "Gerçek Referans Verisi", ColorHex = "#FFD700", LineWidth = 3.2f, DrawOrder = 3, Visible = true };
 
-            // 2. Teori / Dağılım Gauss Çift Çan Eğrisi (Kırmızı vs Yeşil)
-            double rawMean = p2RawSamples.Average();
-            double rawStd = Math.Sqrt(p2RawSamples.Select(v => Math.Pow(v - rawMean, 2)).Sum() / n);
-            if (rawStd < 1e-4) rawStd = 1.0;
+            var distLayers = new List<(int Order, Action DrawAction)>();
 
-            int curveSteps = 200;
-            double[] curveXs = new double[curveSteps];
-            double[] rawPdfYs = new double[curveSteps];
-
-            for (int i = 0; i < curveSteps; i++)
+            if (lRaw.Visible)
             {
-                double x = minVal + (span * i / (curveSteps - 1));
-                curveXs[i] = x;
-                double expRaw = -0.5 * Math.Pow((x - rawMean) / rawStd, 2);
-                double pdfRaw = (1.0 / (rawStd * Math.Sqrt(2.0 * Math.PI))) * Math.Exp(expRaw);
-                rawPdfYs[i] = pdfRaw * n * binWidth; // Histogram frekans ölçeğinde çan eğrisi
+                distLayers.Add((lRaw.DrawOrder, () => {
+                    if (rawBars.Count > 0)
+                    {
+                        var bRaw = plotDistributionGraph.Plot.Add.Bars(rawBars);
+                        bRaw.LegendText = "Ham Olasılık Histogramı";
+                    }
+                    var sRawCurve = plotDistributionGraph.Plot.Add.Scatter(curveXs, rawPdfYs);
+                    sRawCurve.Color = ScottPlot.Color.FromHex(lRaw.ColorHex);
+                    sRawCurve.LineWidth = lRaw.LineWidth;
+                    sRawCurve.MarkerSize = 0f;
+                    sRawCurve.LegendText = $"Ham Dağılım Eğrisi (μ={rawMean:F2}, σ={rawStd:F2})";
+                }));
             }
 
-            var sRawCurve = plotDistributionGraph.Plot.Add.Scatter(curveXs, rawPdfYs);
-            sRawCurve.Color = ScottPlot.Colors.Red;
-            sRawCurve.LineWidth = 2.5f;
-            sRawCurve.MarkerSize = 0f;
-            sRawCurve.LegendText = $"Ham Dağılım Eğrisi (μ={rawMean:F2}, σ={rawStd:F2})";
-
-            if (p2CalSamples != null && p2CalSamples.Count > 0)
+            if (lCal.Visible && p2CalSamples != null && p2CalSamples.Count > 0)
             {
                 double calMean = p2CalSamples.Average();
                 double calStd = Math.Sqrt(p2CalSamples.Select(v => Math.Pow(v - calMean, 2)).Sum() / p2CalSamples.Count);
@@ -862,24 +944,205 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
                     calPdfYs[i] = pdfCal * p2CalSamples.Count * binWidth;
                 }
 
-                var sCalCurve = plotDistributionGraph.Plot.Add.Scatter(curveXs, calPdfYs);
-                sCalCurve.Color = ScottPlot.Colors.LimeGreen;
-                sCalCurve.LineWidth = 2.8f;
-                sCalCurve.MarkerSize = 0f;
-                sCalCurve.LegendText = $"Kalibre Dağılım Eğrisi (μ={calMean:F2}, σ={calStd:F2})";
+                distLayers.Add((lCal.DrawOrder, () => {
+                    if (calBars.Count > 0)
+                    {
+                        var bCal = plotDistributionGraph.Plot.Add.Bars(calBars);
+                        bCal.LegendText = "Kalibre Olasılık Histogramı";
+                    }
+                    var sCalCurve = plotDistributionGraph.Plot.Add.Scatter(curveXs, calPdfYs);
+                    sCalCurve.Color = ScottPlot.Color.FromHex(lCal.ColorHex);
+                    sCalCurve.LineWidth = lCal.LineWidth;
+                    sCalCurve.MarkerSize = 0f;
+                    sCalCurve.LegendText = $"Kalibre Dağılım Eğrisi (μ={calMean:F2}, σ={calStd:F2})";
+                }));
             }
 
-            // 3. Referans Dikey Çizgisi (Sarı / Gold) - En net ve kalın vurgu
-            var vTrue = plotDistributionGraph.Plot.Add.VerticalLine(trueVal);
-            vTrue.Color = ScottPlot.Colors.Gold;
-            vTrue.LineWidth = 3.2f;
-            vTrue.LegendText = $"Gerçek Değer ({trueVal:F2} m)";
+            if (lTrue.Visible)
+            {
+                distLayers.Add((lTrue.DrawOrder, () => {
+                    var vTrue = plotDistributionGraph.Plot.Add.VerticalLine(trueVal);
+                    vTrue.Color = ScottPlot.Color.FromHex(lTrue.ColorHex);
+                    vTrue.LineWidth = lTrue.LineWidth;
+                    vTrue.LegendText = $"Gerçek Değer ({trueVal:F2} m)";
+                }));
+            }
+
+            foreach (var item in distLayers.OrderBy(x => x.Order))
+            {
+                item.DrawAction();
+            }
 
             plotDistributionGraph.Plot.Title($"Olasılık Yoğunluk ve Örneklem Histogramı (Dilim Sayısı: {numBins})");
             plotDistributionGraph.Plot.XLabel("Ölçüm Değeri / Genlik (m)");
             plotDistributionGraph.Plot.YLabel("Örneklem Frekansı (Adet) / Dağılım Yoğunluğu");
             plotDistributionGraph.Plot.ShowLegend();
             plotDistributionGraph.Refresh();
+        }
+
+        #endregion
+
+        #region Profil Kaydetme/Yükleme & Grafik Katman Ayarları Modal
+
+        private void BtnSaveSensorProfile_Click(object? sender, EventArgs e)
+        {
+            try
+            {
+                SyncToGlobalSensorProfile();
+                bool isBaro = (cmbSensorType.SelectedIndex == 0 || cmbSensorType.SelectedItem?.ToString()?.Contains("Barometre") == true);
+                using var sfd = new SaveFileDialog
+                {
+                    Filter = "JSON Dosyaları (*.json)|*.json",
+                    FileName = isBaro ? "BaroSensorProfile.json" : "AccSensorProfile.json",
+                    Title = "Sensör Profilini JSON Olarak Kaydet"
+                };
+                if (sfd.ShowDialog() == DialogResult.OK)
+                {
+                    GlobalSimulationConfig.SaveSensorProfileToFile(sfd.FileName, isBaro);
+                    LogToConsole($"Sensör profili (.json) başarıyla kaydedildi: {sfd.FileName}");
+                    MessageBox.Show("Sensör profili JSON dosyası olarak başarıyla kaydedildi.", "Profil Kaydedildi", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Profil kaydedilirken hata oluştu: {ex.Message}", "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void BtnLoadSensorProfile_Click(object? sender, EventArgs e)
+        {
+            try
+            {
+                bool isBaro = (cmbSensorType.SelectedIndex == 0 || cmbSensorType.SelectedItem?.ToString()?.Contains("Barometre") == true);
+                using var ofd = new OpenFileDialog
+                {
+                    Filter = "JSON Dosyaları (*.json)|*.json",
+                    Title = "Sensör Profilini JSON Dosyasından Yükle"
+                };
+                if (ofd.ShowDialog() == DialogResult.OK)
+                {
+                    if (GlobalSimulationConfig.LoadSensorProfileFromFile(ofd.FileName, isBaro))
+                    {
+                        LoadUIFromGlobalSensorProfile();
+                        LogToConsole($"Sensör profili (.json) başarıyla yüklendi ve arayüze uygulandı: {ofd.FileName}");
+                        MessageBox.Show("Sensör profili JSON dosyasından başarıyla yüklendi.", "Profil Yüklendi", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    else
+                    {
+                        MessageBox.Show("Profil dosyası okunamadı veya biçim geçersiz.", "Uyarı", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Profil yüklenirken hata oluştu: {ex.Message}", "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void BtnP2ChartLayers_Click(object? sender, EventArgs e)
+        {
+            using (Form dlg = new Form())
+            {
+                dlg.Text = "🎨 Grafik Katman, Renk, Kalınlık ve Çizilme Sırası (Z-Order) Ayarları";
+                dlg.Size = new Size(680, 420);
+                dlg.StartPosition = FormStartPosition.CenterParent;
+                dlg.BackColor = Color.FromArgb(30, 41, 59);
+                dlg.ForeColor = Color.White;
+                dlg.FormBorderStyle = FormBorderStyle.FixedDialog;
+                dlg.MaximizeBox = false;
+                dlg.MinimizeBox = false;
+
+                TableLayoutPanel table = new TableLayoutPanel();
+                table.Dock = DockStyle.Top;
+                table.Height = 280;
+                table.ColumnCount = 5;
+                table.RowCount = 4;
+                table.Padding = new Padding(15);
+                table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 35F));
+                table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 15F));
+                table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
+                table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 15F));
+                table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 15F));
+
+                table.Controls.Add(new Label { Text = "Katman / Veri Tipi", Font = new Font("Segoe UI Semibold", 10F), AutoSize = true }, 0, 0);
+                table.Controls.Add(new Label { Text = "Görünür", Font = new Font("Segoe UI Semibold", 10F), AutoSize = true }, 1, 0);
+                table.Controls.Add(new Label { Text = "Renk Seçimi", Font = new Font("Segoe UI Semibold", 10F), AutoSize = true }, 2, 0);
+                table.Controls.Add(new Label { Text = "Kalınlık", Font = new Font("Segoe UI Semibold", 10F), AutoSize = true }, 3, 0);
+                table.Controls.Add(new Label { Text = "Çizim Sırası", Font = new Font("Segoe UI Semibold", 10F), AutoSize = true }, 4, 0);
+
+                string[] keys = { "RawData", "CalibratedData", "TrueData" };
+                string[] names = { "Ham Sensör Verisi", "Kalibre Edilmiş Veri", "Gerçek Referans Verisi" };
+                string[] defaultHex = { "#FF4500", "#32CD32", "#FFD700" };
+                float[] defaultWidth = { 2.5f, 2.8f, 3.2f };
+                int[] defaultOrder = { 1, 2, 3 };
+
+                var rowControls = new List<(string Key, CheckBox chk, Button btnColor, NumericUpDown numWidth, NumericUpDown numOrder)>();
+
+                for (int i = 0; i < keys.Length; i++)
+                {
+                    string key = keys[i];
+                    if (!GlobalSimulationConfig.ChartLayers.TryGetValue(key, out var info))
+                    {
+                        info = new ChartLayerInfo { DisplayName = names[i], ColorHex = defaultHex[i], LineWidth = defaultWidth[i], DrawOrder = defaultOrder[i], Visible = true };
+                        GlobalSimulationConfig.ChartLayers[key] = info;
+                    }
+
+                    Label lblName = new Label { Text = info.DisplayName, AutoSize = true, Anchor = AnchorStyles.Left };
+                    CheckBox chkVis = new CheckBox { Checked = info.Visible, Anchor = AnchorStyles.Left };
+                    
+                    Button btnColor = new Button { Text = "🎨 Renk", BackColor = ColorTranslator.FromHtml(info.ColorHex), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Height = 32, Width = 80 };
+                    btnColor.Click += (s, ev) => {
+                        using (ColorDialog cd = new ColorDialog())
+                        {
+                            cd.Color = btnColor.BackColor;
+                            if (cd.ShowDialog() == DialogResult.OK)
+                            {
+                                btnColor.BackColor = cd.Color;
+                            }
+                        }
+                    };
+
+                    NumericUpDown numWidth = new NumericUpDown { DecimalPlaces = 1, Minimum = (decimal)0.5, Maximum = (decimal)15.0, Increment = (decimal)0.5, Value = (decimal)info.LineWidth, Width = 70 };
+                    NumericUpDown numOrder = new NumericUpDown { Minimum = 1, Maximum = 20, Value = info.DrawOrder, Width = 60 };
+
+                    table.Controls.Add(lblName, 0, i + 1);
+                    table.Controls.Add(chkVis, 1, i + 1);
+                    table.Controls.Add(btnColor, 2, i + 1);
+                    table.Controls.Add(numWidth, 3, i + 1);
+                    table.Controls.Add(numOrder, 4, i + 1);
+
+                    rowControls.Add((key, chkVis, btnColor, numWidth, numOrder));
+                }
+
+                Button btnSave = new Button { Text = "✅ Uygula ve Yenile", BackColor = Color.FromArgb(16, 185, 129), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI Semibold", 10F), Width = 180, Height = 40, Location = new Point(460, 310) };
+                btnSave.Click += (s, ev) => {
+                    foreach (var rc in rowControls)
+                    {
+                        if (GlobalSimulationConfig.ChartLayers.TryGetValue(rc.Key, out var info))
+                        {
+                            info.Visible = rc.chk.Checked;
+                            info.ColorHex = ColorTranslator.ToHtml(rc.btnColor.BackColor);
+                            info.LineWidth = (float)rc.numWidth.Value;
+                            info.DrawOrder = (int)rc.numOrder.Value;
+                        }
+                    }
+                    dlg.DialogResult = DialogResult.OK;
+                    dlg.Close();
+                };
+
+                Button btnCancel = new Button { Text = "İptal", BackColor = Color.FromArgb(100, 116, 139), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Width = 100, Height = 40, Location = new Point(340, 310) };
+                btnCancel.Click += (s, ev) => dlg.Close();
+
+                dlg.Controls.Add(table);
+                dlg.Controls.Add(btnSave);
+                dlg.Controls.Add(btnCancel);
+
+                if (dlg.ShowDialog() == DialogResult.OK)
+                {
+                    BtnP2PlotAll_Click(null, EventArgs.Empty);
+                    LogToConsole("Grafik katman renkleri, kalınlıkları ve çizilme sıraları güncellendi.");
+                }
+            }
         }
 
         #endregion

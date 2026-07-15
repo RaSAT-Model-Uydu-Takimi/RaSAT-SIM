@@ -102,11 +102,44 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             };
 
             btnAddEvent.Click += BtnAddEvent_Click;
+            btnDeleteSelectedEvent.Click += (s, e) =>
+            {
+                timelineControl.DeleteSelectedEvent();
+            };
             btnClearEvents.Click += (s, e) =>
             {
                 _events.Clear();
                 timelineControl.SetEvents(_events);
                 RunAndRefreshSimulation();
+            };
+
+            timelineControl.EventsModified += (s, e) =>
+            {
+                RunAndRefreshSimulation();
+            };
+
+            btnOpenChartSettings.Click += (s, e) =>
+            {
+                using var dlg = new Form
+                {
+                    Text = "🎨 Grafik Katman, Renk ve Sıralama Ayarları",
+                    Size = new Size(500, 520),
+                    StartPosition = FormStartPosition.CenterParent,
+                    BackColor = Color.FromArgb(30, 41, 59),
+                    FormBorderStyle = FormBorderStyle.FixedDialog,
+                    MaximizeBox = false,
+                    MinimizeBox = false
+                };
+                var panel = new ChartLayerSettingsSubPanel { Dock = DockStyle.Fill };
+                dlg.Controls.Add(panel);
+                dlg.ShowDialog();
+            };
+
+            GlobalSimulationConfig.OnChartStylingChanged += () =>
+            {
+                UpdateChartOrderLayout();
+                PlotAllCharts();
+                OnPlayheadChanged(timelineControl.CurrentPlayheadTime);
             };
 
             cmbEventType.SelectedIndexChanged += (s, e) =>
@@ -140,6 +173,23 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
 
         private void SetViewMode(ViewMode mode)
         {
+            tlpMainCharts.SuspendLayout();
+            tlpBottomRow.SuspendLayout();
+
+            if (!tlpMainCharts.Controls.Contains(tlpBottomRow))
+            {
+                tlpMainCharts.Controls.Remove(plotPosition);
+                tlpMainCharts.Controls.Remove(plotVelocity);
+                tlpMainCharts.Controls.Remove(plotAcceleration);
+
+                tlpMainCharts.RowCount = 2;
+                while (tlpMainCharts.RowStyles.Count < 2) tlpMainCharts.RowStyles.Add(new RowStyle());
+                tlpMainCharts.Controls.Add(plotPosition, 0, 0);
+                tlpMainCharts.Controls.Add(tlpBottomRow, 0, 1);
+                tlpBottomRow.Controls.Add(plotVelocity, 0, 0);
+                tlpBottomRow.Controls.Add(plotAcceleration, 1, 0);
+            }
+
             switch (mode)
             {
                 case ViewMode.Proportional:
@@ -188,6 +238,15 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
                 tlpBottomRow.ColumnStyles[1] = new ColumnStyle(SizeType.Percent, 33.33f);
                 tlpBottomRow.ColumnStyles[2] = new ColumnStyle(SizeType.Percent, 33.34f);
             }
+
+            tlpBottomRow.ResumeLayout();
+            tlpMainCharts.ResumeLayout();
+        }
+
+        private void UpdateChartOrderLayout()
+        {
+            // Kullanıcının talebi üzerine: Sayfa düzenini bozan grafik satır kaydırma özelliği tamamen kaldırıldı.
+            // tlpMainCharts ve tlpBottomRow yerleşimi sabit korunuyor.
         }
 
         private void BtnAddEvent_Click(object? sender, EventArgs e)
@@ -240,10 +299,13 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             OnPlayheadChanged(timelineControl.CurrentPlayheadTime);
         }
 
+        private static ScottPlot.Color ToSpColor(System.Drawing.Color c) => new ScottPlot.Color(c.R, c.G, c.B, c.A);
+
         private void PlotAllCharts()
         {
             if (_simulationFrames.Count == 0) return;
 
+            var profile = GlobalSimulationConfig.ChartProfile;
             double[] xs = _simulationFrames.Select(f => f.Time).ToArray();
 
             // 1. Konum Grafiği
@@ -252,23 +314,38 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             double[] posRaw = _simulationFrames.Select(f => f.RawBaroPosition).ToArray();
             double[] posCal = _simulationFrames.Select(f => f.CalibratedBaroPosition).ToArray();
 
-            var sPosTrue = plotPosition.Plot.Add.Scatter(xs, posTrue);
-            sPosTrue.LegendText = "Gerçek İrtifa";
-            sPosTrue.Color = ScottPlot.Colors.Gold;
-            sPosTrue.LineWidth = 3f;
-            sPosTrue.MarkerSize = 0f;
-
-            var sPosRaw = plotPosition.Plot.Add.Scatter(xs, posRaw);
-            sPosRaw.LegendText = "Ham Barometre";
-            sPosRaw.Color = ScottPlot.Colors.OrangeRed;
-            sPosRaw.LineWidth = 1f;
-            sPosRaw.MarkerSize = 2f;
-
-            var sPosCal = plotPosition.Plot.Add.Scatter(xs, posCal);
-            sPosCal.LegendText = "Kalibre Barometre";
-            sPosCal.Color = ScottPlot.Colors.LimeGreen;
-            sPosCal.LineWidth = 2f;
-            sPosCal.MarkerSize = 0f;
+            var posLayers = new List<(int Order, Action DrawAction)>();
+            if (profile.PosTrue.Show)
+            {
+                posLayers.Add((profile.PosTrue.DrawOrder, () => {
+                    var sPosTrue = plotPosition.Plot.Add.Scatter(xs, posTrue);
+                    sPosTrue.LegendText = "Gerçek İrtifa";
+                    sPosTrue.Color = ToSpColor(profile.PosTrue.Color);
+                    sPosTrue.LineWidth = profile.PosTrue.LineWidth;
+                    sPosTrue.MarkerSize = 0f;
+                }));
+            }
+            if (profile.PosRaw.Show)
+            {
+                posLayers.Add((profile.PosRaw.DrawOrder, () => {
+                    var sPosRaw = plotPosition.Plot.Add.Scatter(xs, posRaw);
+                    sPosRaw.LegendText = "Ham Barometre";
+                    sPosRaw.Color = ToSpColor(profile.PosRaw.Color);
+                    sPosRaw.LineWidth = profile.PosRaw.LineWidth;
+                    sPosRaw.MarkerSize = 2f;
+                }));
+            }
+            if (profile.PosCal.Show)
+            {
+                posLayers.Add((profile.PosCal.DrawOrder, () => {
+                    var sPosCal = plotPosition.Plot.Add.Scatter(xs, posCal);
+                    sPosCal.LegendText = "Kalibre Barometre";
+                    sPosCal.Color = ToSpColor(profile.PosCal.Color);
+                    sPosCal.LineWidth = profile.PosCal.LineWidth;
+                    sPosCal.MarkerSize = 0f;
+                }));
+            }
+            foreach (var item in posLayers.OrderBy(x => x.Order)) item.DrawAction();
 
             _vlinePos = plotPosition.Plot.Add.VerticalLine(timelineControl.CurrentPlayheadTime);
             _vlinePos.Color = ScottPlot.Colors.Red;
@@ -279,12 +356,15 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
 
             // 2. Hız Grafiği
             plotVelocity.Plot.Clear();
-            double[] velTrue = _simulationFrames.Select(f => f.TrueVelocity).ToArray();
-            var sVelTrue = plotVelocity.Plot.Add.Scatter(xs, velTrue);
-            sVelTrue.LegendText = "Gerçek Hız";
-            sVelTrue.Color = ScottPlot.Colors.SkyBlue;
-            sVelTrue.LineWidth = 2.5f;
-            sVelTrue.MarkerSize = 0f;
+            if (profile.VelTrue.Show)
+            {
+                double[] velTrue = _simulationFrames.Select(f => f.TrueVelocity).ToArray();
+                var sVelTrue = plotVelocity.Plot.Add.Scatter(xs, velTrue);
+                sVelTrue.LegendText = "Gerçek Hız";
+                sVelTrue.Color = ToSpColor(profile.VelTrue.Color);
+                sVelTrue.LineWidth = profile.VelTrue.LineWidth;
+                sVelTrue.MarkerSize = 0f;
+            }
 
             _vlineVel = plotVelocity.Plot.Add.VerticalLine(timelineControl.CurrentPlayheadTime);
             _vlineVel.Color = ScottPlot.Colors.Red;
@@ -295,20 +375,42 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
 
             // 3. İvme Grafiği
             plotAcceleration.Plot.Clear();
+            double[] accTrue = _simulationFrames.Select(f => f.TrueAcceleration).ToArray();
             double[] accRaw = _simulationFrames.Select(f => f.RawAcceleration).ToArray();
             double[] accCal = _simulationFrames.Select(f => f.CalibratedAcceleration).ToArray();
 
-            var sAccRaw = plotAcceleration.Plot.Add.Scatter(xs, accRaw);
-            sAccRaw.LegendText = "Ham İvme";
-            sAccRaw.Color = ScottPlot.Colors.OrangeRed;
-            sAccRaw.LineWidth = 1f;
-            sAccRaw.MarkerSize = 1.5f;
-
-            var sAccCal = plotAcceleration.Plot.Add.Scatter(xs, accCal);
-            sAccCal.LegendText = "Kalibre İvme";
-            sAccCal.Color = ScottPlot.Colors.LimeGreen;
-            sAccCal.LineWidth = 2f;
-            sAccCal.MarkerSize = 0f;
+            var accLayers = new List<(int Order, Action DrawAction)>();
+            if (profile.AccTrue.Show)
+            {
+                accLayers.Add((profile.AccTrue.DrawOrder, () => {
+                    var sAccTrue = plotAcceleration.Plot.Add.Scatter(xs, accTrue);
+                    sAccTrue.LegendText = "Gerçek İvme";
+                    sAccTrue.Color = ToSpColor(profile.AccTrue.Color);
+                    sAccTrue.LineWidth = profile.AccTrue.LineWidth;
+                    sAccTrue.MarkerSize = 0f;
+                }));
+            }
+            if (profile.AccRaw.Show)
+            {
+                accLayers.Add((profile.AccRaw.DrawOrder, () => {
+                    var sAccRaw = plotAcceleration.Plot.Add.Scatter(xs, accRaw);
+                    sAccRaw.LegendText = "Ham İvme";
+                    sAccRaw.Color = ToSpColor(profile.AccRaw.Color);
+                    sAccRaw.LineWidth = profile.AccRaw.LineWidth;
+                    sAccRaw.MarkerSize = 1.5f;
+                }));
+            }
+            if (profile.AccCal.Show)
+            {
+                accLayers.Add((profile.AccCal.DrawOrder, () => {
+                    var sAccCal = plotAcceleration.Plot.Add.Scatter(xs, accCal);
+                    sAccCal.LegendText = "Kalibre İvme";
+                    sAccCal.Color = ToSpColor(profile.AccCal.Color);
+                    sAccCal.LineWidth = profile.AccCal.LineWidth;
+                    sAccCal.MarkerSize = 0f;
+                }));
+            }
+            foreach (var item in accLayers.OrderBy(x => x.Order)) item.DrawAction();
 
             _vlineAcc = plotAcceleration.Plot.Add.VerticalLine(timelineControl.CurrentPlayheadTime);
             _vlineAcc.Color = ScottPlot.Colors.Red;
@@ -351,14 +453,17 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             string extArrow = fext >= 0 ? "▲" : "▼";
             if (Math.Abs(fext) < 0.01) extArrow = "─";
 
+            double payloadKg = GlobalSimulationConfig.PayloadMassKg;
+            double areaM2 = GlobalSimulationConfig.WingOpenedArea;
+
             string ascii =
-                $"     {dragArrow} F_d (Hava Sürtünmesi) = {fd:+0.00;-0.00;0.00} N\r\n" +
-                $"     {extArrow} F_dış (Timeline)      = {fext:+0.00;-0.00;0.00} N\r\n" +
-                $"┌────┴─────────────────────────────┐\r\n" +
-                $"│  UYDU KÜTLESİ: {GlobalSimulationConfig.TotalMassKg:F2} kg       │\r\n" +
-                $"└────┬─────────────────────────────┘\r\n" +
-                $"     ▼ F_g (Yerçekimi)       = {fg:+0.00;-0.00;0.00} N\r\n" +
-                $"--------------------------------------\r\n" +
+                $"     {dragArrow} F_d (Hava Sürtünmesi @ A={areaM2:F4}m²) = {fd:+0.00;-0.00;0.00} N\r\n" +
+                $"     {extArrow} F_dış (Timeline Aktör Kuvveti)        = {fext:+0.00;-0.00;0.00} N\r\n" +
+                $"┌────┴─────────────────────────────────────────────┐\r\n" +
+                $"│  GÖREV YÜKÜ (FAZ 4): {payloadKg:F2} kg (Açık Kanat)     │\r\n" +
+                $"└────┬─────────────────────────────────────────────┘\r\n" +
+                $"     ▼ F_g (Yerçekimi Kuvveti)                 = {fg:+0.00;-0.00;0.00} N\r\n" +
+                $"------------------------------------------------------\r\n" +
                 $"  NET BİLEŞKE: {fnet:+0.00;-0.00;0.00} N | İVME: {acc:+0.00;-0.00;0.00} m/s²";
 
             lblLiveForceAscii.Text = ascii;
