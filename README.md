@@ -14,7 +14,7 @@ RaSAT SIM, model uydu projeleri için uçuş algoritmalarının, sensör hatalar
 
 ### Derleme ve Çalıştırma
 ```powershell
-cd "m:\Godot\Projeler\RaSAT SIM\FlyingAnalysis"
+cd "...\RaSAT SIM\FlyingAnalysis"
 dotnet restore
 dotnet build -c Release
 dotnet run
@@ -36,7 +36,7 @@ Model uydunun roketten ayrılma, serbest düşüş, ayrılma ve aktif iniş  faz
 * **Kestirim Ayarları:** Kalman filtresi süreç gürültü matrisi (Q) ve sensör ölçüm gürültü matrisi (R) katsayıları.
 
 ### Çıktılar
-* **Zaman-Konum ve Kuvvet Grafikleri:** Uydunun irtifa, hız, ivme verileri ile üzerindeki net aerodinamik ve kütleçekim kuvvet diyagramı.
+* **Konum - Zaman  ve Kuvvet Grafikleri:** Uydunun irtifa, hız, ivme verileri ile üzerindeki net aerodinamik ve kütleçekim kuvvet diyagramı.
 * **Metrolojik Başarı ve Kestirim Raporu:**
   * **Doğruluk Başarısı (Trueness):** Ters kalibrasyon denkleminin sistematik kayma ve ölçek hatasını sönümleme oranı.
   * **Kesinlik Başarısı (Precision):** Kalman filtresinin rastgele beyaz gürültü titreşimlerini bastırma oranı.
@@ -48,7 +48,7 @@ Model uydunun roketten ayrılma, serbest düşüş, ayrılma ve aktif iniş  faz
 
 FlyingAnalysis platformunu destekleyen, tasarım ve doğrulama süreçlerinde kullanılan diğer programlar:
 
-### 1. Sayısıal Similasyon (İlk Gözağrımız)
+### 1. Sayısıal Similasyon (İlk Göz Ağrım)
 * **Temel İşlevi:** Flying Analysis ilk halidir. Proje geliştirilmesi yarım kalmıştır. Bazı güzel özellikleri flyin analysise taşında uygun görünen diğer özelikler taşındıktan sonra depodan kaldırılacaktır
 ### 2. SensorAnalizi (Sensör Arıza ve Gömülü STM32 Algoritma Doğrulaması)
 * **Temel İşlevi:** Sensör arızalarının model uydu algoritmaları üzerindeki etkisini inceleyen ve gerçek STM32 mikrodenetleyici C/C++ kodlerinin simülasyonda test edildiği doğrulama aracıdır.
@@ -59,5 +59,8 @@ FlyingAnalysis platformunu destekleyen, tasarım ve doğrulama süreçlerinde ku
 * **Temel İşlevi:**  Sahada yapılan gerçek uçuş testelerinden veya Sensor Analizi programından elde edilen veri log dosyalarını (CSV) içeri aktararak grafik üzerinde inceleme aracıdır.
 * **Girdi:** SayısalSimilasyondan elde edilen csv dosyası
 * **Çıktı:** CVS içindeki dosyaların zaman göre veya paket numrasına göre grafikleri
+### 4. Veri Analizi (Fiz)
+* **Durumu**  Şu anlık başarısız bir girişimdir . Hedef kendi yazdığımız fizik motorunu ve uçuş yazılımı algoritmalarını  godot oyun motorunda simile etmektir. Elbet bir gün geri dönmeyi temenni ediyoruz
+
 
 
