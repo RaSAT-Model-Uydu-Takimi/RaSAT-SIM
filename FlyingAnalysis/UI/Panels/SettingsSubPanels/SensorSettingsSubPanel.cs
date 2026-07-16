@@ -80,14 +80,15 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
 
             cmbSensorType.SelectedIndexChanged += (s, e) => { LoadUIFromGlobalSensorProfile(); SyncToGlobalSensorProfile(); };
 
-            if (btnSaveSensorProfile != null) btnSaveSensorProfile.Click += BtnSaveSensorProfile_Click;
-            if (btnLoadSensorProfile != null) btnLoadSensorProfile.Click += BtnLoadSensorProfile_Click;
+            if (btnP2AutoCalibrate != null) btnP2AutoCalibrate.Click += BtnP2AutoCalibrate_Click;
             if (btnMasterSaveCsv != null) btnMasterSaveCsv.Click += BtnMasterSaveCsv_Click;
             if (btnP2ChartLayers != null) btnP2ChartLayers.Click += BtnP2ChartLayers_Click;
 
             // Sayfa 2 - Analiz & Çizim
             btnP2SelectRawFile.Click += BtnP2SelectRawFile_Click;
+            btnP2ClearRawFile.Click += BtnP2ClearRawFile_Click;
             btnP2SelectCalFile.Click += BtnP2SelectCalFile_Click;
+            btnP2ClearCalFile.Click += BtnP2ClearCalFile_Click;
             btnP2UseLastGenerated.Click += BtnP2UseLastGenerated_Click;
             btnP2PlotAll.Click += BtnP2PlotAll_Click;
 
@@ -239,22 +240,24 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
                 val += GetNextGaussian(0.0, (double)numThermalStdDev.Value);
             }
 
-            // 4. Bağıl Termal Gürültü (% FS)
+            // 4. Bağıl Termal Gürültü (% Relative Noise - O anki referans büyüklük ile orantılı)
             if (chkEnableRelativeNoise.Checked && numRelativeNoisePercent.Value > 0)
             {
-                double fsSpan = (double)(numRangeMax.Value - numRangeMin.Value);
-                if (fsSpan <= 0) fsSpan = 5000.0;
-                double relStdDev = (double)numRelativeNoisePercent.Value * fsSpan / 100.0;
-                val += GetNextGaussian(0.0, relStdDev);
+                double relStdDev = (double)numRelativeNoisePercent.Value * Math.Abs(trueValue) / 100.0;
+                if (relStdDev > 0)
+                {
+                    val += GetNextGaussian(0.0, relStdDev);
+                }
             }
 
-            // 5. Darbe Gürültüsü (Spike Noise)
+            // 5. Darbe Gürültüsü (Spike Noise - Standart Sapma Katı / K * sigma)
             if (chkEnableSpike.Checked && numSpikeProbPercent.Value > 0)
             {
                 if (random.NextDouble() * 100.0 < (double)numSpikeProbPercent.Value)
                 {
+                    double baseSigma = (chkEnableThermal.Checked && numThermalStdDev.Value > 0) ? (double)numThermalStdDev.Value : 1.0;
                     double sign = random.NextDouble() > 0.5 ? 1.0 : -1.0;
-                    val += sign * (double)numSpikeAmplitude.Value;
+                    val += sign * ((double)numSpikeAmplitude.Value * baseSigma);
                 }
             }
             return val;
@@ -577,6 +580,7 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             try
             {
                 isSyncingUI = true;
+                if (lblSpikeAmp != null) lblSpikeAmp.Text = "Darbe Çarpanı (K × σ):";
                 bool isBaro = (cmbSensorType.SelectedIndex == 0 || cmbSensorType.SelectedItem?.ToString()?.Contains("Barometre") == true);
                 if (isBaro)
                 {
@@ -675,6 +679,19 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             }
         }
 
+        private void BtnP2ClearRawFile_Click(object? sender, EventArgs e)
+        {
+            txtP2RawFilePath.Text = "(Ham Sensör Dosyası)";
+            p2RawFilePath = string.Empty;
+            p2RawSamples.Clear();
+            if (lastGeneratedRawSamples.Count > 0)
+            {
+                p2RawSamples.AddRange(lastGeneratedRawSamples);
+                txtP2RawFilePath.Text = "(Sayfa 1 Anlık Veri)";
+            }
+            LogToConsole("Ham sensör dosya seçimi temizlendi.");
+        }
+
         private void BtnP2SelectCalFile_Click(object? sender, EventArgs e)
         {
             using (OpenFileDialog ofd = new OpenFileDialog())
@@ -689,6 +706,14 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
                     LogToConsole($"Sayfa 2 Kalibre Dosya yüklendi ({p2CalSamples.Count} veri): {txtP2CalFilePath.Text}");
                 }
             }
+        }
+
+        private void BtnP2ClearCalFile_Click(object? sender, EventArgs e)
+        {
+            txtP2CalFilePath.Text = "(Aktif Kalibrasyon ile Otomatik)";
+            p2CalFilePath = string.Empty;
+            p2CalSamples.Clear();
+            LogToConsole("Kalibre sensör dosya seçimi temizlendi (Otomatik kalibrasyon moduna geçildi).");
         }
 
         private void BtnP2UseLastGenerated_Click(object? sender, EventArgs e)
@@ -731,9 +756,9 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
                 return;
             }
 
-            if (p2CalSamples.Count == 0 || p2CalSamples.Count != p2RawSamples.Count)
+            if (p2CalSamples.Count == 0 || p2CalSamples.Count != p2RawSamples.Count || txtP2CalFilePath.Text == "(Aktif Kalibrasyon ile Otomatik)" || string.IsNullOrWhiteSpace(txtP2CalFilePath.Text))
             {
-                // Eğer kalibre dosya seçilmediyse, şu anki aktif kalibrasyon parametreleriyle hesapla
+                // Eğer kalibre dosya özel olarak seçilmediyse veya otomatik moddaysa, şu anki aktif kalibrasyon parametreleriyle taze hesapla
                 p2CalSamples = p2RawSamples.Select(GetCalibratedValue).ToList();
                 txtP2CalFilePath.Text = "(Aktif Kalibrasyon ile Otomatik)";
             }
@@ -842,23 +867,31 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             // 2. Alt Grafik: ScottPlot Çift Çan Eğrisi ve Histogram Grafiğini Çiz
             DrawDistributionGraphScottPlot(trueVal);
 
-            // 3. İstatistik ve Metrik Özet Tablosunu Yaz
+            // 3. Metrolojik ve İstatistiki Özet Tablosu (Doğruluk, Kesinlik ve RMSE Analizi)
             double rawMean = p2RawSamples.Average();
             double rawStd = Math.Sqrt(p2RawSamples.Select(v => Math.Pow(v - rawMean, 2)).Sum() / n);
-            double rawAbsErr = Math.Abs(rawMean - trueVal);
+            double rawBias = Math.Abs(rawMean - trueVal);
+            double rawRmse = Math.Sqrt(p2RawSamples.Select(v => Math.Pow(v - trueVal, 2)).Sum() / n);
+            double rawSnr = rawStd > 1e-9 && Math.Abs(rawMean) > 1e-9 ? 20.0 * Math.Log10(Math.Abs(rawMean) / rawStd) : 0.0;
 
             double calMean = p2CalSamples.Average();
             double calStd = Math.Sqrt(p2CalSamples.Select(v => Math.Pow(v - calMean, 2)).Sum() / n);
-            double calAbsErr = Math.Abs(calMean - trueVal);
+            double calBias = Math.Abs(calMean - trueVal);
+            double calRmse = Math.Sqrt(p2CalSamples.Select(v => Math.Pow(v - trueVal, 2)).Sum() / n);
+            double calSnr = calStd > 1e-9 && Math.Abs(calMean) > 1e-9 ? 20.0 * Math.Log10(Math.Abs(calMean) / calStd) : 0.0;
 
-            double accuracyImp = rawAbsErr > 1e-6 ? ((rawAbsErr - calAbsErr) / rawAbsErr) * 100.0 : 100.0;
+            double truenessImprovement = rawBias > 1e-6 ? ((rawBias - calBias) / rawBias) * 100.0 : 100.0;
+            double rmseImprovement = rawRmse > 1e-6 ? ((rawRmse - calRmse) / rawRmse) * 100.0 : 100.0;
 
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine($"[ ANALİZ ÖZETİ (N = {n} Ölçüm | Referans X = {trueVal:F2}) ]");
-            sb.AppendLine($"--------------------------------------------------------------------------------------------------");
-            sb.AppendLine($"-> HAM SENSÖR DOSYASI : Ortalama = {rawMean,10:F4} | Std Sapma σ = ±{rawStd,8:F4} | Mutlak Sapma = {rawAbsErr,8:F4}");
-            sb.AppendLine($"-> KALİBRE DOSYA      : Ortalama = {calMean,10:F4} | Std Sapma σ = ±{calStd,8:F4} | Mutlak Sapma = {calAbsErr,8:F4}");
-            sb.AppendLine($"-> METROLOJİK DEĞER   : Sistematik Hata İyileşmesi = %{Math.Max(0.0, accuracyImp):F2} | Gürültü Standart Sapması σ Korundu.");
+            sb.AppendLine($"[ METROLOJİK SENSÖR ANALİZİ (N = {n} Örneklem | Gerçek Referans X_true = {trueVal:F2}) ]");
+            sb.AppendLine($"------------------------------------------------------------------------------------------------------------------");
+            sb.AppendLine($"-> HAM SENSÖR VERİSİ  : Doğruluk (Bias) = {rawBias,8:F4} | Kesinlik (σ) = ±{rawStd,7:F4} | RMSE = {rawRmse,8:F4} | SNR = {rawSnr,5:F1} dB");
+            sb.AppendLine($"-> KALİBRE SENSÖR     : Doğruluk (Bias) = {calBias,8:F4} | Kesinlik (σ) = ±{calStd,7:F4} | RMSE = {calRmse,8:F4} | SNR = {calSnr,5:F1} dB");
+            sb.AppendLine($"------------------------------------------------------------------------------------------------------------------");
+            sb.AppendLine($"🎯 DOĞRULUK (Trueness) Başarısı  : %{Math.Max(0.0, truenessImprovement):F2}  (Sistematik Bias & Ölçek Hatası Temizlendi)");
+            sb.AppendLine($"🏆 TOPLAM HATA (RMSE) İyileşmesi : %{Math.Max(0.0, rmseImprovement):F2}  (Kalibrasyon sonrası kalan sapma: ±{calRmse:F4})");
+            sb.AppendLine($"ℹ️ KESİNLİK (Precision / σ)    : Statik kalibrasyon gürültüyü (σ) değiştirmez; EKF / Füzyon motoru ile bastırılır.");
 
             txtP2SummaryTable.Text = sb.ToString();
             LogToConsole("ScottPlot zaman serisi grafiği ve PDF dağılım eğrileri çizildi.");
@@ -1035,7 +1068,13 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
         {
             try
             {
+                // 1. O anki tüm kutucuk değerlerini global statik profile senkronize et
                 SyncToGlobalSensorProfile();
+
+                // 2. Arka plana sessizce ve dosya sormadan MasterConfig JSON olarak kaydet
+                GlobalSimulationConfig.SaveMasterSettingsToAutoFile();
+
+                // 3. İsteğe bağlı olarak simülasyon veri dökümünü de arka plana sabit dosyaya yaz
                 int count = (int)numGenCount.Value;
                 if (count <= 0) count = 500;
                 double dt = 0.02; // 50 Hz
@@ -1044,123 +1083,141 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
                 double trueAccBase = 15.0; // roket ivmesi örneği
                 double trueTempBase = 15.0;
 
-                using var sfd = new SaveFileDialog
+                string autoCsvPath = Path.Combine(Application.StartupPath, "RaSAT_AutoMasterLog.csv");
+                StringBuilder sb = new StringBuilder();
+                sb.AppendLine("Time_s,True_Altitude_m,Raw_Baro_Altitude_m,Calibrated_Baro_Altitude_m,True_Acc_mps2,Raw_Acc_mps2,Calibrated_Acc_mps2,True_Temp_C,Raw_Temp_C,Calibrated_Temp_C,EKF_Estimated_Altitude_m,EKF_Estimated_Velocity_mps,EKF_Estimated_Acc_mps2,Confidence_General_Percent,Confidence_BaroTemp_Percent,Confidence_IMU_Percent");
+
+                double ekfPos = trueAltBase;
+                double ekfVel = 0.0;
+                double ekfAcc = trueAccBase;
+                double pState = 1.0;
+                Random rnd = new Random();
+
+                for (int i = 0; i < count; i++)
                 {
-                    Filter = "CSV Dosyaları (*.csv)|*.csv|Metin Dosyaları (*.txt)|*.txt|Tüm Dosyalar (*.*)|*.*",
-                    FileName = $"Master_Flight_And_Sensor_Data_N{count}_{DateTime.Now:yyyyMMdd_HHmmss}.csv",
-                    Title = "Tüm Sistem & Sensör & Kestirim Verilerini Evrensel Formatla Kaydet"
-                };
+                    double t = i * dt;
+                    double trueAlt = trueAltBase + (0.5 * trueAccBase * t * t * 0.01);
+                    double trueAcc = trueAccBase;
+                    double trueTemp = trueTempBase - (trueAlt * 0.0065);
 
-                if (sfd.ShowDialog() == DialogResult.OK)
-                {
-                    StringBuilder sb = new StringBuilder();
-                    sb.AppendLine("Time_s,True_Altitude_m,Raw_Baro_Altitude_m,Calibrated_Baro_Altitude_m,True_Acc_mps2,Raw_Acc_mps2,Calibrated_Acc_mps2,True_Temp_C,Raw_Temp_C,Calibrated_Temp_C,EKF_Estimated_Altitude_m,EKF_Estimated_Velocity_mps,EKF_Estimated_Acc_mps2,Confidence_General_Percent,Confidence_BaroTemp_Percent,Confidence_IMU_Percent");
+                    // Barometre (İrtifa Eşdeğeri)
+                    double rawBaro = GlobalSimulationConfig.ApplySensorForwardError(trueAlt, true, rnd, i, count);
+                    double calBaro = GlobalSimulationConfig.ApplySensorReverseCalibration(rawBaro, true);
 
-                    double ekfPos = trueAltBase;
-                    double ekfVel = 0.0;
-                    double ekfAcc = trueAccBase;
-                    double pState = 1.0;
-                    Random rnd = new Random();
+                    // İvmeölçer
+                    double rawAcc = GlobalSimulationConfig.ApplySensorForwardError(trueAcc, false, rnd, i, count);
+                    double calAcc = GlobalSimulationConfig.ApplySensorReverseCalibration(rawAcc, false);
 
-                    for (int i = 0; i < count; i++)
-                    {
-                        double t = i * dt;
-                        double trueAlt = trueAltBase + (0.5 * trueAccBase * t * t * 0.01);
-                        double trueAcc = trueAccBase;
-                        double trueTemp = trueTempBase - (trueAlt * 0.0065);
+                    // Sıcaklık (Hafif gürültü)
+                    double rawTemp = trueTemp + (rnd.NextDouble() - 0.5) * 0.2;
+                    double calTemp = rawTemp;
 
-                        // Barometre (İrtifa Eşdeğeri)
-                        double rawBaro = GlobalSimulationConfig.ApplySensorForwardError(trueAlt, true, rnd, i, count);
-                        double calBaro = GlobalSimulationConfig.ApplySensorReverseCalibration(rawBaro, true);
+                    // Basit EKF adım simülasyonu
+                    pState += GlobalSimulationConfig.EstProcessNoiseQBase;
+                    double kGain = pState / (pState + GlobalSimulationConfig.EstBaroNoiseRBase);
+                    ekfPos += kGain * (calBaro - ekfPos);
+                    ekfVel = (ekfPos - trueAltBase) / (t + dt);
+                    ekfAcc = calAcc;
+                    pState *= (1.0 - kGain);
 
-                        // İvmeölçer
-                        double rawAcc = GlobalSimulationConfig.ApplySensorForwardError(trueAcc, false, rnd, i, count);
-                        double calAcc = GlobalSimulationConfig.ApplySensorReverseCalibration(rawAcc, false);
+                    double confGen = Math.Clamp(100.0 - Math.Abs(calBaro - ekfPos) * 2.0, 0.0, 100.0);
+                    double confBaro = Math.Clamp(100.0 - Math.Abs(rawBaro - calBaro) * 5.0, 0.0, 100.0);
+                    double confAcc = Math.Clamp(100.0 - Math.Abs(rawAcc - calAcc) * 10.0, 0.0, 100.0);
 
-                        // Sıcaklık (Hafif gürültü)
-                        double rawTemp = trueTemp + (rnd.NextDouble() - 0.5) * 0.2;
-                        double calTemp = rawTemp;
-
-                        // Basit EKF adım simülasyonu
-                        pState += GlobalSimulationConfig.EstProcessNoiseQBase;
-                        double kGain = pState / (pState + GlobalSimulationConfig.EstBaroNoiseRBase);
-                        ekfPos += kGain * (calBaro - ekfPos);
-                        ekfVel = (ekfPos - trueAltBase) / (t + dt);
-                        ekfAcc = calAcc;
-                        pState *= (1.0 - kGain);
-
-                        double confGen = Math.Clamp(100.0 - Math.Abs(calBaro - ekfPos) * 2.0, 0.0, 100.0);
-                        double confBaro = Math.Clamp(100.0 - Math.Abs(rawBaro - calBaro) * 5.0, 0.0, 100.0);
-                        double confAcc = Math.Clamp(100.0 - Math.Abs(rawAcc - calAcc) * 10.0, 0.0, 100.0);
-
-                        sb.AppendLine(string.Format(CultureInfo.InvariantCulture,
-                            "{0:F4},{1:F4},{2:F4},{3:F4},{4:F4},{5:F4},{6:F4},{7:F4},{8:F4},{9:F4},{10:F4},{11:F4},{12:F4},{13:F1},{14:F1},{15:F1}",
-                            t, trueAlt, rawBaro, calBaro, trueAcc, rawAcc, calAcc, trueTemp, rawTemp, calTemp, ekfPos, ekfVel, ekfAcc, confGen, confBaro, confAcc));
-                    }
-
-                    File.WriteAllText(sfd.FileName, sb.ToString(), Encoding.UTF8);
-                    LogToConsole($"MASTER CSV Kaydedildi -> {Path.GetFileName(sfd.FileName)} ({count} adım, 15 sütun)");
-                    MessageBox.Show($"Tüm sistem, sensör ve kestirim verileri başarıyla çok sütunlu evrensel CSV dosyasına kaydedildi!\n\nDosya: {sfd.FileName}\nSütun Sayısı: 16\nÖrneklem: {count}", "Master CSV Başarılı", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    sb.AppendLine(string.Format(CultureInfo.InvariantCulture,
+                        "{0:F4},{1:F4},{2:F4},{3:F4},{4:F4},{5:F4},{6:F4},{7:F4},{8:F4},{9:F4},{10:F4},{11:F4},{12:F4},{13:F1},{14:F1},{15:F1}",
+                        t, trueAlt, rawBaro, calBaro, trueAcc, rawAcc, calAcc, trueTemp, rawTemp, calTemp, ekfPos, ekfVel, ekfAcc, confGen, confBaro, confAcc));
                 }
+
+                File.WriteAllText(autoCsvPath, sb.ToString(), Encoding.UTF8);
+                LogToConsole($"Sistem Ayarları (JSON) ve Veri Dökümü (CSV) otomatik hafızaya kaydedildi -> {GlobalSimulationConfig.MasterConfigPath}");
+                MessageBox.Show("✔ TÜM SİSTEM VE SENSÖR AYARLARI otomatik hafızaya başarıyla kaydedildi!\n\nUygulamayı bir sonraki açışınızda bu ayarlar hiçbir dosya seçmenize gerek kalmadan doğrudan yüklenecektir.\n\n(Not: Veri dökümü de arka planda RaSAT_AutoMasterLog.csv dosyasına yazıldı.)", "Sistem Otomatik Kaydedildi", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Master CSV kaydedilirken hata oluştu: {ex.Message}", "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Ayarlar otomatik kaydedilirken hata oluştu: {ex.Message}", "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
-        private void BtnSaveSensorProfile_Click(object? sender, EventArgs e)
+        private void BtnP2AutoCalibrate_Click(object? sender, EventArgs e)
         {
             try
             {
+                // 1. Gerçek (TrueVal) değeri al
+                double trueVal = (double)numP2TrueVal.Value;
+                int n = (int)numGenCount.Value;
+                if (n <= 0) n = 500;
+
+                // 2. Taze ham sensör verileri üret (o anki sensör hata profilimize göre)
+                SyncToGlobalSensorProfile(); // Sayfa 1'deki parametrelerin güncel olduğundan emin ol
+                p2RawSamples.Clear();
+                for (int i = 0; i < n; i++)
+                {
+                    double sample = GetSimulatedRawSensorValue(trueVal);
+                    p2RawSamples.Add(sample);
+                }
+
+                // 3. İki Noktalı Doğrusal Regresyon (Linear Regression) ile Kesin Hata Çözümü
+                double rawMean = p2RawSamples.Average();
+                double calcBias = 0.0;
+                double calcScalePercent = 0.0;
+
+                if (chkEnableScale.Checked && chkEnableBias.Checked)
+                {
+                    // Hem Scale hem Bias aktif: İki referans noktası üzerinden tam ayrıştırma
+                    double true1 = (Math.Abs(trueVal) < 1.0) ? trueVal - 50.0 : trueVal * 0.75;
+                    double true2 = (Math.Abs(trueVal) < 1.0) ? trueVal + 50.0 : trueVal * 1.25;
+
+                    double sum1 = 0.0, sum2 = 0.0;
+                    for (int i = 0; i < n; i++)
+                    {
+                        sum1 += GetSimulatedRawSensorValue(true1);
+                        sum2 += GetSimulatedRawSensorValue(true2);
+                    }
+                    double mean1 = sum1 / n;
+                    double mean2 = sum2 / n;
+
+                    if (Math.Abs(true2 - true1) > 1e-6)
+                    {
+                        double m = (mean2 - mean1) / (true2 - true1);
+                        calcBias = mean1 - (m * true1);
+                        calcScalePercent = (m - 1.0) * 100.0;
+                    }
+                }
+                else if (chkEnableScale.Checked)
+                {
+                    // Sadece Scale aktif, Bias 0
+                    calcBias = 0.0;
+                    if (Math.Abs(trueVal) > 1e-6)
+                    {
+                        calcScalePercent = ((rawMean - trueVal) / trueVal) * 100.0;
+                    }
+                }
+                else
+                {
+                    // Sadece Bias aktif (veya hiçbiri işaretli değilse varsayılan Bias çözümü)
+                    calcBias = rawMean - trueVal;
+                    calcScalePercent = 0.0;
+                }
+
+                // 4. Değerleri İşle ve Arayüze / Global Sisteme Uygula
+                numProcessedBias.Value = (decimal)Math.Clamp(calcBias, (double)numProcessedBias.Minimum, (double)numProcessedBias.Maximum);
+                numProcessedScale.Value = (decimal)Math.Clamp(calcScalePercent, (double)numProcessedScale.Minimum, (double)numProcessedScale.Maximum);
+
+                // Global Profile ve Sync
                 SyncToGlobalSensorProfile();
-                bool isBaro = (cmbSensorType.SelectedIndex == 0 || cmbSensorType.SelectedItem?.ToString()?.Contains("Barometre") == true);
-                using var sfd = new SaveFileDialog
-                {
-                    Filter = "JSON Dosyaları (*.json)|*.json",
-                    FileName = isBaro ? "BaroSensorProfile.json" : "AccSensorProfile.json",
-                    Title = "Sensör Profilini JSON Olarak Kaydet"
-                };
-                if (sfd.ShowDialog() == DialogResult.OK)
-                {
-                    GlobalSimulationConfig.SaveSensorProfileToFile(sfd.FileName, isBaro);
-                    LogToConsole($"Sensör profili (.json) başarıyla kaydedildi: {sfd.FileName}");
-                    MessageBox.Show("Sensör profili JSON dosyası olarak başarıyla kaydedildi.", "Profil Kaydedildi", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Profil kaydedilirken hata oluştu: {ex.Message}", "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
 
-        private void BtnLoadSensorProfile_Click(object? sender, EventArgs e)
-        {
-            try
-            {
-                bool isBaro = (cmbSensorType.SelectedIndex == 0 || cmbSensorType.SelectedItem?.ToString()?.Contains("Barometre") == true);
-                using var ofd = new OpenFileDialog
-                {
-                    Filter = "JSON Dosyaları (*.json)|*.json",
-                    Title = "Sensör Profilini JSON Dosyasından Yükle"
-                };
-                if (ofd.ShowDialog() == DialogResult.OK)
-                {
-                    if (GlobalSimulationConfig.LoadSensorProfileFromFile(ofd.FileName, isBaro))
-                    {
-                        LoadUIFromGlobalSensorProfile();
-                        LogToConsole($"Sensör profili (.json) başarıyla yüklendi ve arayüze uygulandı: {ofd.FileName}");
-                        MessageBox.Show("Sensör profili JSON dosyasından başarıyla yüklendi.", "Profil Yüklendi", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    }
-                    else
-                    {
-                        MessageBox.Show("Profil dosyası okunamadı veya biçim geçersiz.", "Uyarı", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    }
-                }
+                // Eski kalibre verisini temizle ki yeni kalibrasyonla taze hesaplandığından %100 emin olalım
+                p2CalSamples.Clear();
+
+                // 5. Grafikleri Çiz ve İyileşmeyi Görselleştir
+                BtnP2PlotAll_Click(this, EventArgs.Empty);
+
+                LogToConsole($"Otomatik Kalibrasyon Tamamlandı. Gerçek Değer: {trueVal:F2}, Ham Ortalama: {rawMean:F2}, İşlenmiş Bias (b_calc): {calcBias:F4}");
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Profil yüklenirken hata oluştu: {ex.Message}", "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Otomatik kalibrasyon sırasında hata oluştu: {ex.Message}", "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 

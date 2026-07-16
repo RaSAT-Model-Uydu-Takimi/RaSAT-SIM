@@ -26,8 +26,9 @@ namespace FlyingAnalysis.UI.Panels
 
 
 
-            // Varsayılan olarak 1. paneli aç
+            // Varsayılan olarak 1. paneli aç ve arka plandaki otomatik ayar dosyasını yükle
             this.Load += (s, e) => {
+                Models.GlobalSimulationConfig.LoadMasterSettingsFromAutoFile();
                 if (_currentActivePanel == null)
                 {
                     LoadSubPanel(new WorldVariablesSubPanel(), "DURUM: 1. Dünya ve Çevre Değişkenleri Paneli Aktif.");

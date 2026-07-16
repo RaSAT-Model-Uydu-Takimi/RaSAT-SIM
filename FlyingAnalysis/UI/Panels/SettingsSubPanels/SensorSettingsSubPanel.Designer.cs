@@ -85,20 +85,21 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             numP2TrueVal = new NumericUpDown();
             btnP2SelectRawFile = new Button();
             txtP2RawFilePath = new TextBox();
+            btnP2ClearRawFile = new Button();
             btnP2SelectCalFile = new Button();
             txtP2CalFilePath = new TextBox();
+            btnP2ClearCalFile = new Button();
             btnP2UseLastGenerated = new Button();
             btnP2PlotAll = new Button();
             lblBinCount = new Label();
             trkBinCount = new TrackBar();
+            btnP2AutoCalibrate = new Button();
             plotTimeSeries = new ScottPlot.WinForms.FormsPlot();
             plotDistributionGraph = new ScottPlot.WinForms.FormsPlot();
             btnP2ViewSplit = new Button();
             btnP2ViewTimeSeries = new Button();
             btnP2ViewDistribution = new Button();
             btnP2ChartLayers = new Button();
-            btnSaveSensorProfile = new Button();
-            btnLoadSensorProfile = new Button();
             txtP2SummaryTable = new TextBox();
             grpRange.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)numRangeMax).BeginInit();
@@ -162,20 +163,6 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             cmbSensorType.Size = new Size(260, 36);
             cmbSensorType.TabIndex = 2;
             // 
-            // btnMasterSaveCsv
-            // 
-            btnMasterSaveCsv.BackColor = Color.FromArgb(22, 163, 74);
-            btnMasterSaveCsv.FlatAppearance.BorderSize = 0;
-            btnMasterSaveCsv.FlatStyle = FlatStyle.Flat;
-            btnMasterSaveCsv.Font = new Font("Segoe UI Semibold", 9.5F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            btnMasterSaveCsv.ForeColor = Color.White;
-            btnMasterSaveCsv.Location = new Point(380, 15);
-            btnMasterSaveCsv.Name = "btnMasterSaveCsv";
-            btnMasterSaveCsv.Size = new Size(245, 38);
-            btnMasterSaveCsv.TabIndex = 10;
-            btnMasterSaveCsv.Text = "💾 TÜM SİSTEMİ KAYDET (CSV)";
-            btnMasterSaveCsv.UseVisualStyleBackColor = false;
-            // 
             // btnPage1_Settings
             // 
             btnPage1_Settings.BackColor = Color.FromArgb(15, 118, 110);
@@ -218,13 +205,28 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             btnPage3_Estimation.Text = "Sayfa 3: Kestirim Çekirdeği (EKF)";
             btnPage3_Estimation.UseVisualStyleBackColor = false;
             // 
+            // btnMasterSaveCsv
+            // 
+            btnMasterSaveCsv.BackColor = Color.FromArgb(22, 163, 74);
+            btnMasterSaveCsv.FlatAppearance.BorderSize = 0;
+            btnMasterSaveCsv.FlatStyle = FlatStyle.Flat;
+            btnMasterSaveCsv.Font = new Font("Segoe UI Semibold", 9.5F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            btnMasterSaveCsv.ForeColor = Color.White;
+            btnMasterSaveCsv.Location = new Point(380, 15);
+            btnMasterSaveCsv.Name = "btnMasterSaveCsv";
+            btnMasterSaveCsv.Size = new Size(280, 38);
+            btnMasterSaveCsv.TabIndex = 10;
+            btnMasterSaveCsv.Text = "💾 TÜM SİSTEMİ & AYARLARI KAYDET";
+            btnMasterSaveCsv.UseVisualStyleBackColor = false;
+            // 
             // pnlPage3_Estimation
             // 
+            pnlPage3_Estimation.BackColor = Color.FromArgb(15, 23, 42);
             pnlPage3_Estimation.Location = new Point(25, 120);
             pnlPage3_Estimation.Name = "pnlPage3_Estimation";
             pnlPage3_Estimation.Size = new Size(1340, 750);
+            pnlPage3_Estimation.TabIndex = 0;
             pnlPage3_Estimation.Visible = false;
-            pnlPage3_Estimation.BackColor = Color.FromArgb(15, 23, 42);
             // 
             // grpRange
             // 
@@ -473,9 +475,9 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             lblSpikeAmp.ForeColor = Color.FromArgb(15, 23, 42);
             lblSpikeAmp.Location = new Point(30, 140);
             lblSpikeAmp.Name = "lblSpikeAmp";
-            lblSpikeAmp.Size = new Size(185, 25);
+            lblSpikeAmp.Size = new Size(186, 25);
             lblSpikeAmp.TabIndex = 6;
-            lblSpikeAmp.Text = "Spike Genliği (±Birim):";
+            lblSpikeAmp.Text = "Darbe Çarpanı (K × σ):";
             // 
             // numSpikeAmplitude
             // 
@@ -883,23 +885,26 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             grpPage2_AnalysisAndPlots.Controls.Add(numP2TrueVal);
             grpPage2_AnalysisAndPlots.Controls.Add(btnP2SelectRawFile);
             grpPage2_AnalysisAndPlots.Controls.Add(txtP2RawFilePath);
+            grpPage2_AnalysisAndPlots.Controls.Add(btnP2ClearRawFile);
             grpPage2_AnalysisAndPlots.Controls.Add(btnP2SelectCalFile);
             grpPage2_AnalysisAndPlots.Controls.Add(txtP2CalFilePath);
+            grpPage2_AnalysisAndPlots.Controls.Add(btnP2ClearCalFile);
             grpPage2_AnalysisAndPlots.Controls.Add(btnP2UseLastGenerated);
             grpPage2_AnalysisAndPlots.Controls.Add(btnP2PlotAll);
             grpPage2_AnalysisAndPlots.Controls.Add(lblBinCount);
             grpPage2_AnalysisAndPlots.Controls.Add(trkBinCount);
+            grpPage2_AnalysisAndPlots.Controls.Add(btnP2AutoCalibrate);
+            grpPage2_AnalysisAndPlots.Controls.Add(txtP2SummaryTable);
             grpPage2_AnalysisAndPlots.Controls.Add(plotTimeSeries);
             grpPage2_AnalysisAndPlots.Controls.Add(plotDistributionGraph);
             grpPage2_AnalysisAndPlots.Controls.Add(btnP2ViewSplit);
             grpPage2_AnalysisAndPlots.Controls.Add(btnP2ViewTimeSeries);
             grpPage2_AnalysisAndPlots.Controls.Add(btnP2ViewDistribution);
             grpPage2_AnalysisAndPlots.Controls.Add(btnP2ChartLayers);
-            grpPage2_AnalysisAndPlots.Controls.Add(txtP2SummaryTable);
             grpPage2_AnalysisAndPlots.Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold, GraphicsUnit.Point, 0);
             grpPage2_AnalysisAndPlots.Location = new Point(25, 115);
             grpPage2_AnalysisAndPlots.Name = "grpPage2_AnalysisAndPlots";
-            grpPage2_AnalysisAndPlots.Size = new Size(1360, 845);
+            grpPage2_AnalysisAndPlots.Size = new Size(1360, 980);
             grpPage2_AnalysisAndPlots.TabIndex = 9;
             grpPage2_AnalysisAndPlots.TabStop = false;
             grpPage2_AnalysisAndPlots.Text = "Sayfa 2: Zaman Serisi Titreşim Grafiği (ScottPlot) & Doğruluk/Kesinlik Çift Çan Eğrisi (PDF)";
@@ -936,7 +941,7 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             btnP2SelectRawFile.ForeColor = Color.White;
             btnP2SelectRawFile.Location = new Point(265, 33);
             btnP2SelectRawFile.Name = "btnP2SelectRawFile";
-            btnP2SelectRawFile.Size = new Size(130, 34);
+            btnP2SelectRawFile.Size = new Size(115, 34);
             btnP2SelectRawFile.TabIndex = 2;
             btnP2SelectRawFile.Text = "Ham Dosya Seç";
             btnP2SelectRawFile.UseVisualStyleBackColor = false;
@@ -944,12 +949,26 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             // txtP2RawFilePath
             // 
             txtP2RawFilePath.Font = new Font("Segoe UI", 8.5F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            txtP2RawFilePath.Location = new Point(400, 35);
+            txtP2RawFilePath.Location = new Point(385, 35);
             txtP2RawFilePath.Name = "txtP2RawFilePath";
             txtP2RawFilePath.ReadOnly = true;
-            txtP2RawFilePath.Size = new Size(150, 30);
+            txtP2RawFilePath.Size = new Size(135, 30);
             txtP2RawFilePath.TabIndex = 3;
             txtP2RawFilePath.Text = "(Ham Sensör Dosyası)";
+            // 
+            // btnP2ClearRawFile
+            // 
+            btnP2ClearRawFile.BackColor = Color.FromArgb(185, 28, 28);
+            btnP2ClearRawFile.FlatAppearance.BorderSize = 0;
+            btnP2ClearRawFile.FlatStyle = FlatStyle.Flat;
+            btnP2ClearRawFile.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+            btnP2ClearRawFile.ForeColor = Color.White;
+            btnP2ClearRawFile.Location = new Point(523, 33);
+            btnP2ClearRawFile.Name = "btnP2ClearRawFile";
+            btnP2ClearRawFile.Size = new Size(30, 34);
+            btnP2ClearRawFile.TabIndex = 4;
+            btnP2ClearRawFile.Text = "✖";
+            btnP2ClearRawFile.UseVisualStyleBackColor = false;
             // 
             // btnP2SelectCalFile
             // 
@@ -958,22 +977,36 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             btnP2SelectCalFile.FlatStyle = FlatStyle.Flat;
             btnP2SelectCalFile.Font = new Font("Segoe UI", 8.5F, FontStyle.Bold);
             btnP2SelectCalFile.ForeColor = Color.White;
-            btnP2SelectCalFile.Location = new Point(560, 33);
+            btnP2SelectCalFile.Location = new Point(558, 33);
             btnP2SelectCalFile.Name = "btnP2SelectCalFile";
-            btnP2SelectCalFile.Size = new Size(140, 34);
-            btnP2SelectCalFile.TabIndex = 4;
+            btnP2SelectCalFile.Size = new Size(120, 34);
+            btnP2SelectCalFile.TabIndex = 5;
             btnP2SelectCalFile.Text = "Kalibre Dosya Seç";
             btnP2SelectCalFile.UseVisualStyleBackColor = false;
             // 
             // txtP2CalFilePath
             // 
             txtP2CalFilePath.Font = new Font("Segoe UI", 8.5F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            txtP2CalFilePath.Location = new Point(705, 35);
+            txtP2CalFilePath.Location = new Point(683, 35);
             txtP2CalFilePath.Name = "txtP2CalFilePath";
             txtP2CalFilePath.ReadOnly = true;
-            txtP2CalFilePath.Size = new Size(150, 30);
-            txtP2CalFilePath.TabIndex = 5;
+            txtP2CalFilePath.Size = new Size(135, 30);
+            txtP2CalFilePath.TabIndex = 6;
             txtP2CalFilePath.Text = "(Kalibre Dosyası)";
+            // 
+            // btnP2ClearCalFile
+            // 
+            btnP2ClearCalFile.BackColor = Color.FromArgb(4, 120, 87);
+            btnP2ClearCalFile.FlatAppearance.BorderSize = 0;
+            btnP2ClearCalFile.FlatStyle = FlatStyle.Flat;
+            btnP2ClearCalFile.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+            btnP2ClearCalFile.ForeColor = Color.White;
+            btnP2ClearCalFile.Location = new Point(821, 33);
+            btnP2ClearCalFile.Name = "btnP2ClearCalFile";
+            btnP2ClearCalFile.Size = new Size(30, 34);
+            btnP2ClearCalFile.TabIndex = 7;
+            btnP2ClearCalFile.Text = "✖";
+            btnP2ClearCalFile.UseVisualStyleBackColor = false;
             // 
             // btnP2UseLastGenerated
             // 
@@ -982,10 +1015,10 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             btnP2UseLastGenerated.FlatStyle = FlatStyle.Flat;
             btnP2UseLastGenerated.Font = new Font("Segoe UI", 8.5F, FontStyle.Bold);
             btnP2UseLastGenerated.ForeColor = Color.White;
-            btnP2UseLastGenerated.Location = new Point(865, 33);
+            btnP2UseLastGenerated.Location = new Point(856, 33);
             btnP2UseLastGenerated.Name = "btnP2UseLastGenerated";
             btnP2UseLastGenerated.Size = new Size(125, 34);
-            btnP2UseLastGenerated.TabIndex = 6;
+            btnP2UseLastGenerated.TabIndex = 8;
             btnP2UseLastGenerated.Text = "Anlık Çek (S1)";
             btnP2UseLastGenerated.UseVisualStyleBackColor = false;
             // 
@@ -996,10 +1029,10 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             btnP2PlotAll.FlatStyle = FlatStyle.Flat;
             btnP2PlotAll.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
             btnP2PlotAll.ForeColor = Color.White;
-            btnP2PlotAll.Location = new Point(995, 33);
+            btnP2PlotAll.Location = new Point(986, 33);
             btnP2PlotAll.Name = "btnP2PlotAll";
             btnP2PlotAll.Size = new Size(130, 34);
-            btnP2PlotAll.TabIndex = 7;
+            btnP2PlotAll.TabIndex = 9;
             btnP2PlotAll.Text = "Grafikleri Çiz";
             btnP2PlotAll.UseVisualStyleBackColor = false;
             // 
@@ -1008,25 +1041,54 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             lblBinCount.AutoSize = true;
             lblBinCount.Font = new Font("Segoe UI Semibold", 8.5F, FontStyle.Bold, GraphicsUnit.Point, 0);
             lblBinCount.ForeColor = Color.FromArgb(15, 23, 42);
-            lblBinCount.Location = new Point(1135, 26);
+            lblBinCount.Location = new Point(1135, 58);
             lblBinCount.Name = "lblBinCount";
-            lblBinCount.Size = new Size(160, 20);
-            lblBinCount.TabIndex = 10;
+            lblBinCount.Size = new Size(161, 23);
+            lblBinCount.TabIndex = 11;
             lblBinCount.Text = "Histogram Dilim: 50";
             // 
             // trkBinCount
             // 
             trkBinCount.AutoSize = false;
-            trkBinCount.Location = new Point(1135, 46);
+            trkBinCount.Location = new Point(1135, 78);
             trkBinCount.Maximum = 1000;
             trkBinCount.Minimum = 10;
             trkBinCount.Name = "trkBinCount";
-            trkBinCount.Size = new Size(190, 25);
-            trkBinCount.TabIndex = 11;
+            trkBinCount.Size = new Size(190, 28);
+            trkBinCount.TabIndex = 12;
             trkBinCount.TickFrequency = 25;
             trkBinCount.Value = 50;
             trkBinCount.ValueChanged += TrkBinCount_ValueChanged;
             // 
+            // btnP2AutoCalibrate
+            // 
+            btnP2AutoCalibrate.BackColor = Color.FromArgb(217, 119, 6);
+            btnP2AutoCalibrate.FlatAppearance.BorderSize = 0;
+            btnP2AutoCalibrate.FlatStyle = FlatStyle.Flat;
+            btnP2AutoCalibrate.Font = new Font("Segoe UI Semibold", 8.5F, FontStyle.Bold);
+            btnP2AutoCalibrate.ForeColor = Color.White;
+            btnP2AutoCalibrate.Location = new Point(1126, 17);
+            btnP2AutoCalibrate.Name = "btnP2AutoCalibrate";
+            btnP2AutoCalibrate.Size = new Size(195, 36);
+            btnP2AutoCalibrate.TabIndex = 10;
+            btnP2AutoCalibrate.Text = "🎯 OTOMATİK KALİBRASYON";
+            btnP2AutoCalibrate.UseVisualStyleBackColor = false;
+            // 
+            // plotTimeSeries
+            // 
+            plotTimeSeries.DisplayScale = 1.5F;
+            plotTimeSeries.Location = new Point(15, 115);
+            plotTimeSeries.Name = "plotTimeSeries";
+            plotTimeSeries.Size = new Size(1330, 290);
+            plotTimeSeries.TabIndex = 8;
+            // 
+            // plotDistributionGraph
+            // 
+            plotDistributionGraph.DisplayScale = 1.5F;
+            plotDistributionGraph.Location = new Point(15, 415);
+            plotDistributionGraph.Name = "plotDistributionGraph";
+            plotDistributionGraph.Size = new Size(1330, 290);
+            plotDistributionGraph.TabIndex = 9;
             // 
             // btnP2ViewSplit
             // 
@@ -1084,33 +1146,17 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             btnP2ChartLayers.Text = "🎨 Grafik Katman & Çizim Ayarları";
             btnP2ChartLayers.UseVisualStyleBackColor = false;
             // 
-            // plotTimeSeries
-            // 
-            plotTimeSeries.DisplayScale = 1.5F;
-            plotTimeSeries.Location = new Point(15, 115);
-            plotTimeSeries.Name = "plotTimeSeries";
-            plotTimeSeries.Size = new Size(1330, 290);
-            plotTimeSeries.TabIndex = 8;
-            // 
-            // plotDistributionGraph
-            // 
-            plotDistributionGraph.DisplayScale = 1.5F;
-            plotDistributionGraph.Location = new Point(15, 415);
-            plotDistributionGraph.Name = "plotDistributionGraph";
-            plotDistributionGraph.Size = new Size(1330, 290);
-            plotDistributionGraph.TabIndex = 9;
-            // 
             // txtP2SummaryTable
             // 
             txtP2SummaryTable.BackColor = Color.FromArgb(15, 23, 42);
             txtP2SummaryTable.Font = new Font("Consolas", 9F, FontStyle.Regular, GraphicsUnit.Point, 0);
             txtP2SummaryTable.ForeColor = Color.FromArgb(226, 232, 240);
-            txtP2SummaryTable.Location = new Point(15, 715);
+            txtP2SummaryTable.Location = new Point(0, 761);
             txtP2SummaryTable.Multiline = true;
             txtP2SummaryTable.Name = "txtP2SummaryTable";
             txtP2SummaryTable.ReadOnly = true;
             txtP2SummaryTable.ScrollBars = ScrollBars.Vertical;
-            txtP2SummaryTable.Size = new Size(1330, 115);
+            txtP2SummaryTable.Size = new Size(1340, 213);
             txtP2SummaryTable.TabIndex = 10;
             // 
             // SensorSettingsSubPanel
@@ -1129,42 +1175,12 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             Controls.Add(btnPage2_Chart);
             Controls.Add(btnPage1_Settings);
             Controls.Add(btnMasterSaveCsv);
-            Controls.Add(btnSaveSensorProfile);
-            Controls.Add(btnLoadSensorProfile);
             Controls.Add(cmbSensorType);
             Controls.Add(lblSensorSelect);
             Controls.Add(lblPanelTitle);
-            // 
-            // btnSaveSensorProfile
-            // 
-            btnSaveSensorProfile.BackColor = Color.FromArgb(15, 118, 110);
-            btnSaveSensorProfile.FlatAppearance.BorderSize = 0;
-            btnSaveSensorProfile.FlatStyle = FlatStyle.Flat;
-            btnSaveSensorProfile.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
-            btnSaveSensorProfile.ForeColor = Color.White;
-            btnSaveSensorProfile.Location = new Point(1065, 17);
-            btnSaveSensorProfile.Name = "btnSaveSensorProfile";
-            btnSaveSensorProfile.Size = new Size(160, 36);
-            btnSaveSensorProfile.TabIndex = 16;
-            btnSaveSensorProfile.Text = "💾 Sensörü Kaydet";
-            btnSaveSensorProfile.UseVisualStyleBackColor = false;
-            // 
-            // btnLoadSensorProfile
-            // 
-            btnLoadSensorProfile.BackColor = Color.FromArgb(51, 65, 85);
-            btnLoadSensorProfile.FlatAppearance.BorderSize = 0;
-            btnLoadSensorProfile.FlatStyle = FlatStyle.Flat;
-            btnLoadSensorProfile.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
-            btnLoadSensorProfile.ForeColor = Color.White;
-            btnLoadSensorProfile.Location = new Point(1235, 17);
-            btnLoadSensorProfile.Name = "btnLoadSensorProfile";
-            btnLoadSensorProfile.Size = new Size(160, 36);
-            btnLoadSensorProfile.TabIndex = 17;
-            btnLoadSensorProfile.Text = "📂 Sensörü Yükle";
-            btnLoadSensorProfile.UseVisualStyleBackColor = false;
             Font = new Font("Segoe UI", 9F, FontStyle.Regular, GraphicsUnit.Point, 0);
             Name = "SensorSettingsSubPanel";
-            Size = new Size(1428, 988);
+            Size = new Size(1602, 1148);
             grpRange.ResumeLayout(false);
             grpRange.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)numRangeMax).EndInit();
@@ -1279,8 +1295,10 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
         private System.Windows.Forms.NumericUpDown numP2TrueVal;
         private System.Windows.Forms.Button btnP2SelectRawFile;
         private System.Windows.Forms.TextBox txtP2RawFilePath;
+        private System.Windows.Forms.Button btnP2ClearRawFile;
         private System.Windows.Forms.Button btnP2SelectCalFile;
         private System.Windows.Forms.TextBox txtP2CalFilePath;
+        private System.Windows.Forms.Button btnP2ClearCalFile;
         private System.Windows.Forms.Button btnP2UseLastGenerated;
         private System.Windows.Forms.Button btnP2PlotAll;
         private System.Windows.Forms.Label lblBinCount;
@@ -1291,8 +1309,7 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
         private System.Windows.Forms.Button btnP2ViewTimeSeries;
         private System.Windows.Forms.Button btnP2ViewDistribution;
         private System.Windows.Forms.Button btnP2ChartLayers;
-        private System.Windows.Forms.Button btnSaveSensorProfile;
-        private System.Windows.Forms.Button btnLoadSensorProfile;
+        private System.Windows.Forms.Button btnP2AutoCalibrate;
         private System.Windows.Forms.Button btnMasterSaveCsv;
         private System.Windows.Forms.TextBox txtP2SummaryTable;
     }

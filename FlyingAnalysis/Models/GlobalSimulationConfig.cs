@@ -71,23 +71,23 @@ namespace FlyingAnalysis.Models
         }
 
         // 7. Sensör Kalibrasyon & Hata Profili (SensorSettingsSubPanel tarafından otomatik beslenir)
-        // Barometre Hata ve Kalibrasyon Parametreleri
-        public static double BaroBiasMeter { get; set; } = 0.5;
-        public static double BaroScaleErrorPercent { get; set; } = 0.0;
-        public static double BaroNoiseStdMeter { get; set; } = 1.2;
-        public static double BaroRelativeNoisePercent { get; set; } = 0.0;
-        public static double BaroSpikeProbPercent { get; set; } = 0.0;
-        public static double BaroSpikeAmplitudeMeter { get; set; } = 0.0;
+        // Barometre Hata ve Kalibrasyon Parametreleri (Varsayılan: Konuşulan Fiziksel Değerler)
+        public static double BaroBiasMeter { get; set; } = 2.5; // Lehimleme & termal ofset kayması ~2.5m
+        public static double BaroScaleErrorPercent { get; set; } = 0.5; // Bağıl ölçek hatası %0.5
+        public static double BaroNoiseStdMeter { get; set; } = 0.5; // Kısa mesafe çözünürlük gürültüsü ~0.5m
+        public static double BaroRelativeNoisePercent { get; set; } = 0.1; // %0.1 bağıl gürültü
+        public static double BaroSpikeProbPercent { get; set; } = 0.5; // %0.5 darbe ihtimali
+        public static double BaroSpikeAmplitudeMeter { get; set; } = 5.0; // 5 x Sigma darbe genliği
         public static double BaroProcessedBias { get; set; } = 0.0;
         public static double BaroProcessedScalePercent { get; set; } = 0.0;
 
-        // İvmeölçer Hata ve Kalibrasyon Parametreleri
-        public static double AccBiasMps2 { get; set; } = 0.05;
-        public static double AccScaleErrorPercent { get; set; } = 0.0;
-        public static double AccNoiseStdMps2 { get; set; } = 0.15;
-        public static double AccRelativeNoisePercent { get; set; } = 0.0;
-        public static double AccSpikeProbPercent { get; set; } = 0.0;
-        public static double AccSpikeAmplitudeMps2 { get; set; } = 0.0;
+        // İvmeölçer / IMU Hata ve Kalibrasyon Parametreleri (Varsayılan: Konuşulan Fiziksel Değerler)
+        public static double AccBiasMps2 { get; set; } = 0.15; // Mutlak bias 0.15 m/s²
+        public static double AccScaleErrorPercent { get; set; } = 0.5; // %0.5 ölçek hatası
+        public static double AccNoiseStdMps2 { get; set; } = 0.12; // Termal gürültü 0.12 m/s²
+        public static double AccRelativeNoisePercent { get; set; } = 0.1; // %0.1 bağıl gürültü
+        public static double AccSpikeProbPercent { get; set; } = 0.5; // %0.5 darbe ihtimali
+        public static double AccSpikeAmplitudeMps2 { get; set; } = 6.0; // 6 x Sigma darbe genliği
         public static double AccProcessedBias { get; set; } = 0.0;
         public static double AccProcessedScalePercent { get; set; } = 0.0;
 
@@ -131,22 +131,25 @@ namespace FlyingAnalysis.Models
                 val += totalSigma * randStdNormal;
             }
 
-            // 4. Bağıl Termal Gürültü (% FS)
+            // 4. Bağıl Termal Gürültü (% Relative Noise - O anki büyüklük ile orantılı)
             if (relNoise > 0)
             {
-                double fsSpan = isBaro ? 5000.0 : 100.0; // Baro için 5km span, ivme için 100 m/s² span
-                double relSigma = relNoise * fsSpan / 100.0;
-                double u1 = 1.0 - rand.NextDouble();
-                double u2 = 1.0 - rand.NextDouble();
-                double randStdNormal = Math.Sqrt(-2.0 * Math.Log(u1)) * Math.Sin(2.0 * Math.PI * u2);
-                val += relSigma * randStdNormal;
+                double relSigma = (relNoise / 100.0) * Math.Abs(trueValue);
+                if (relSigma > 0)
+                {
+                    double u1 = 1.0 - rand.NextDouble();
+                    double u2 = 1.0 - rand.NextDouble();
+                    double randStdNormal = Math.Sqrt(-2.0 * Math.Log(u1)) * Math.Sin(2.0 * Math.PI * u2);
+                    val += relSigma * randStdNormal;
+                }
             }
 
-            // 5. Darbe Gürültüsü (Spike Noise)
+            // 5. Darbe Gürültüsü (Spike Noise - Standart Sapma Katı / K * sigma modeline dayalı)
             if (spikeProb > 0 && rand.NextDouble() * 100.0 < spikeProb)
             {
+                double baseSigma = thermalStd > 0 ? thermalStd : 1.0; // Termal StdDev sıfırsa varsayılan 1 birim alınır
                 double sign = rand.NextDouble() > 0.5 ? 1.0 : -1.0;
-                val += sign * spikeAmp;
+                val += sign * (spikeAmp * baseSigma);
             }
 
             return val;
@@ -334,6 +337,114 @@ namespace FlyingAnalysis.Models
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Global ayarlar yüklenirken hata: {ex.Message}");
+                return false;
+            }
+        }
+
+        public static string MasterConfigPath => System.IO.Path.Combine(System.Windows.Forms.Application.StartupPath, "RaSAT_MasterConfig.json");
+
+        public static void SaveMasterSettingsToAutoFile()
+        {
+            try
+            {
+                var masterObj = new
+                {
+                    // Fizik & Ortam & Uydu
+                    Gravity, AirDensity, SeaLevelTemperature, LapseRate,
+                    CarrierMassGram, PayloadMassGram,
+                    CarrierCrossSectionArea, CarrierCd, MainParachuteArea, MainParachuteCd,
+                    WingClosedArea, WingOpenedArea, BodyCd,
+                    ApamParachuteArea, ApamParachuteCd,
+                    Phase1Duration, Phase2ToPhase3Delay, Phase3ToPhase4DeployTime, Phase4ToApamDelay,
+                    
+                    // Barometre
+                    BaroBiasMeter, BaroScaleErrorPercent, BaroNoiseStdMeter, BaroRelativeNoisePercent,
+                    BaroSpikeProbPercent, BaroSpikeAmplitudeMeter, BaroProcessedBias, BaroProcessedScalePercent,
+                    
+                    // İvmeölçer
+                    AccBiasMps2, AccScaleErrorPercent, AccNoiseStdMps2, AccRelativeNoisePercent,
+                    AccSpikeProbPercent, AccSpikeAmplitudeMps2, AccProcessedBias, AccProcessedScalePercent,
+                    
+                    // EKF Çekirdek
+                    EstProcessNoiseQBase, EstBaroNoiseRBase, EstAccNoiseRBase,
+                    EstBaroCutoffPenalty, EstAccCutoffPenalty, EstTempCutoffPenalty, EstCoastDecayRatePerSec
+                };
+
+                string json = System.Text.Json.JsonSerializer.Serialize(masterObj, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+                System.IO.File.WriteAllText(MasterConfigPath, json);
+                System.Diagnostics.Debug.WriteLine($"Master ayarlar otomatik kaydedildi: {MasterConfigPath}");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Master ayarlar otomatik kaydedilirken hata: {ex.Message}");
+            }
+        }
+
+        public static bool LoadMasterSettingsFromAutoFile()
+        {
+            try
+            {
+                if (!System.IO.File.Exists(MasterConfigPath)) return false;
+                string json = System.IO.File.ReadAllText(MasterConfigPath);
+                using var doc = System.Text.Json.JsonDocument.Parse(json);
+                var root = doc.RootElement;
+
+                // Fizik & Ortam & Uydu
+                if (root.TryGetProperty("Gravity", out var p1)) Gravity = p1.GetDouble();
+                if (root.TryGetProperty("AirDensity", out var p2)) AirDensity = p2.GetDouble();
+                if (root.TryGetProperty("SeaLevelTemperature", out var p3)) SeaLevelTemperature = p3.GetDouble();
+                if (root.TryGetProperty("LapseRate", out var p4)) LapseRate = p4.GetDouble();
+                if (root.TryGetProperty("CarrierMassGram", out var p5)) CarrierMassGram = p5.GetDouble();
+                if (root.TryGetProperty("PayloadMassGram", out var p6)) PayloadMassGram = p6.GetDouble();
+                if (root.TryGetProperty("CarrierCrossSectionArea", out var p7)) CarrierCrossSectionArea = p7.GetDouble();
+                if (root.TryGetProperty("CarrierCd", out var p8)) CarrierCd = p8.GetDouble();
+                if (root.TryGetProperty("MainParachuteArea", out var p9)) MainParachuteArea = p9.GetDouble();
+                if (root.TryGetProperty("MainParachuteCd", out var p10)) MainParachuteCd = p10.GetDouble();
+                if (root.TryGetProperty("WingClosedArea", out var p11)) WingClosedArea = p11.GetDouble();
+                if (root.TryGetProperty("WingOpenedArea", out var p12)) WingOpenedArea = p12.GetDouble();
+                if (root.TryGetProperty("BodyCd", out var p13)) BodyCd = p13.GetDouble();
+                if (root.TryGetProperty("ApamParachuteArea", out var p14)) ApamParachuteArea = p14.GetDouble();
+                if (root.TryGetProperty("ApamParachuteCd", out var p15)) ApamParachuteCd = p15.GetDouble();
+                if (root.TryGetProperty("Phase1Duration", out var p16)) Phase1Duration = p16.GetDouble();
+                if (root.TryGetProperty("Phase2ToPhase3Delay", out var p17)) Phase2ToPhase3Delay = p17.GetDouble();
+                if (root.TryGetProperty("Phase3ToPhase4DeployTime", out var p18)) Phase3ToPhase4DeployTime = p18.GetDouble();
+                if (root.TryGetProperty("Phase4ToApamDelay", out var p19)) Phase4ToApamDelay = p19.GetDouble();
+
+                // Barometre
+                if (root.TryGetProperty("BaroBiasMeter", out var b1)) BaroBiasMeter = b1.GetDouble();
+                if (root.TryGetProperty("BaroScaleErrorPercent", out var b2)) BaroScaleErrorPercent = b2.GetDouble();
+                if (root.TryGetProperty("BaroNoiseStdMeter", out var b3)) BaroNoiseStdMeter = b3.GetDouble();
+                if (root.TryGetProperty("BaroRelativeNoisePercent", out var b4)) BaroRelativeNoisePercent = b4.GetDouble();
+                if (root.TryGetProperty("BaroSpikeProbPercent", out var b5)) BaroSpikeProbPercent = b5.GetDouble();
+                if (root.TryGetProperty("BaroSpikeAmplitudeMeter", out var b6)) BaroSpikeAmplitudeMeter = b6.GetDouble();
+                if (root.TryGetProperty("BaroProcessedBias", out var b7)) BaroProcessedBias = b7.GetDouble();
+                if (root.TryGetProperty("BaroProcessedScalePercent", out var b8)) BaroProcessedScalePercent = b8.GetDouble();
+
+                // İvmeölçer
+                if (root.TryGetProperty("AccBiasMps2", out var a1)) AccBiasMps2 = a1.GetDouble();
+                if (root.TryGetProperty("AccScaleErrorPercent", out var a2)) AccScaleErrorPercent = a2.GetDouble();
+                if (root.TryGetProperty("AccNoiseStdMps2", out var a3)) AccNoiseStdMps2 = a3.GetDouble();
+                if (root.TryGetProperty("AccRelativeNoisePercent", out var a4)) AccRelativeNoisePercent = a4.GetDouble();
+                if (root.TryGetProperty("AccSpikeProbPercent", out var a5)) AccSpikeProbPercent = a5.GetDouble();
+                if (root.TryGetProperty("AccSpikeAmplitudeMps2", out var a6)) AccSpikeAmplitudeMps2 = a6.GetDouble();
+                if (root.TryGetProperty("AccProcessedBias", out var a7)) AccProcessedBias = a7.GetDouble();
+                if (root.TryGetProperty("AccProcessedScalePercent", out var a8)) AccProcessedScalePercent = a8.GetDouble();
+
+                // EKF Çekirdek
+                if (root.TryGetProperty("EstProcessNoiseQBase", out var e1)) EstProcessNoiseQBase = e1.GetDouble();
+                if (root.TryGetProperty("EstBaroNoiseRBase", out var e2)) EstBaroNoiseRBase = e2.GetDouble();
+                if (root.TryGetProperty("EstAccNoiseRBase", out var e3)) EstAccNoiseRBase = e3.GetDouble();
+                if (root.TryGetProperty("EstBaroCutoffPenalty", out var e4)) EstBaroCutoffPenalty = e4.GetDouble();
+                if (root.TryGetProperty("EstAccCutoffPenalty", out var e5)) EstAccCutoffPenalty = e5.GetDouble();
+                if (root.TryGetProperty("EstTempCutoffPenalty", out var e6)) EstTempCutoffPenalty = e6.GetDouble();
+                if (root.TryGetProperty("EstCoastDecayRatePerSec", out var e7)) EstCoastDecayRatePerSec = e7.GetDouble();
+
+                System.Diagnostics.Debug.WriteLine($"Master ayarlar otomatik yüklendi: {MasterConfigPath}");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Master ayarlar yüklenirken hata: {ex.Message}");
                 return false;
             }
         }

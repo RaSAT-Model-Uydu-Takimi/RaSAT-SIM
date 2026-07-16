@@ -28,282 +28,246 @@ namespace FlyingAnalysis.UI.Panels
         /// </summary>
         private void InitializeComponent()
         {
-            this.pnlTopHeader = new System.Windows.Forms.Panel();
-            this.lblHeaderTitle = new System.Windows.Forms.Label();
-            this.btnLoadDefaults = new System.Windows.Forms.Button();
-            this.pnlSidebarMenu = new System.Windows.Forms.Panel();
-            this.btnTab8_Contingency = new System.Windows.Forms.Button();
-            this.btnTab7_Landing = new System.Windows.Forms.Button();
-            this.btnTab6_ControlledDescent = new System.Windows.Forms.Button();
-            this.btnTab5_BrakePhase = new System.Windows.Forms.Button();
-            this.btnTab4_Separation = new System.Windows.Forms.Button();
-            this.btnTab3_Ascent = new System.Windows.Forms.Button();
-            this.btnTab2_SatellitePhysics = new System.Windows.Forms.Button();
-            this.btnTab1_WorldVariables = new System.Windows.Forms.Button();
-
-            this.pnlSubContentContainer = new System.Windows.Forms.Panel();
-            this.pnlBottomStatusBar = new System.Windows.Forms.Panel();
-            this.lblActiveTabStatus = new System.Windows.Forms.Label();
-            this.btnApplyAndSave = new System.Windows.Forms.Button();
-            this.pnlTopHeader.SuspendLayout();
-            this.pnlSidebarMenu.SuspendLayout();
-            this.pnlBottomStatusBar.SuspendLayout();
-            this.SuspendLayout();
+            pnlTopHeader = new Panel();
+            lblHeaderTitle = new Label();
+            pnlSidebarMenu = new Panel();
+            btnTab8_Contingency = new Button();
+            btnTab7_Landing = new Button();
+            btnTab6_ControlledDescent = new Button();
+            btnTab5_BrakePhase = new Button();
+            btnTab4_Separation = new Button();
+            btnTab3_Ascent = new Button();
+            btnTab2_SatellitePhysics = new Button();
+            btnTab1_WorldVariables = new Button();
+            pnlSubContentContainer = new Panel();
+            pnlBottomStatusBar = new Panel();
+            lblActiveTabStatus = new Label();
+            pnlTopHeader.SuspendLayout();
+            pnlSidebarMenu.SuspendLayout();
+            pnlBottomStatusBar.SuspendLayout();
+            SuspendLayout();
             // 
             // pnlTopHeader
             // 
-            this.pnlTopHeader.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(24)))), ((int)(((byte)(34)))), ((int)(((byte)(48)))));
-            this.pnlTopHeader.Controls.Add(this.btnLoadDefaults);
-            this.pnlTopHeader.Controls.Add(this.lblHeaderTitle);
-            this.pnlTopHeader.Dock = System.Windows.Forms.DockStyle.Top;
-            this.pnlTopHeader.Location = new System.Drawing.Point(0, 0);
-            this.pnlTopHeader.Name = "pnlTopHeader";
-            this.pnlTopHeader.Size = new System.Drawing.Size(1200, 60);
-            this.pnlTopHeader.TabIndex = 0;
+            pnlTopHeader.BackColor = Color.FromArgb(24, 34, 48);
+            pnlTopHeader.Controls.Add(lblHeaderTitle);
+            pnlTopHeader.Dock = DockStyle.Top;
+            pnlTopHeader.Location = new Point(0, 0);
+            pnlTopHeader.Name = "pnlTopHeader";
+            pnlTopHeader.Size = new Size(1200, 60);
+            pnlTopHeader.TabIndex = 0;
             // 
             // lblHeaderTitle
             // 
-            this.lblHeaderTitle.AutoSize = true;
-            this.lblHeaderTitle.Font = new System.Drawing.Font("Segoe UI Semibold", 14F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblHeaderTitle.ForeColor = System.Drawing.Color.White;
-            this.lblHeaderTitle.Location = new System.Drawing.Point(20, 15);
-            this.lblHeaderTitle.Name = "lblHeaderTitle";
-            this.lblHeaderTitle.Size = new System.Drawing.Size(512, 32);
-            this.lblHeaderTitle.TabIndex = 0;
-            this.lblHeaderTitle.Text = "AYARLAR VE SİMÜLASYON PARAMETRELERİ MERKEZİ";
-            // 
-            // btnLoadDefaults
-            // 
-            this.btnLoadDefaults.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnLoadDefaults.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(52)))), ((int)(((byte)(73)))), ((int)(((byte)(94)))));
-            this.btnLoadDefaults.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnLoadDefaults.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnLoadDefaults.ForeColor = System.Drawing.Color.White;
-            this.btnLoadDefaults.Location = new System.Drawing.Point(970, 12);
-            this.btnLoadDefaults.Name = "btnLoadDefaults";
-            this.btnLoadDefaults.Size = new System.Drawing.Size(210, 36);
-            this.btnLoadDefaults.TabIndex = 1;
-            this.btnLoadDefaults.Text = "Aksaray Varsayılanları Yükle";
-            this.btnLoadDefaults.UseVisualStyleBackColor = false;
+            lblHeaderTitle.AutoSize = true;
+            lblHeaderTitle.Font = new Font("Segoe UI Semibold", 14F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            lblHeaderTitle.ForeColor = Color.White;
+            lblHeaderTitle.Location = new Point(20, 15);
+            lblHeaderTitle.Name = "lblHeaderTitle";
+            lblHeaderTitle.Size = new Size(700, 38);
+            lblHeaderTitle.TabIndex = 0;
+            lblHeaderTitle.Text = "AYARLAR VE SİMÜLASYON PARAMETRELERİ MERKEZİ";
             // 
             // pnlSidebarMenu
             // 
-            this.pnlSidebarMenu.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(41)))), ((int)(((byte)(59)))));
-            this.pnlSidebarMenu.Controls.Add(this.btnTab8_Contingency);
-
-            this.pnlSidebarMenu.Controls.Add(this.btnTab7_Landing);
-            this.pnlSidebarMenu.Controls.Add(this.btnTab6_ControlledDescent);
-            this.pnlSidebarMenu.Controls.Add(this.btnTab5_BrakePhase);
-            this.pnlSidebarMenu.Controls.Add(this.btnTab4_Separation);
-            this.pnlSidebarMenu.Controls.Add(this.btnTab3_Ascent);
-            this.pnlSidebarMenu.Controls.Add(this.btnTab2_SatellitePhysics);
-            this.pnlSidebarMenu.Controls.Add(this.btnTab1_WorldVariables);
-            this.pnlSidebarMenu.Dock = System.Windows.Forms.DockStyle.Left;
-            this.pnlSidebarMenu.Location = new System.Drawing.Point(0, 60);
-            this.pnlSidebarMenu.Name = "pnlSidebarMenu";
-            this.pnlSidebarMenu.Size = new System.Drawing.Size(280, 690);
-            this.pnlSidebarMenu.TabIndex = 1;
-            // 
-            // btnTab1_WorldVariables
-            // 
-            this.btnTab1_WorldVariables.Dock = System.Windows.Forms.DockStyle.Top;
-            this.btnTab1_WorldVariables.FlatAppearance.BorderSize = 0;
-            this.btnTab1_WorldVariables.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnTab1_WorldVariables.Font = new System.Drawing.Font("Segoe UI Semibold", 10.5F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnTab1_WorldVariables.ForeColor = System.Drawing.Color.White;
-            this.btnTab1_WorldVariables.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnTab1_WorldVariables.Location = new System.Drawing.Point(0, 0);
-            this.btnTab1_WorldVariables.Name = "btnTab1_WorldVariables";
-            this.btnTab1_WorldVariables.Padding = new System.Windows.Forms.Padding(15, 0, 0, 0);
-            this.btnTab1_WorldVariables.Size = new System.Drawing.Size(280, 55);
-            this.btnTab1_WorldVariables.TabIndex = 0;
-            this.btnTab1_WorldVariables.Text = "1. Dünya ve Çevre Değişkenleri";
-            this.btnTab1_WorldVariables.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnTab1_WorldVariables.UseVisualStyleBackColor = true;
-            // 
-            // btnTab2_SatellitePhysics
-            // 
-            this.btnTab2_SatellitePhysics.Dock = System.Windows.Forms.DockStyle.Top;
-            this.btnTab2_SatellitePhysics.FlatAppearance.BorderSize = 0;
-            this.btnTab2_SatellitePhysics.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnTab2_SatellitePhysics.Font = new System.Drawing.Font("Segoe UI Semibold", 10.5F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnTab2_SatellitePhysics.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(203)))), ((int)(((byte)(213)))), ((int)(((byte)(225)))));
-            this.btnTab2_SatellitePhysics.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnTab2_SatellitePhysics.Location = new System.Drawing.Point(0, 55);
-            this.btnTab2_SatellitePhysics.Name = "btnTab2_SatellitePhysics";
-            this.btnTab2_SatellitePhysics.Padding = new System.Windows.Forms.Padding(15, 0, 0, 0);
-            this.btnTab2_SatellitePhysics.Size = new System.Drawing.Size(280, 55);
-            this.btnTab2_SatellitePhysics.TabIndex = 1;
-            this.btnTab2_SatellitePhysics.Text = "2. Uydunun Fiziksel Özellikleri";
-            this.btnTab2_SatellitePhysics.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnTab2_SatellitePhysics.UseVisualStyleBackColor = true;
-            // 
-            // btnTab3_Ascent
-            // 
-            this.btnTab3_Ascent.Dock = System.Windows.Forms.DockStyle.Top;
-            this.btnTab3_Ascent.FlatAppearance.BorderSize = 0;
-            this.btnTab3_Ascent.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnTab3_Ascent.Font = new System.Drawing.Font("Segoe UI Semibold", 10.5F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnTab3_Ascent.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(203)))), ((int)(((byte)(213)))), ((int)(((byte)(225)))));
-            this.btnTab3_Ascent.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnTab3_Ascent.Location = new System.Drawing.Point(0, 110);
-            this.btnTab3_Ascent.Name = "btnTab3_Ascent";
-            this.btnTab3_Ascent.Padding = new System.Windows.Forms.Padding(15, 0, 0, 0);
-            this.btnTab3_Ascent.Size = new System.Drawing.Size(280, 55);
-            this.btnTab3_Ascent.TabIndex = 2;
-            this.btnTab3_Ascent.Text = "3. Faz 1: Roketle Yükseliş & Ayrılma";
-            this.btnTab3_Ascent.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnTab3_Ascent.UseVisualStyleBackColor = true;
-            // 
-            // btnTab4_Separation
-            // 
-            this.btnTab4_Separation.Dock = System.Windows.Forms.DockStyle.Top;
-            this.btnTab4_Separation.FlatAppearance.BorderSize = 0;
-            this.btnTab4_Separation.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnTab4_Separation.Font = new System.Drawing.Font("Segoe UI Semibold", 10.5F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnTab4_Separation.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(203)))), ((int)(((byte)(213)))), ((int)(((byte)(225)))));
-            this.btnTab4_Separation.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnTab4_Separation.Location = new System.Drawing.Point(0, 165);
-            this.btnTab4_Separation.Name = "btnTab4_Separation";
-            this.btnTab4_Separation.Padding = new System.Windows.Forms.Padding(15, 0, 0, 0);
-            this.btnTab4_Separation.Size = new System.Drawing.Size(280, 55);
-            this.btnTab4_Separation.TabIndex = 3;
-            this.btnTab4_Separation.Text = "4. Faz 2: Paraşütlü Süzülüş & SİGMA";
-            this.btnTab4_Separation.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnTab4_Separation.UseVisualStyleBackColor = true;
-            // 
-            // btnTab5_BrakePhase
-            // 
-            this.btnTab5_BrakePhase.Dock = System.Windows.Forms.DockStyle.Top;
-            this.btnTab5_BrakePhase.FlatAppearance.BorderSize = 0;
-            this.btnTab5_BrakePhase.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnTab5_BrakePhase.Font = new System.Drawing.Font("Segoe UI Semibold", 10.5F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnTab5_BrakePhase.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(203)))), ((int)(((byte)(213)))), ((int)(((byte)(225)))));
-            this.btnTab5_BrakePhase.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnTab5_BrakePhase.Location = new System.Drawing.Point(0, 220);
-            this.btnTab5_BrakePhase.Name = "btnTab5_BrakePhase";
-            this.btnTab5_BrakePhase.Padding = new System.Windows.Forms.Padding(15, 0, 0, 0);
-            this.btnTab5_BrakePhase.Size = new System.Drawing.Size(280, 55);
-            this.btnTab5_BrakePhase.TabIndex = 4;
-            this.btnTab5_BrakePhase.Text = "5. Faz 3: Ayrılma Hali (S3 Blokları)";
-            this.btnTab5_BrakePhase.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnTab5_BrakePhase.UseVisualStyleBackColor = true;
-            // 
-            // btnTab6_ControlledDescent
-            // 
-            this.btnTab6_ControlledDescent.Dock = System.Windows.Forms.DockStyle.Top;
-            this.btnTab6_ControlledDescent.FlatAppearance.BorderSize = 0;
-            this.btnTab6_ControlledDescent.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnTab6_ControlledDescent.Font = new System.Drawing.Font("Segoe UI Semibold", 10.5F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnTab6_ControlledDescent.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(203)))), ((int)(((byte)(213)))), ((int)(((byte)(225)))));
-            this.btnTab6_ControlledDescent.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnTab6_ControlledDescent.Location = new System.Drawing.Point(0, 275);
-            this.btnTab6_ControlledDescent.Name = "btnTab6_ControlledDescent";
-            this.btnTab6_ControlledDescent.Padding = new System.Windows.Forms.Padding(15, 0, 0, 0);
-            this.btnTab6_ControlledDescent.Size = new System.Drawing.Size(280, 55);
-            this.btnTab6_ControlledDescent.TabIndex = 5;
-            this.btnTab6_ControlledDescent.Text = "6. Faz 4: Aktif İniş (4 Alt Faz & PID)";
-            this.btnTab6_ControlledDescent.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnTab6_ControlledDescent.UseVisualStyleBackColor = true;
-            // 
-            // btnTab7_Landing
-            // 
-            this.btnTab7_Landing.Dock = System.Windows.Forms.DockStyle.Top;
-            this.btnTab7_Landing.FlatAppearance.BorderSize = 0;
-            this.btnTab7_Landing.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnTab7_Landing.Font = new System.Drawing.Font("Segoe UI Semibold", 10.5F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnTab7_Landing.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(203)))), ((int)(((byte)(213)))), ((int)(((byte)(225)))));
-            this.btnTab7_Landing.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnTab7_Landing.Location = new System.Drawing.Point(0, 330);
-            this.btnTab7_Landing.Name = "btnTab7_Landing";
-            this.btnTab7_Landing.Padding = new System.Windows.Forms.Padding(15, 0, 0, 0);
-            this.btnTab7_Landing.Size = new System.Drawing.Size(280, 55);
-            this.btnTab7_Landing.TabIndex = 6;
-            this.btnTab7_Landing.Text = "7. APAM Acil Paraşüt & Koruma";
-            this.btnTab7_Landing.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnTab7_Landing.UseVisualStyleBackColor = true;
+            pnlSidebarMenu.BackColor = Color.FromArgb(30, 41, 59);
+            pnlSidebarMenu.Controls.Add(btnTab8_Contingency);
+            pnlSidebarMenu.Controls.Add(btnTab7_Landing);
+            pnlSidebarMenu.Controls.Add(btnTab6_ControlledDescent);
+            pnlSidebarMenu.Controls.Add(btnTab5_BrakePhase);
+            pnlSidebarMenu.Controls.Add(btnTab4_Separation);
+            pnlSidebarMenu.Controls.Add(btnTab3_Ascent);
+            pnlSidebarMenu.Controls.Add(btnTab2_SatellitePhysics);
+            pnlSidebarMenu.Controls.Add(btnTab1_WorldVariables);
+            pnlSidebarMenu.Dock = DockStyle.Left;
+            pnlSidebarMenu.Location = new Point(0, 60);
+            pnlSidebarMenu.Name = "pnlSidebarMenu";
+            pnlSidebarMenu.Size = new Size(280, 690);
+            pnlSidebarMenu.TabIndex = 1;
             // 
             // btnTab8_Contingency
             // 
-            this.btnTab8_Contingency.Dock = System.Windows.Forms.DockStyle.Top;
-            this.btnTab8_Contingency.FlatAppearance.BorderSize = 0;
-            this.btnTab8_Contingency.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnTab8_Contingency.Font = new System.Drawing.Font("Segoe UI Semibold", 10.5F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnTab8_Contingency.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(203)))), ((int)(((byte)(213)))), ((int)(((byte)(225)))));
-            this.btnTab8_Contingency.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnTab8_Contingency.Location = new System.Drawing.Point(0, 385);
-            this.btnTab8_Contingency.Name = "btnTab8_Contingency";
-            this.btnTab8_Contingency.Padding = new System.Windows.Forms.Padding(15, 0, 0, 0);
-            this.btnTab8_Contingency.Size = new System.Drawing.Size(280, 55);
-            this.btnTab8_Contingency.TabIndex = 7;
-            this.btnTab8_Contingency.Text = "8. Faz 5: Yere İniş & Sertlik Kriterleri";
-
-            this.btnTab8_Contingency.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnTab8_Contingency.UseVisualStyleBackColor = true;
+            btnTab8_Contingency.Dock = DockStyle.Top;
+            btnTab8_Contingency.FlatAppearance.BorderSize = 0;
+            btnTab8_Contingency.FlatStyle = FlatStyle.Flat;
+            btnTab8_Contingency.Font = new Font("Segoe UI Semibold", 10.5F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            btnTab8_Contingency.ForeColor = Color.FromArgb(203, 213, 225);
+            btnTab8_Contingency.ImageAlign = ContentAlignment.MiddleLeft;
+            btnTab8_Contingency.Location = new Point(0, 385);
+            btnTab8_Contingency.Name = "btnTab8_Contingency";
+            btnTab8_Contingency.Padding = new Padding(15, 0, 0, 0);
+            btnTab8_Contingency.Size = new Size(280, 55);
+            btnTab8_Contingency.TabIndex = 7;
+            btnTab8_Contingency.Text = "8. Faz 5: Yere İniş & Sertlik Kriterleri";
+            btnTab8_Contingency.TextAlign = ContentAlignment.MiddleLeft;
+            btnTab8_Contingency.UseVisualStyleBackColor = true;
+            // 
+            // btnTab7_Landing
+            // 
+            btnTab7_Landing.Dock = DockStyle.Top;
+            btnTab7_Landing.FlatAppearance.BorderSize = 0;
+            btnTab7_Landing.FlatStyle = FlatStyle.Flat;
+            btnTab7_Landing.Font = new Font("Segoe UI Semibold", 10.5F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            btnTab7_Landing.ForeColor = Color.FromArgb(203, 213, 225);
+            btnTab7_Landing.ImageAlign = ContentAlignment.MiddleLeft;
+            btnTab7_Landing.Location = new Point(0, 330);
+            btnTab7_Landing.Name = "btnTab7_Landing";
+            btnTab7_Landing.Padding = new Padding(15, 0, 0, 0);
+            btnTab7_Landing.Size = new Size(280, 55);
+            btnTab7_Landing.TabIndex = 6;
+            btnTab7_Landing.Text = "7. APAM Acil Paraşüt & Koruma";
+            btnTab7_Landing.TextAlign = ContentAlignment.MiddleLeft;
+            btnTab7_Landing.UseVisualStyleBackColor = true;
+            // 
+            // btnTab6_ControlledDescent
+            // 
+            btnTab6_ControlledDescent.Dock = DockStyle.Top;
+            btnTab6_ControlledDescent.FlatAppearance.BorderSize = 0;
+            btnTab6_ControlledDescent.FlatStyle = FlatStyle.Flat;
+            btnTab6_ControlledDescent.Font = new Font("Segoe UI Semibold", 10.5F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            btnTab6_ControlledDescent.ForeColor = Color.FromArgb(203, 213, 225);
+            btnTab6_ControlledDescent.ImageAlign = ContentAlignment.MiddleLeft;
+            btnTab6_ControlledDescent.Location = new Point(0, 275);
+            btnTab6_ControlledDescent.Name = "btnTab6_ControlledDescent";
+            btnTab6_ControlledDescent.Padding = new Padding(15, 0, 0, 0);
+            btnTab6_ControlledDescent.Size = new Size(280, 55);
+            btnTab6_ControlledDescent.TabIndex = 5;
+            btnTab6_ControlledDescent.Text = "6. Faz 4: Aktif İniş (4 Alt Faz & PID)";
+            btnTab6_ControlledDescent.TextAlign = ContentAlignment.MiddleLeft;
+            btnTab6_ControlledDescent.UseVisualStyleBackColor = true;
+            // 
+            // btnTab5_BrakePhase
+            // 
+            btnTab5_BrakePhase.Dock = DockStyle.Top;
+            btnTab5_BrakePhase.FlatAppearance.BorderSize = 0;
+            btnTab5_BrakePhase.FlatStyle = FlatStyle.Flat;
+            btnTab5_BrakePhase.Font = new Font("Segoe UI Semibold", 10.5F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            btnTab5_BrakePhase.ForeColor = Color.FromArgb(203, 213, 225);
+            btnTab5_BrakePhase.ImageAlign = ContentAlignment.MiddleLeft;
+            btnTab5_BrakePhase.Location = new Point(0, 220);
+            btnTab5_BrakePhase.Name = "btnTab5_BrakePhase";
+            btnTab5_BrakePhase.Padding = new Padding(15, 0, 0, 0);
+            btnTab5_BrakePhase.Size = new Size(280, 55);
+            btnTab5_BrakePhase.TabIndex = 4;
+            btnTab5_BrakePhase.Text = "5. Faz 3: Ayrılma Hali (S3 Blokları)";
+            btnTab5_BrakePhase.TextAlign = ContentAlignment.MiddleLeft;
+            btnTab5_BrakePhase.UseVisualStyleBackColor = true;
+            // 
+            // btnTab4_Separation
+            // 
+            btnTab4_Separation.Dock = DockStyle.Top;
+            btnTab4_Separation.FlatAppearance.BorderSize = 0;
+            btnTab4_Separation.FlatStyle = FlatStyle.Flat;
+            btnTab4_Separation.Font = new Font("Segoe UI Semibold", 10.5F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            btnTab4_Separation.ForeColor = Color.FromArgb(203, 213, 225);
+            btnTab4_Separation.ImageAlign = ContentAlignment.MiddleLeft;
+            btnTab4_Separation.Location = new Point(0, 165);
+            btnTab4_Separation.Name = "btnTab4_Separation";
+            btnTab4_Separation.Padding = new Padding(15, 0, 0, 0);
+            btnTab4_Separation.Size = new Size(280, 55);
+            btnTab4_Separation.TabIndex = 3;
+            btnTab4_Separation.Text = "4. Faz 2: Paraşütlü Süzülüş & SİGMA";
+            btnTab4_Separation.TextAlign = ContentAlignment.MiddleLeft;
+            btnTab4_Separation.UseVisualStyleBackColor = true;
+            // 
+            // btnTab3_Ascent
+            // 
+            btnTab3_Ascent.Dock = DockStyle.Top;
+            btnTab3_Ascent.FlatAppearance.BorderSize = 0;
+            btnTab3_Ascent.FlatStyle = FlatStyle.Flat;
+            btnTab3_Ascent.Font = new Font("Segoe UI Semibold", 10.5F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            btnTab3_Ascent.ForeColor = Color.FromArgb(203, 213, 225);
+            btnTab3_Ascent.ImageAlign = ContentAlignment.MiddleLeft;
+            btnTab3_Ascent.Location = new Point(0, 110);
+            btnTab3_Ascent.Name = "btnTab3_Ascent";
+            btnTab3_Ascent.Padding = new Padding(15, 0, 0, 0);
+            btnTab3_Ascent.Size = new Size(280, 55);
+            btnTab3_Ascent.TabIndex = 2;
+            btnTab3_Ascent.Text = "3. Faz 1: Roketle Yükseliş & Ayrılma";
+            btnTab3_Ascent.TextAlign = ContentAlignment.MiddleLeft;
+            btnTab3_Ascent.UseVisualStyleBackColor = true;
+            // 
+            // btnTab2_SatellitePhysics
+            // 
+            btnTab2_SatellitePhysics.Dock = DockStyle.Top;
+            btnTab2_SatellitePhysics.FlatAppearance.BorderSize = 0;
+            btnTab2_SatellitePhysics.FlatStyle = FlatStyle.Flat;
+            btnTab2_SatellitePhysics.Font = new Font("Segoe UI Semibold", 10.5F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            btnTab2_SatellitePhysics.ForeColor = Color.FromArgb(203, 213, 225);
+            btnTab2_SatellitePhysics.ImageAlign = ContentAlignment.MiddleLeft;
+            btnTab2_SatellitePhysics.Location = new Point(0, 55);
+            btnTab2_SatellitePhysics.Name = "btnTab2_SatellitePhysics";
+            btnTab2_SatellitePhysics.Padding = new Padding(15, 0, 0, 0);
+            btnTab2_SatellitePhysics.Size = new Size(280, 55);
+            btnTab2_SatellitePhysics.TabIndex = 1;
+            btnTab2_SatellitePhysics.Text = "2. Uydunun Fiziksel Özellikleri";
+            btnTab2_SatellitePhysics.TextAlign = ContentAlignment.MiddleLeft;
+            btnTab2_SatellitePhysics.UseVisualStyleBackColor = true;
+            // 
+            // btnTab1_WorldVariables
+            // 
+            btnTab1_WorldVariables.Dock = DockStyle.Top;
+            btnTab1_WorldVariables.FlatAppearance.BorderSize = 0;
+            btnTab1_WorldVariables.FlatStyle = FlatStyle.Flat;
+            btnTab1_WorldVariables.Font = new Font("Segoe UI Semibold", 10.5F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            btnTab1_WorldVariables.ForeColor = Color.White;
+            btnTab1_WorldVariables.ImageAlign = ContentAlignment.MiddleLeft;
+            btnTab1_WorldVariables.Location = new Point(0, 0);
+            btnTab1_WorldVariables.Name = "btnTab1_WorldVariables";
+            btnTab1_WorldVariables.Padding = new Padding(15, 0, 0, 0);
+            btnTab1_WorldVariables.Size = new Size(280, 55);
+            btnTab1_WorldVariables.TabIndex = 0;
+            btnTab1_WorldVariables.Text = "1. Dünya ve Çevre Değişkenleri";
+            btnTab1_WorldVariables.TextAlign = ContentAlignment.MiddleLeft;
+            btnTab1_WorldVariables.UseVisualStyleBackColor = true;
             // 
             // pnlSubContentContainer
-
             // 
-            this.pnlSubContentContainer.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(241)))), ((int)(((byte)(245)))), ((int)(((byte)(249)))));
-            this.pnlSubContentContainer.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.pnlSubContentContainer.Location = new System.Drawing.Point(280, 60);
-            this.pnlSubContentContainer.Name = "pnlSubContentContainer";
-            this.pnlSubContentContainer.Size = new System.Drawing.Size(920, 640);
-            this.pnlSubContentContainer.TabIndex = 2;
+            pnlSubContentContainer.BackColor = Color.FromArgb(241, 245, 249);
+            pnlSubContentContainer.Dock = DockStyle.Fill;
+            pnlSubContentContainer.Location = new Point(280, 60);
+            pnlSubContentContainer.Name = "pnlSubContentContainer";
+            pnlSubContentContainer.Size = new Size(920, 640);
+            pnlSubContentContainer.TabIndex = 2;
             // 
             // pnlBottomStatusBar
             // 
-            this.pnlBottomStatusBar.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(226)))), ((int)(((byte)(232)))), ((int)(((byte)(240)))));
-            this.pnlBottomStatusBar.Controls.Add(this.btnApplyAndSave);
-            this.pnlBottomStatusBar.Controls.Add(this.lblActiveTabStatus);
-            this.pnlBottomStatusBar.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.pnlBottomStatusBar.Location = new System.Drawing.Point(280, 700);
-            this.pnlBottomStatusBar.Name = "pnlBottomStatusBar";
-            this.pnlBottomStatusBar.Size = new System.Drawing.Size(920, 50);
-            this.pnlBottomStatusBar.TabIndex = 3;
+            pnlBottomStatusBar.BackColor = Color.FromArgb(226, 232, 240);
+            pnlBottomStatusBar.Controls.Add(lblActiveTabStatus);
+            pnlBottomStatusBar.Dock = DockStyle.Bottom;
+            pnlBottomStatusBar.Location = new Point(280, 700);
+            pnlBottomStatusBar.Name = "pnlBottomStatusBar";
+            pnlBottomStatusBar.Size = new Size(920, 50);
+            pnlBottomStatusBar.TabIndex = 3;
             // 
             // lblActiveTabStatus
             // 
-            this.lblActiveTabStatus.AutoSize = true;
-            this.lblActiveTabStatus.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblActiveTabStatus.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(51)))), ((int)(((byte)(65)))), ((int)(((byte)(85)))));
-            this.lblActiveTabStatus.Location = new System.Drawing.Point(20, 15);
-            this.lblActiveTabStatus.Name = "lblActiveTabStatus";
-            this.lblActiveTabStatus.Size = new System.Drawing.Size(342, 21);
-            this.lblActiveTabStatus.TabIndex = 0;
-            this.lblActiveTabStatus.Text = "DURUM: 8 Ayar panelinden 1.si görüntüleniyor.";
-            // 
-            // btnApplyAndSave
-            // 
-            this.btnApplyAndSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnApplyAndSave.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(16)))), ((int)(((byte)(185)))), ((int)(((byte)(129)))));
-            this.btnApplyAndSave.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnApplyAndSave.Font = new System.Drawing.Font("Segoe UI Semibold", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnApplyAndSave.ForeColor = System.Drawing.Color.White;
-            this.btnApplyAndSave.Location = new System.Drawing.Point(730, 8);
-            this.btnApplyAndSave.Name = "btnApplyAndSave";
-            this.btnApplyAndSave.Size = new System.Drawing.Size(170, 34);
-            this.btnApplyAndSave.TabIndex = 1;
-            this.btnApplyAndSave.Text = "KAYDET VE UYGULA";
-            this.btnApplyAndSave.UseVisualStyleBackColor = false;
+            lblActiveTabStatus.AutoSize = true;
+            lblActiveTabStatus.Font = new Font("Segoe UI", 9.5F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            lblActiveTabStatus.ForeColor = Color.FromArgb(51, 65, 85);
+            lblActiveTabStatus.Location = new Point(20, 15);
+            lblActiveTabStatus.Name = "lblActiveTabStatus";
+            lblActiveTabStatus.Size = new Size(408, 25);
+            lblActiveTabStatus.TabIndex = 0;
+            lblActiveTabStatus.Text = "DURUM: 8 Ayar panelinden 1.si görüntüleniyor.";
             // 
             // SimulationConfigDashboard
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this.pnlSubContentContainer);
-            this.Controls.Add(this.pnlBottomStatusBar);
-            this.Controls.Add(this.pnlSidebarMenu);
-            this.Controls.Add(this.pnlTopHeader);
-            this.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.Name = "SimulationConfigDashboard";
-            this.Size = new System.Drawing.Size(1200, 750);
-            this.pnlTopHeader.ResumeLayout(false);
-            this.pnlTopHeader.PerformLayout();
-            this.pnlSidebarMenu.ResumeLayout(false);
-            this.pnlBottomStatusBar.ResumeLayout(false);
-            this.pnlBottomStatusBar.PerformLayout();
-            this.ResumeLayout(false);
+            AutoScaleDimensions = new SizeF(10F, 25F);
+            AutoScaleMode = AutoScaleMode.Font;
+            Controls.Add(pnlSubContentContainer);
+            Controls.Add(pnlBottomStatusBar);
+            Controls.Add(pnlSidebarMenu);
+            Controls.Add(pnlTopHeader);
+            Font = new Font("Segoe UI", 9F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            Name = "SimulationConfigDashboard";
+            Size = new Size(1200, 750);
+            pnlTopHeader.ResumeLayout(false);
+            pnlTopHeader.PerformLayout();
+            pnlSidebarMenu.ResumeLayout(false);
+            pnlBottomStatusBar.ResumeLayout(false);
+            pnlBottomStatusBar.PerformLayout();
+            ResumeLayout(false);
 
         }
 
@@ -311,7 +275,6 @@ namespace FlyingAnalysis.UI.Panels
 
         private System.Windows.Forms.Panel pnlTopHeader;
         private System.Windows.Forms.Label lblHeaderTitle;
-        private System.Windows.Forms.Button btnLoadDefaults;
         private System.Windows.Forms.Panel pnlSidebarMenu;
         private System.Windows.Forms.Button btnTab1_WorldVariables;
         private System.Windows.Forms.Button btnTab2_SatellitePhysics;
@@ -325,6 +288,5 @@ namespace FlyingAnalysis.UI.Panels
 
         private System.Windows.Forms.Panel pnlBottomStatusBar;
         private System.Windows.Forms.Label lblActiveTabStatus;
-        private System.Windows.Forms.Button btnApplyAndSave;
     }
 }

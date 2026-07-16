@@ -181,13 +181,17 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
                 tlpMainCharts.Controls.Remove(plotPosition);
                 tlpMainCharts.Controls.Remove(plotVelocity);
                 tlpMainCharts.Controls.Remove(plotAcceleration);
+                tlpMainCharts.Controls.Remove(grpSuccessConsole);
+                tlpMainCharts.Controls.Remove(grpLiveForceDiagram);
 
                 tlpMainCharts.RowCount = 2;
                 while (tlpMainCharts.RowStyles.Count < 2) tlpMainCharts.RowStyles.Add(new RowStyle());
                 tlpMainCharts.Controls.Add(plotPosition, 0, 0);
                 tlpMainCharts.Controls.Add(tlpBottomRow, 0, 1);
-                tlpBottomRow.Controls.Add(plotVelocity, 0, 0);
-                tlpBottomRow.Controls.Add(plotAcceleration, 1, 0);
+                tlpBottomRow.Controls.Add(grpSuccessConsole, 0, 0);
+                tlpBottomRow.Controls.Add(plotVelocity, 1, 0);
+                tlpBottomRow.Controls.Add(plotAcceleration, 2, 0);
+                tlpBottomRow.Controls.Add(grpLiveForceDiagram, 3, 0);
             }
 
             switch (mode)
@@ -197,6 +201,7 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
                     tlpMainCharts.RowStyles[1] = new RowStyle(SizeType.Percent, 35f);
                     plotPosition.Visible = true;
                     tlpBottomRow.Visible = true;
+                    grpSuccessConsole.Visible = true;
                     plotVelocity.Visible = true;
                     plotAcceleration.Visible = true;
                     grpLiveForceDiagram.Visible = true;
@@ -212,9 +217,12 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
                     tlpMainCharts.RowStyles[1] = new RowStyle(SizeType.Percent, 100f);
                     plotPosition.Visible = false;
                     tlpBottomRow.Visible = true;
-                    tlpBottomRow.ColumnStyles[0] = new ColumnStyle(SizeType.Percent, 100f);
-                    tlpBottomRow.ColumnStyles[1] = new ColumnStyle(SizeType.Percent, 0f);
+                    while (tlpBottomRow.ColumnStyles.Count < 4) tlpBottomRow.ColumnStyles.Add(new ColumnStyle());
+                    tlpBottomRow.ColumnStyles[0] = new ColumnStyle(SizeType.Percent, 0f);
+                    tlpBottomRow.ColumnStyles[1] = new ColumnStyle(SizeType.Percent, 100f);
                     tlpBottomRow.ColumnStyles[2] = new ColumnStyle(SizeType.Percent, 0f);
+                    tlpBottomRow.ColumnStyles[3] = new ColumnStyle(SizeType.Percent, 0f);
+                    grpSuccessConsole.Visible = false;
                     plotVelocity.Visible = true;
                     plotAcceleration.Visible = false;
                     grpLiveForceDiagram.Visible = false;
@@ -224,9 +232,12 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
                     tlpMainCharts.RowStyles[1] = new RowStyle(SizeType.Percent, 100f);
                     plotPosition.Visible = false;
                     tlpBottomRow.Visible = true;
+                    while (tlpBottomRow.ColumnStyles.Count < 4) tlpBottomRow.ColumnStyles.Add(new ColumnStyle());
                     tlpBottomRow.ColumnStyles[0] = new ColumnStyle(SizeType.Percent, 0f);
-                    tlpBottomRow.ColumnStyles[1] = new ColumnStyle(SizeType.Percent, 100f);
-                    tlpBottomRow.ColumnStyles[2] = new ColumnStyle(SizeType.Percent, 0f);
+                    tlpBottomRow.ColumnStyles[1] = new ColumnStyle(SizeType.Percent, 0f);
+                    tlpBottomRow.ColumnStyles[2] = new ColumnStyle(SizeType.Percent, 100f);
+                    tlpBottomRow.ColumnStyles[3] = new ColumnStyle(SizeType.Percent, 0f);
+                    grpSuccessConsole.Visible = false;
                     plotVelocity.Visible = false;
                     plotAcceleration.Visible = true;
                     grpLiveForceDiagram.Visible = false;
@@ -234,13 +245,70 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             }
             if (mode == ViewMode.Proportional)
             {
-                tlpBottomRow.ColumnStyles[0] = new ColumnStyle(SizeType.Percent, 33.33f);
-                tlpBottomRow.ColumnStyles[1] = new ColumnStyle(SizeType.Percent, 33.33f);
-                tlpBottomRow.ColumnStyles[2] = new ColumnStyle(SizeType.Percent, 33.34f);
+                while (tlpBottomRow.ColumnStyles.Count < 4) tlpBottomRow.ColumnStyles.Add(new ColumnStyle());
+                tlpBottomRow.ColumnStyles[0] = new ColumnStyle(SizeType.Percent, 25f);
+                tlpBottomRow.ColumnStyles[1] = new ColumnStyle(SizeType.Percent, 25f);
+                tlpBottomRow.ColumnStyles[2] = new ColumnStyle(SizeType.Percent, 25f);
+                tlpBottomRow.ColumnStyles[3] = new ColumnStyle(SizeType.Percent, 25f);
             }
 
             tlpBottomRow.ResumeLayout();
             tlpMainCharts.ResumeLayout();
+        }
+
+        private void UpdateSuccessConsole()
+        {
+            if (_simulationFrames == null || _simulationFrames.Count == 0) return;
+
+            // --- İRTİFA METRİKLERİ ---
+            double rmseHamPos = Math.Sqrt(_simulationFrames.Average(f => Math.Pow(f.RawBaroPosition - f.TruePosition, 2)));
+            double biasHamPos = Math.Abs(_simulationFrames.Average(f => f.RawBaroPosition - f.TruePosition));
+            double stdHamPos = Math.Sqrt(_simulationFrames.Average(f => Math.Pow((f.RawBaroPosition - f.TruePosition) - (_simulationFrames.Average(x => x.RawBaroPosition - x.TruePosition)), 2)));
+
+            double rmseCalPos = Math.Sqrt(_simulationFrames.Average(f => Math.Pow(f.CalibratedBaroPosition - f.TruePosition, 2)));
+            double biasCalPos = Math.Abs(_simulationFrames.Average(f => f.CalibratedBaroPosition - f.TruePosition));
+            double stdCalPos = Math.Sqrt(_simulationFrames.Average(f => Math.Pow((f.CalibratedBaroPosition - f.TruePosition) - (_simulationFrames.Average(x => x.CalibratedBaroPosition - x.TruePosition)), 2)));
+
+            double rmseEkfPos = Math.Sqrt(_simulationFrames.Average(f => Math.Pow(f.EstimatedPosition - f.TruePosition, 2)));
+            double biasEkfPos = Math.Abs(_simulationFrames.Average(f => f.EstimatedPosition - f.TruePosition));
+            double stdEkfPos = Math.Sqrt(_simulationFrames.Average(f => Math.Pow((f.EstimatedPosition - f.TruePosition) - (_simulationFrames.Average(x => x.EstimatedPosition - x.TruePosition)), 2)));
+
+            double posTruenessRatio = (biasHamPos > 1e-6) ? (1.0 - (biasCalPos / biasHamPos)) * 100.0 : 100.0;
+            double posPrecisionRatio = (stdHamPos > 1e-6) ? (1.0 - (stdEkfPos / stdHamPos)) * 100.0 : 100.0;
+            double posRmseRatio = (rmseHamPos > 1e-6) ? (1.0 - (rmseEkfPos / rmseHamPos)) * 100.0 : 100.0;
+
+            // --- İVME METRİKLERİ ---
+            double rmseHamAcc = Math.Sqrt(_simulationFrames.Average(f => Math.Pow(f.RawAcceleration - f.TrueAcceleration, 2)));
+            double biasHamAcc = Math.Abs(_simulationFrames.Average(f => f.RawAcceleration - f.TrueAcceleration));
+            double stdHamAcc = Math.Sqrt(_simulationFrames.Average(f => Math.Pow((f.RawAcceleration - f.TrueAcceleration) - (_simulationFrames.Average(x => x.RawAcceleration - x.TrueAcceleration)), 2)));
+
+            double rmseCalAcc = Math.Sqrt(_simulationFrames.Average(f => Math.Pow(f.CalibratedAcceleration - f.TrueAcceleration, 2)));
+            double biasCalAcc = Math.Abs(_simulationFrames.Average(f => f.CalibratedAcceleration - f.TrueAcceleration));
+            double stdCalAcc = Math.Sqrt(_simulationFrames.Average(f => Math.Pow((f.CalibratedAcceleration - f.TrueAcceleration) - (_simulationFrames.Average(x => x.CalibratedAcceleration - x.TrueAcceleration)), 2)));
+
+            double rmseEkfAcc = Math.Sqrt(_simulationFrames.Average(f => Math.Pow(f.EstimatedAcceleration - f.TrueAcceleration, 2)));
+            double biasEkfAcc = Math.Abs(_simulationFrames.Average(f => f.EstimatedAcceleration - f.TrueAcceleration));
+            double stdEkfAcc = Math.Sqrt(_simulationFrames.Average(f => Math.Pow((f.EstimatedAcceleration - f.TrueAcceleration) - (_simulationFrames.Average(x => x.EstimatedAcceleration - x.TrueAcceleration)), 2)));
+
+            double accTruenessRatio = (biasHamAcc > 1e-6) ? (1.0 - (biasCalAcc / biasHamAcc)) * 100.0 : 100.0;
+            double accPrecisionRatio = (stdHamAcc > 1e-6) ? (1.0 - (stdEkfAcc / stdHamAcc)) * 100.0 : 100.0;
+            double accRmseRatio = (rmseHamAcc > 1e-6) ? (1.0 - (rmseEkfAcc / rmseHamAcc)) * 100.0 : 100.0;
+
+            string ascii =
+                $" === METROLOJİK HATA & GÜRÜLTÜ ANALİZİ ===\r\n" +
+                $" [ İRTİFA (Baro -> Kalibre -> EKF) ]\r\n" +
+                $" Ham RMSE    : {rmseHamPos:F2} m (Bias: {biasHamPos:F2}, σ: ±{stdHamPos:F2})\r\n" +
+                $" Kalibre RMSE: {rmseCalPos:F2} m | Doğruluk İyileşmesi: %{Math.Max(0, posTruenessRatio):F1}\r\n" +
+                $" EKF RMSE    : {rmseEkfPos:F2} m | Kesinlik Süzme    : %{Math.Max(0, posPrecisionRatio):F1}\r\n" +
+                $" -> TOPLAM İRTİFA BAŞARISI (RMSE) : %{Math.Max(0, posRmseRatio):F1}\r\n" +
+                $"--------------------------------------------\r\n" +
+                $" [ İVME (IMU -> Kalibre -> EKF) ]\r\n" +
+                $" Ham RMSE    : {rmseHamAcc:F2} m/s² (Bias: {biasHamAcc:F2}, σ: ±{stdHamAcc:F2})\r\n" +
+                $" Kalibre RMSE: {rmseCalAcc:F2} m/s²| Doğruluk İyileşmesi: %{Math.Max(0, accTruenessRatio):F1}\r\n" +
+                $" EKF RMSE    : {rmseEkfAcc:F2} m/s²| Kesinlik Süzme    : %{Math.Max(0, accPrecisionRatio):F1}\r\n" +
+                $" -> TOPLAM İVME BAŞARISI (RMSE)   : %{Math.Max(0, accRmseRatio):F1}";
+
+            lblSuccessConsole.Text = ascii;
         }
 
         private void UpdateChartOrderLayout()
@@ -455,6 +523,8 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
 
             plotAcceleration.Plot.ShowLegend();
             plotAcceleration.Refresh();
+
+            UpdateSuccessConsole();
         }
 
         private void OnPlayheadChanged(double time)

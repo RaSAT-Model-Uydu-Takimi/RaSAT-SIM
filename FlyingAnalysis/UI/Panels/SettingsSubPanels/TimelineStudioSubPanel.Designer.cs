@@ -51,6 +51,8 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
         private System.Windows.Forms.TableLayoutPanel tlpBottomRow;
         private ScottPlot.WinForms.FormsPlot plotVelocity;
         private ScottPlot.WinForms.FormsPlot plotAcceleration;
+        private System.Windows.Forms.GroupBox grpSuccessConsole;
+        private System.Windows.Forms.Label lblSuccessConsole;
         private System.Windows.Forms.GroupBox grpLiveForceDiagram;
         private System.Windows.Forms.Label lblLiveForceAscii;
 
@@ -119,6 +121,8 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             this.tlpBottomRow = new System.Windows.Forms.TableLayoutPanel();
             this.plotVelocity = new ScottPlot.WinForms.FormsPlot();
             this.plotAcceleration = new ScottPlot.WinForms.FormsPlot();
+            this.grpSuccessConsole = new System.Windows.Forms.GroupBox();
+            this.lblSuccessConsole = new System.Windows.Forms.Label();
             this.grpLiveForceDiagram = new System.Windows.Forms.GroupBox();
             this.lblLiveForceAscii = new System.Windows.Forms.Label();
             this.lblConfidenceDisplay = new System.Windows.Forms.Label();
@@ -515,13 +519,15 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             this.plotPosition.TabIndex = 0;
 
             // tlpBottomRow
-            this.tlpBottomRow.ColumnCount = 3;
-            this.tlpBottomRow.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33F));
-            this.tlpBottomRow.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33F));
-            this.tlpBottomRow.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.34F));
-            this.tlpBottomRow.Controls.Add(this.plotVelocity, 0, 0);
-            this.tlpBottomRow.Controls.Add(this.plotAcceleration, 1, 0);
-            this.tlpBottomRow.Controls.Add(this.grpLiveForceDiagram, 2, 0);
+            this.tlpBottomRow.ColumnCount = 4;
+            this.tlpBottomRow.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 25F));
+            this.tlpBottomRow.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 25F));
+            this.tlpBottomRow.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 25F));
+            this.tlpBottomRow.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 25F));
+            this.tlpBottomRow.Controls.Add(this.grpSuccessConsole, 0, 0);
+            this.tlpBottomRow.Controls.Add(this.plotVelocity, 1, 0);
+            this.tlpBottomRow.Controls.Add(this.plotAcceleration, 2, 0);
+            this.tlpBottomRow.Controls.Add(this.grpLiveForceDiagram, 3, 0);
             this.tlpBottomRow.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tlpBottomRow.Location = new System.Drawing.Point(3, 255);
             this.tlpBottomRow.Name = "tlpBottomRow";
@@ -530,19 +536,41 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             this.tlpBottomRow.Size = new System.Drawing.Size(1194, 162);
             this.tlpBottomRow.TabIndex = 1;
 
+            // grpSuccessConsole
+            this.grpSuccessConsole.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(41)))), ((int)(((byte)(59)))));
+            this.grpSuccessConsole.Controls.Add(this.lblSuccessConsole);
+            this.grpSuccessConsole.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.grpSuccessConsole.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
+            this.grpSuccessConsole.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(226)))), ((int)(((byte)(232)))), ((int)(((byte)(240)))));
+            this.grpSuccessConsole.Location = new System.Drawing.Point(3, 3);
+            this.grpSuccessConsole.Name = "grpSuccessConsole";
+            this.grpSuccessConsole.Size = new System.Drawing.Size(294, 156);
+            this.grpSuccessConsole.TabIndex = 0;
+            this.grpSuccessConsole.Text = "🏆 EKF & Kalibrasyon Başarı Raporu";
+
+            // lblSuccessConsole
+            this.lblSuccessConsole.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblSuccessConsole.Font = new System.Drawing.Font("Consolas", 8F, System.Drawing.FontStyle.Bold);
+            this.lblSuccessConsole.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(56)))), ((int)(((byte)(189)))), ((int)(((byte)(248)))));
+            this.lblSuccessConsole.Location = new System.Drawing.Point(3, 19);
+            this.lblSuccessConsole.Name = "lblSuccessConsole";
+            this.lblSuccessConsole.Padding = new System.Windows.Forms.Padding(4);
+            this.lblSuccessConsole.Size = new System.Drawing.Size(288, 134);
+            this.lblSuccessConsole.Text = " === GÜRÜLTÜ & HATA SÜZME ORANLARI ===\r\n [ İRTİFA (Baro -> Kalibre -> EKF) ]\r\n Ham MAE       : 0.00 m\r\n Kalibre MAE   : 0.00 m | Süzme: %0.0\r\n EKF (Son) MAE : 0.00 m | Süzme: %0.0\r\n----------------------------------------\r\n [ İVME (IMU -> Kalibre -> EKF) ]\r\n Ham MAE       : 0.00 m/s²\r\n Kalibre MAE   : 0.00 m/s²| Süzme: %0.0\r\n EKF (Son) MAE : 0.00 m/s²| Süzme: %0.0";
+
             // plotVelocity
             this.plotVelocity.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.plotVelocity.Location = new System.Drawing.Point(3, 3);
+            this.plotVelocity.Location = new System.Drawing.Point(303, 3);
             this.plotVelocity.Name = "plotVelocity";
-            this.plotVelocity.Size = new System.Drawing.Size(391, 156);
-            this.plotVelocity.TabIndex = 0;
+            this.plotVelocity.Size = new System.Drawing.Size(294, 156);
+            this.plotVelocity.TabIndex = 1;
 
             // plotAcceleration
             this.plotAcceleration.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.plotAcceleration.Location = new System.Drawing.Point(400, 3);
+            this.plotAcceleration.Location = new System.Drawing.Point(603, 3);
             this.plotAcceleration.Name = "plotAcceleration";
-            this.plotAcceleration.Size = new System.Drawing.Size(391, 156);
-            this.plotAcceleration.TabIndex = 1;
+            this.plotAcceleration.Size = new System.Drawing.Size(294, 156);
+            this.plotAcceleration.TabIndex = 2;
 
             // grpLiveForceDiagram
             this.grpLiveForceDiagram.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(41)))), ((int)(((byte)(59)))));
@@ -550,10 +578,10 @@ namespace FlyingAnalysis.UI.Panels.SettingsSubPanels
             this.grpLiveForceDiagram.Dock = System.Windows.Forms.DockStyle.Fill;
             this.grpLiveForceDiagram.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.grpLiveForceDiagram.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(226)))), ((int)(((byte)(232)))), ((int)(((byte)(240)))));
-            this.grpLiveForceDiagram.Location = new System.Drawing.Point(797, 3);
+            this.grpLiveForceDiagram.Location = new System.Drawing.Point(903, 3);
             this.grpLiveForceDiagram.Name = "grpLiveForceDiagram";
-            this.grpLiveForceDiagram.Size = new System.Drawing.Size(394, 156);
-            this.grpLiveForceDiagram.TabIndex = 2;
+            this.grpLiveForceDiagram.Size = new System.Drawing.Size(294, 156);
+            this.grpLiveForceDiagram.TabIndex = 3;
             this.grpLiveForceDiagram.Text = "⚡ Canlı Kuvvet Vektör Diyagramı";
 
             // lblLiveForceAscii
