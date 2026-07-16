@@ -36,7 +36,7 @@ Model uydunun her fazını ayrı ayrı simüle eder. Sensörlerde (Barometre ve 
 * **Kestirim Ayarları:** Kalman filtresi süreç gürültü matrisi (Q) ve sensör ölçüm gürültü matrisi (R) katsayıları.
 
 ### Çıktılar
-* **Zamana Grafikler:** Uydunun irtifa, hız, ivme verileri zamana göre çizen grafiklerdir. Gerçek verileri Ham verileri sensör verileri kalibraston sonrası sensör verileri ve  EKM verileri çizilir .
+* **Zamana Göre Grafikler:** Uydunun irtifa, hız, ivme verilerni zamana göre çizen grafiklerdir. Gerçek verileri , Ham verileri sensör verileri kalibrasyon  verilerini ve  EKM verileri çizer .
 * **Kuvvet Diyagramaları:** Teorik olarak fazlardaki limit hızı gösteren çeşitleri vardır ama en önemlisi uçuşun herhangi bir anında uygulanan kuvvetleri gösteren türüdür
 * **Metrolojik Başarı ve Kestirim Raporu:**
   * **Doğruluk Başarısı (Trueness):** Ters kalibrasyon denkleminin sistematik kayma ve ölçek hatasını sönümleme oranı.
@@ -52,7 +52,7 @@ FlyingAnalysis platformunu destekleyen, tasarım ve doğrulama süreçlerinde ku
 ### 1. Sayısıal Similasyon (İlk Göz Ağrım)
 * **Temel İşlevi:** Flying Analysis ilk halidir. Proje geliştirilmesi yarım kalmıştır. Bazı güzel özellikleri flyin analysise taşında uygun görünen diğer özelikler taşındıktan sonra depodan kaldırılacaktır
 ### 2. SensorAnalizi (Sensör Arıza ve Gömülü STM32 Algoritma Doğrulaması)
-* **Temel İşlevi:** Sensör arızalarının model uydu algoritmaları üzerindeki etkisini inceleyen ve gerçek STM32 mikrodenetleyici C/C++ kodlerinin simülasyonda test edildiği doğrulama aracıdır.
+* **Temel İşlevi:** Sensör arızalarının model uydu algoritmaları üzerindeki etkisini inceleyen ve gerçek STM32 mikrodenetleyici C kodlarının simülasyonda test edildiği doğrulama aracıdır.
 * **Girdi:** STM32 Mikrodenetleyicimizin uçuş sırasında müdahale edebileceği her şeyin bulunduğu (mesela sol ön motor yüzde kaç güçle çalışacak) bir emirler dosyası).
 * **Çıktı:** Gelen Emire göre davrandığında uydu sensörlerinin okuyacağı telemetri verilerinin dosyası 
 
