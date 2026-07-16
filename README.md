@@ -27,7 +27,7 @@ dotnet run
 Ekosistemin temel analiz aracı olan FlyingAnalysis; 4 fazlı yarışma uçuş dinamiğine ek olarak, belirli anlarda sensörlerin bozulduğu, veri kesintilerinin yaşandığı veya rüzgar darbelerinin etkili olduğu özel uçuş senaryoları oluşturmayı sağlar, sensör kalibrasyon modellerini ve 3x3 Kalman Kestirim Çekirdeğini (EKF) modüler bir arayüzde sunar.
 
 ### Temel İşlevi
-Model uydunun roketten ayrılma, serbest düşüş, ayrılma ve aktif iniş  fazlarını simüle eder. Sensörlerde (Barometre ve İvmeölçer) oluşabilecek metrolojik hataları (%20 sistematik kayma, %20 rastgele gürültü, ani sıçramalar ve veri kesintileri) modeller ve Kalman Filtresi (EKF) algoritmalarının bu hataları süzme başarımını gerçek zamanlı test eder.
+Model uydunun her fazını ayrı ayrı simüle eder. Sensörlerde (Barometre ve İvmeölçer) oluşabilecek metrolojik hataları (%20 sistematik kayma, %20 rastgele gürültü, ani sıçramalar ve veri kesintileri) modeller ve Kalman Filtresi (EKF) algoritmalarının bu hataları süzme başarımını gerçek zamanlı test eder.
 
 ### Girdiler
 * **Fiziksel ve Atmosferik Değişkenler:** Taşıyıcı ve görev yükü kütleleri (kg), paraşüt ve kanat alanları (m²), sürüklenme katsayısı (Cd) ile atmosferik referans basınç ve sıcaklık değerleri (P0, T0).
@@ -36,7 +36,8 @@ Model uydunun roketten ayrılma, serbest düşüş, ayrılma ve aktif iniş  faz
 * **Kestirim Ayarları:** Kalman filtresi süreç gürültü matrisi (Q) ve sensör ölçüm gürültü matrisi (R) katsayıları.
 
 ### Çıktılar
-* **Konum - Zaman  ve Kuvvet Grafikleri:** Uydunun irtifa, hız, ivme verileri ile üzerindeki net aerodinamik ve kütleçekim kuvvet diyagramı.
+* **Zamana Grafikler:** Uydunun irtifa, hız, ivme verileri zamana göre çizen grafiklerdir. Gerçek verileri Ham verileri sensör verileri kalibraston sonrası sensör verileri ve  EKM verileri çizilir .
+* **Kuvvet Diyagramaları:** Teorik olarak fazlardaki limit hızı gösteren çeşitleri vardır ama en önemlisi uçuşun herhangi bir anında uygulanan kuvvetleri gösteren türüdür
 * **Metrolojik Başarı ve Kestirim Raporu:**
   * **Doğruluk Başarısı (Trueness):** Ters kalibrasyon denkleminin sistematik kayma ve ölçek hatasını sönümleme oranı.
   * **Kesinlik Başarısı (Precision):** Kalman filtresinin rastgele beyaz gürültü titreşimlerini bastırma oranı.
